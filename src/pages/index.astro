@@ -31,7 +31,10 @@ const fields = categories
   .sort((a, b) => a.displayOrder - b.displayOrder);
 
 // More objects (exclude the lead)
-const more = items.filter((i) => i.id !== lead?.id).slice(0, 8);
+const more = items.filter((i) => i.id !== lead?.id).slice(0, 12);
+
+const dashless = (s: string) => s.replace(/-/g, '');
+const itemById = new Map(items.map((i) => [dashless(i.id), i]));
 
 const publishedNarratives = narratives
   .filter((n) => n.publishStatus === 'Published')
@@ -131,15 +134,16 @@ const jsonLd = [
     <MeridianArc items={items} />
 
     <div class="container">
-      <!-- ── From the Curator ──────────────────────────────────────────── -->
-      <section class="leader" aria-label="From the Curator">
-        <div class="leader__head">From the Curator</div>
-        <div class="leader__body">
+      <!-- ── From the Curator (editorial) ──────────────────────────────── -->
+      <aside class="editorial" aria-label="From the Curator">
+        <div class="editorial__mark" aria-hidden="true">✦</div>
+        <p class="editorial__label">From the Curator</p>
+        <div class="editorial__body">
           <p>I did not set out to build a museum. I set out to keep a few things from disappearing — a map that mistook my island for a second world, a typewriter that survived a war, a barometer a club once gave away as a prize.</p>
           <p>The Meridian is the line I draw through them: objects gathered far apart, from Ceylon and Britain and places further still, set down here so they might be read together rather than scattered and forgotten.</p>
-          <p class="leader__sign">— Yulan Galagoda</p>
         </div>
-      </section>
+        <p class="editorial__sign">— Yulan Galagoda, Curator</p>
+      </aside>
 
       <!-- ── From the Collection ───────────────────────────────────────── -->
       {more.length > 0 && (
@@ -159,14 +163,23 @@ const jsonLd = [
         <section class="section-gap--sm" aria-label="Narratives">
           <div class="sec-head"><span>Narratives</span></div>
           <div class="narr-grid">
-            {publishedNarratives.map((n, idx) => (
-              <a class="narr-card" href={`/narratives/${n.slug}`}>
-                <p class="narr-card__kicker">Narrative · {ROMAN[idx] ?? idx + 1}</p>
-                <h3 class="narr-card__name">{n.name}</h3>
-                {n.premise && <p class="narr-card__premise">{n.premise}</p>}
-                <div class="narr-card__objects"><span class="narr-card__count">{n.itemIds.length} objects, one story →</span></div>
-              </a>
-            ))}
+            {publishedNarratives.map((n, idx) => {
+              const thumbs = n.itemIds.map((id) => itemById.get(id)).filter((i) => i && i.primaryImage).slice(0, 4);
+              return (
+                <a class="narr-card" href={`/narratives/${n.slug}`}>
+                  <p class="narr-card__kicker">Narrative · {ROMAN[idx] ?? idx + 1}</p>
+                  <h3 class="narr-card__name">{n.name}</h3>
+                  {n.premise && <p class="narr-card__premise">{n.premise}</p>}
+                  <div class="narr-card__objects">
+                    {thumbs.map((i) => (
+                      <img class="narr-card__thumb" src={i!.primaryImage} alt={i!.imageAltText || i!.name} loading="lazy" decoding="async" />
+                    ))}
+                    <span class="narr-card__count">{n.itemIds.length} objects</span>
+                  </div>
+                  <span class="narr-cta narr-card__cta">Read the narrative →</span>
+                </a>
+              );
+            })}
           </div>
         </section>
       )}
