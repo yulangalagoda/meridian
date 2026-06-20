@@ -19,6 +19,19 @@ function narrativeItems(n: (typeof narratives)[number]) {
   return n.itemIds.map((id) => itemById.get(id)).filter((i) => i !== undefined);
 }
 
+function yearLabel(y: number): string {
+  return y < 0 ? `${Math.abs(y)} BCE` : String(y);
+}
+function yearSpan(linked: ReturnType<typeof narrativeItems>): string | null {
+  const ys = linked.map((i) => i!.year).filter((y): y is number => y !== null);
+  if (!ys.length) return null;
+  const lo = Math.min(...ys), hi = Math.max(...ys);
+  return lo === hi ? yearLabel(lo) : `${yearLabel(lo)}–${yearLabel(hi)}`;
+}
+
+const lead = published[0];
+const rest = published.slice(1);
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
@@ -59,31 +72,60 @@ const jsonLd = {
       </header>
 
       {published.length > 0 ? (
-        <div class="narr-grid">
-          {published.map((n, idx) => {
-            const linked = narrativeItems(n);
-            const thumbs = linked.filter((i) => i.primaryImage).slice(0, 4);
+        <>
+          {lead && (() => {
+            const linked = narrativeItems(lead);
+            const plates = linked.filter((i) => i!.primaryImage).slice(0, 6);
+            const span = yearSpan(linked);
             return (
-              <a class="narr-card reveal" href={`/narratives/${n.slug}`}>
-                <p class="narr-card__kicker">Narrative · {ROMAN[idx] ?? idx + 1}</p>
-                <h2 class="narr-card__name">{n.name}</h2>
-                {n.premise && <p class="narr-card__premise">{n.premise}</p>}
-                <div class="narr-card__objects">
-                  {thumbs.map((i) => (
-                    <img
-                      class="narr-card__thumb"
-                      src={i.primaryImage}
-                      alt={i.imageAltText || i.name}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ))}
-                  <span class="narr-card__count">{linked.length} {linked.length === 1 ? 'object' : 'objects'}</span>
+              <a class="narr-lead reveal" href={`/narratives/${lead.slug}`}>
+                <div class="narr-lead__body">
+                  <p class="narr-lead__kicker">The Lead · Narrative {ROMAN[0]}</p>
+                  <h2 class="narr-lead__title">{lead.name}</h2>
+                  {lead.premise && <p class="narr-lead__premise">{lead.premise}</p>}
+                  <p class="narr-lead__meta">
+                    {linked.length} {linked.length === 1 ? 'object' : 'objects'}{span ? ` · ${span}` : ''}
+                  </p>
+                  <span class="narr-cta">Read the narrative →</span>
                 </div>
+                {plates.length > 0 && (
+                  <div class="narr-lead__plates">
+                    {plates.map((i) => (
+                      <img src={i!.primaryImage} alt={i!.imageAltText || i!.name} loading="lazy" decoding="async" />
+                    ))}
+                  </div>
+                )}
               </a>
             );
-          })}
-        </div>
+          })()}
+
+          {rest.length > 0 && (
+            <>
+              <div class="sec-head"><span>More Narratives</span></div>
+              <div class="narr-grid">
+                {rest.map((n, idx) => {
+                  const linked = narrativeItems(n);
+                  const thumbs = linked.filter((i) => i!.primaryImage).slice(0, 4);
+                  const span = yearSpan(linked);
+                  return (
+                    <a class="narr-card reveal" href={`/narratives/${n.slug}`}>
+                      <p class="narr-card__kicker">Narrative · {ROMAN[idx + 1] ?? idx + 2}</p>
+                      <h2 class="narr-card__name">{n.name}</h2>
+                      {n.premise && <p class="narr-card__premise">{n.premise}</p>}
+                      <div class="narr-card__objects">
+                        {thumbs.map((i) => (
+                          <img class="narr-card__thumb" src={i!.primaryImage} alt={i!.imageAltText || i!.name} loading="lazy" decoding="async" />
+                        ))}
+                        <span class="narr-card__count">{linked.length} {linked.length === 1 ? 'object' : 'objects'}{span ? ` · ${span}` : ''}</span>
+                      </div>
+                      <span class="narr-cta narr-card__cta">Read →</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </>
       ) : (
         <p class="no-results">The first narratives are being written. Return soon.</p>
       )}
