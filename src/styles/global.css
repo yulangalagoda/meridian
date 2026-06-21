@@ -416,6 +416,20 @@ h1, h2, h3, h4 { font-family: var(--display); font-weight: 400; line-height: var
 
 .narr-card__cta { margin-top: var(--sp-5); align-self: flex-start; }
 
+/* Secondary narrative headlines (homepage) */
+.narr-more { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--rule-soft); margin-top: var(--sp-8); }
+.narr-more li { border-left: 1px solid var(--rule-hair); }
+.narr-more li:first-child { border-left: 0; }
+.narr-more a { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); padding: var(--sp-5) var(--sp-5) var(--sp-5) 0; color: inherit; height: 100%; }
+.narr-more li:not(:first-child) a { padding-left: var(--sp-5); }
+.narr-more__k { font-family: var(--mono); font-size: 9.5px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--oxblood); }
+.narr-more__t { font-family: var(--display); font-size: var(--text-md); line-height: var(--lh-snug); color: var(--ink); }
+.narr-more a:hover .narr-more__t { color: var(--oxblood); }
+.narr-more__d { font-size: var(--text-sm); font-style: italic; color: var(--ink-mute); line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+.narr-more__go { font-family: var(--mono); font-size: 9.5px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ink-faint); }
+.narr-more a:hover .narr-more__go { color: var(--oxblood); }
+@media (max-width: 760px) { .narr-more { grid-template-columns: 1fr; } .narr-more li { border-left: 0; border-top: 1px solid var(--rule-hair); } .narr-more li:first-child { border-top: 0; } .narr-more a { padding-left: 0 !important; } }
+
 .narr-hero { text-align: center; max-width: 48rem; margin: 0 auto; padding: var(--sp-12) var(--sp-6) 0; }
 .narr-hero__kicker { font-family: var(--mono); font-size: 11px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--oxblood); }
 .narr-hero__title { font-size: var(--text-3xl); margin-top: var(--sp-4); line-height: 1.02; color: var(--ink); }
