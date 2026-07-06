@@ -578,6 +578,32 @@ h1, h2, h3, h4 { font-family: var(--display); font-weight: 400; line-height: var
 .lightbox__close { position: absolute; top: var(--sp-6); right: var(--sp-6); background: none; border: none; color: rgba(237, 227, 208, 0.7); font-size: 1.5rem; cursor: pointer; padding: var(--sp-2); }
 .lightbox__close:hover { color: #fff; }
 
+/* ── Search palette (⌘K) ─────────────────────────────────────────────────── */
+.palette { position: fixed; inset: 0; z-index: 300; background: rgba(15, 11, 6, 0.55); backdrop-filter: blur(2px); display: flex; align-items: flex-start; justify-content: center; padding: clamp(3rem, 12vh, 8rem) var(--sp-4) var(--sp-4); }
+.palette[hidden] { display: none; }
+.palette__panel { width: 100%; max-width: 620px; background: var(--paper); border: 1px solid var(--ink); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; max-height: min(60vh, 540px); }
+.palette__head { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-4) var(--sp-5); border-bottom: 2px solid var(--ink); }
+.palette__glyph { color: var(--oxblood); font-size: 0.9rem; }
+.palette__input { flex: 1; border: 0; background: transparent; color: var(--ink); font-family: var(--display); font-size: 1.25rem; outline: none; }
+.palette__input::placeholder { color: var(--ink-faint); font-style: italic; }
+.palette__esc { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); background: none; border: 1px solid var(--rule-soft); padding: 3px 7px; cursor: pointer; }
+.palette__esc:hover { color: var(--oxblood); border-color: var(--oxblood); }
+.palette__results { overflow-y: auto; padding: var(--sp-2) 0; }
+.palette__group { font-family: var(--mono); font-size: 9.5px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--oxblood); padding: var(--sp-3) var(--sp-5) var(--sp-1); }
+.palette__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-4); padding: 8px var(--sp-5); color: inherit; border-left: 3px solid transparent; }
+.palette__row-t { font-family: var(--display); font-size: 1.05rem; color: var(--ink); line-height: 1.25; }
+.palette__row-m { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; }
+.palette__row:hover, .palette__row.is-selected { background: var(--paper-2); border-left-color: var(--oxblood); }
+.palette__row.is-selected .palette__row-t { color: var(--oxblood); }
+.palette__empty { padding: var(--sp-8) var(--sp-5); text-align: center; font-style: italic; color: var(--ink-faint); }
+.palette__foot { display: flex; gap: var(--sp-5); justify-content: center; padding: var(--sp-3); border-top: 1px solid var(--rule-hair); font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+
+/* Header search trigger */
+.topstrip__search { font-family: var(--mono); font-size: 10.5px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ink-faint); background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 6px; transition: color var(--dur-fast); }
+.topstrip__search:hover { color: var(--oxblood); }
+.topstrip__search kbd { font-family: var(--mono); font-size: 9px; border: 1px solid var(--rule-soft); padding: 1px 4px; letter-spacing: 0.05em; }
+.topstrip__right { display: inline-flex; align-items: center; gap: var(--sp-5); }
+
 /* ── Prose / policy / about ──────────────────────────────────────────────── */
 .prose-page { max-width: var(--container-narrow); margin: 0 auto; padding: 0 var(--sp-6) var(--sp-20); }
 .prose-page__header { text-align: left; padding-block: var(--sp-12) var(--sp-5); border-bottom: 3px double var(--ink); margin-bottom: var(--sp-8); }

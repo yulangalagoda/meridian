@@ -23,9 +23,14 @@ const isCurrent = (href: string) =>
     <div class="topstrip">
       <span>A Record, Not a Shop</span>
       <span class="topstrip__center">Ceylon &middot; Britain &middot; the Wider World</span>
-      <button class="topstrip__toggle" id="edition-toggle" type="button" aria-label="Switch edition">
-        <span id="edition-label">Evening Edition</span>
-      </button>
+      <span class="topstrip__right">
+        <button class="topstrip__search" type="button" data-open-search aria-label="Search the archive">
+          Search <kbd>⌘K</kbd>
+        </button>
+        <button class="topstrip__toggle" id="edition-toggle" type="button" aria-label="Switch edition">
+          <span id="edition-label">Evening Edition</span>
+        </button>
+      </span>
     </div>
 
     <div class="masthead">

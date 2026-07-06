@@ -17,19 +17,14 @@ function unique(vals: string[]): string[] {
 }
 
 const eras = unique(items.map((i) => i.era));
-const countries = unique(items.map((i) => i.originCountry));
-const conditions = unique(items.map((i) => i.condition));
-const allTags = unique(items.flatMap((i) => i.tags));
 const catOptions = categories
   .filter((c) => items.some((i) => i.categorySlug === c.slug))
   .sort((a, b) => a.displayOrder - b.displayOrder);
 
+// Brutal simplicity: two axes only. Anything finer belongs to search (⌘K).
 const groups = [
-  { key: 'era',       label: 'Era',       options: eras.map((v) => ({ label: v, val: slug(v) })) },
-  { key: 'category',  label: 'Category',  options: catOptions.map((c) => ({ label: c.name, val: slug(c.name) })) },
-  { key: 'origin',    label: 'Origin',    options: countries.map((v) => ({ label: v, val: slug(v) })) },
-  { key: 'tag',       label: 'Tags',      options: allTags.map((v) => ({ label: v, val: slug(v) })) },
-  { key: 'condition', label: 'Condition', options: conditions.map((v) => ({ label: v, val: slug(v) })) },
+  { key: 'category', label: 'Field', options: catOptions.map((c) => ({ label: c.name, val: slug(c.name) })) },
+  { key: 'era',      label: 'Era',   options: eras.map((v) => ({ label: v, val: slug(v) })) },
 ].filter((g) => g.options.length > 0);
 ---
 
@@ -176,11 +171,8 @@ const groups = [
 
     // Active filters: key → Set<slugified value>
     const active: Record<string, Set<string>> = {
-      era: new Set(),
       category: new Set(),
-      origin: new Set(),
-      tag: new Set(),
-      condition: new Set(),
+      era: new Set(),
     };
 
     // ── Mobile toggle ──────────────────────────────────────────────────────────

@@ -1,6 +1,8 @@
 // Normalises link targets so internal links stay on the site.
 // Notion rewrites links typed as "/seeking" etc. to app.notion.com URLs,
 // and absolute meridian.yulan.me links should be relative.
+import SLUG_REDIRECTS from './redirects.json';
+
 // Known Notion page ids (dashless) → site routes, for link-to-page mentions.
 const PAGE_ROUTES: Record<string, string> = {
   '37b56d8311d2816c928df1a4969f03c9': '/collecting-policy',
@@ -20,6 +22,11 @@ function normalizeHref(href: string): { href: string; internal: boolean } {
   if (idMatch && PAGE_ROUTES[idMatch[1]]) {
     return { href: PAGE_ROUTES[idMatch[1]], internal: true };
   }
+  // Heal links that still use a renamed item slug (editors typed the old URL)
+  const slugMatch = h.match(/^\/collection\/([a-z0-9-]+)\/?$/);
+  if (slugMatch && (SLUG_REDIRECTS as Record<string, string>)[slugMatch[1]]) {
+    return { href: (SLUG_REDIRECTS as Record<string, string>)[slugMatch[1]], internal: true };
+  }
   if (h.startsWith('/')) return { href: h, internal: true };
   return { href: h, internal: false };
 }
@@ -38,7 +45,7 @@ export function renderSpans(spans: any[]): string {
       if (span.annotations?.italic) text = `<em>${text}</em>`;
       if (span.annotations?.code) text = `<code>${text}</code>`;
       if (span.annotations?.strikethrough) text = `<s>${text}</s>`;
-      if (span.href) {
+      if (span.href && !span.href.includes('[') ) {
         const { href, internal } = normalizeHref(span.href);
         text = internal
           ? `<a href="${href}">${text}</a>`

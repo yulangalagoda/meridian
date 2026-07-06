@@ -1,0 +1,179 @@
+---
+// ⌘K search palette — dependency-free, newspaper-styled.
+// Index is fetched lazily on first open from /search-index.json.
+---
+
+<div class="palette" id="palette" role="dialog" aria-modal="true" aria-label="Search the archive" hidden>
+  <div class="palette__panel">
+    <div class="palette__head">
+      <span class="palette__glyph" aria-hidden="true">✦</span>
+      <input
+        class="palette__input"
+        id="palette-input"
+        type="text"
+        placeholder="Search the archive…"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Search"
+      />
+      <button class="palette__esc" id="palette-close" type="button" aria-label="Close search">esc</button>
+    </div>
+    <div class="palette__results" id="palette-results" role="listbox"></div>
+    <div class="palette__foot">
+      <span>↑↓ navigate</span>
+      <span>↵ open</span>
+      <span>esc close</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const palette = document.getElementById('palette')!;
+    const input = document.getElementById('palette-input') as HTMLInputElement;
+    const resultsEl = document.getElementById('palette-results')!;
+    const closeBtn = document.getElementById('palette-close');
+
+    type Entry = { t: string; u: string; k: string; d: string; m: string };
+    type Index = { objects: Entry[]; narratives: Entry[]; fields: Entry[]; pages: Entry[] };
+
+    let index: Index | null = null;
+    let loading = false;
+    let flat: { e: Entry; group: string }[] = [];
+    let sel = 0;
+
+    const GROUPS: [keyof Index, string][] = [
+      ['objects', 'Objects'],
+      ['narratives', 'Narratives'],
+      ['fields', 'Fields'],
+      ['pages', 'Pages'],
+    ];
+
+    async function ensureIndex() {
+      if (index || loading) return;
+      loading = true;
+      try {
+        const res = await fetch('/search-index.json');
+        index = await res.json();
+        render(input.value);
+      } catch {
+        resultsEl.innerHTML = '<p class="palette__empty">The index could not be loaded.</p>';
+      } finally {
+        loading = false;
+      }
+    }
+
+    function score(e: Entry, q: string): number {
+      const name = e.t.toLowerCase();
+      const hay = (e.t + ' ' + e.k + ' ' + e.d).toLowerCase();
+      const tokens = q.split(/\s+/).filter(Boolean);
+      if (!tokens.length) return 0;
+      let s = 0;
+      for (const tok of tokens) {
+        if (!hay.includes(tok)) return 0; // every token must match somewhere
+        if (name.startsWith(tok)) s += 3;
+        else if (name.includes(tok)) s += 2;
+        else s += 1;
+      }
+      return s;
+    }
+
+    function esc(s: string): string {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function render(query: string) {
+      if (!index) return;
+      const q = query.trim().toLowerCase();
+      flat = [];
+      let html = '';
+
+      for (const [key, label] of GROUPS) {
+        let entries = index[key];
+        let scored: { e: Entry; s: number }[];
+        if (q) {
+          scored = entries.map((e) => ({ e, s: score(e, q) })).filter((x) => x.s > 0);
+          scored.sort((a, b) => b.s - a.s);
+        } else {
+          // Empty query: a taste of each drawer
+          scored = entries.slice(0, key === 'objects' ? 5 : 3).map((e) => ({ e, s: 0 }));
+        }
+        const top = scored.slice(0, key === 'objects' ? 8 : 4);
+        if (!top.length) continue;
+
+        html += `<p class="palette__group">${label}</p>`;
+        for (const { e } of top) {
+          const i = flat.length;
+          flat.push({ e, group: label });
+          html += `<a class="palette__row" data-i="${i}" href="${e.u}" role="option">
+            <span class="palette__row-t">${esc(e.t)}</span>
+            ${e.m ? `<span class="palette__row-m">${esc(e.m)}</span>` : ''}
+          </a>`;
+        }
+      }
+
+      resultsEl.innerHTML = html || '<p class="palette__empty">Nothing in the archive matches. Try a year, a maker, or a field.</p>';
+      sel = 0;
+      highlight();
+    }
+
+    function highlight() {
+      resultsEl.querySelectorAll('.palette__row').forEach((r, i) => {
+        r.classList.toggle('is-selected', i === sel);
+        if (i === sel) (r as HTMLElement).scrollIntoView({ block: 'nearest' });
+      });
+    }
+
+    function open() {
+      palette.hidden = false;
+      document.body.style.overflow = 'hidden';
+      input.value = '';
+      ensureIndex().then(() => render(''));
+      if (index) render('');
+      requestAnimationFrame(() => input.focus());
+    }
+
+    function close() {
+      palette.hidden = true;
+      document.body.style.overflow = '';
+    }
+
+    // Global shortcuts
+    document.addEventListener('keydown', (ev) => {
+      const target = ev.target as HTMLElement;
+      const typing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+      if ((ev.metaKey || ev.ctrlKey) && ev.key.toLowerCase() === 'k') {
+        ev.preventDefault();
+        palette.hidden ? open() : close();
+        return;
+      }
+      if (ev.key === '/' && !typing && palette.hidden) {
+        ev.preventDefault();
+        open();
+        return;
+      }
+      if (!palette.hidden) {
+        if (ev.key === 'Escape') { ev.preventDefault(); close(); }
+        else if (ev.key === 'ArrowDown') { ev.preventDefault(); sel = Math.min(sel + 1, flat.length - 1); highlight(); }
+        else if (ev.key === 'ArrowUp') { ev.preventDefault(); sel = Math.max(sel - 1, 0); highlight(); }
+        else if (ev.key === 'Enter') {
+          ev.preventDefault();
+          const row = resultsEl.querySelector<HTMLAnchorElement>(`.palette__row[data-i="${sel}"]`);
+          if (row) location.href = row.href;
+        }
+      }
+    });
+
+    input.addEventListener('input', () => render(input.value));
+    closeBtn?.addEventListener('click', close);
+    palette.addEventListener('click', (ev) => { if (ev.target === palette) close(); });
+
+    // Openers: any element with data-open-search
+    document.querySelectorAll('[data-open-search]').forEach((el) => {
+      el.addEventListener('click', (ev) => { ev.preventDefault(); open(); });
+    });
+
+    // For the 404 page and anything else
+    (window as any).meridianSearch = { open };
+  })();
+</script>

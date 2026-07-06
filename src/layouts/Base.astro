@@ -1,4 +1,6 @@
 ---
+import Search from '../components/Search.astro';
+
 interface Props {
   title: string;
   description?: string;
@@ -125,6 +127,9 @@ const jsonLdBlocks = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   </head>
   <body>
     <slot />
+
+    <!-- ⌘K search palette -->
+    <Search />
 
     <!-- Scroll reveal -->
     <script>
