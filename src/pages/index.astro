@@ -1,5 +1,560 @@
 ---
+// Home, from the "Home - Night Sky" reference: the opening ceremony (the
+// definition of a meridian, the star rising to the line, the featured object
+// culminating in its lens), the sky of every object with its constellations,
+// the narrative cards, the two threads and the footer.
+//
+// The epigraph and the two thread descriptions are read from the root "The
+// Meridian" page in Notion. The featured object is one of the items ticked
+// Featured, in Display Order; one culminates each day (the client picks by the
+// visitor's date, the build renders the build day's pick).
 import NightSky from '../layouts/NightSky.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import MottoFooter from '../components/MottoFooter.astro';
+import { skyPositions, glyph, xr } from '../components/sky/geometry';
+import { constellationPath } from '../components/timeline/model';
+import { inWords } from '../components/words';
+import { fetchIdentity, getSiteData } from '../lib/notion';
+import type { Item } from '../lib/types';
+
+const { items, narratives } = await getSiteData();
+const id = await fetchIdentity();
+const bare = (s: string) => s.replace(/-/g, '');
+const byId = new Map(items.map((it) => [bare(it.id), it]));
+const yearOf = (it: Item) => it.year ?? 0;
+const island = (it: Item) => it.thread === 'The Island';
+const verified = (it: Item) => it.verification === 'Verified';
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// The featured object for a given day.
+const featured = items.filter((it) => it.featured);
+const dayOf = (d: Date) => Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
+const feats = featured.map((it) => ({
+  slug: it.slug, name: it.name, date: it.dateLabel, origin: it.originCountry, maker: it.maker, short: it.shortDescription,
+  verification: it.verification, verified: verified(it), image: it.primaryImage ?? '', alt: it.imageAltText || it.name,
+}));
+const now = new Date();
+const feat = feats[dayOf(now) % Math.max(1, feats.length)];
+const today = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+// The sky: the Timeline's star layout, its constellation curves, and a mini
+// glyph per narrative for the cards.
+const pos = skyPositions(items.map((it) => ({ slug: it.slug, year: yearOf(it) })));
+const years = Object.fromEntries(items.map((it) => [it.slug, yearOf(it)]));
+const fx = (y: number) => 0.035 + xr(y) * 0.93;
+const nar = narratives.map((n) => {
+  const its = (n.itemIds.map((i) => byId.get(i)).filter(Boolean) as Item[]).sort((a, b) => yearOf(a) - yearOf(b));
+  const pts = its.map((it) => [pos[it.slug][0] * 1320, pos[it.slug][1] * 600] as [number, number]);
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const y0 = yearOf(its[0]), y1 = yearOf(its[its.length - 1]);
+  const g = glyph(pos, years, its.map((it) => it.slug));
+  return {
+    slug: n.slug, name: n.name, premise: n.premise, items: its.map((it) => it.slug),
+    d: constellationPath(n.slug, pts), gd: g.d, dots: g.dots,
+    lx: xs.reduce((a, b) => a + b, 0) / xs.length / 13.2, ly: Math.min(...ys) / 6,
+    span: y0 === y1 ? String(y0) : y0 + '–' + y1, count: its.length,
+  };
+});
+const start = nar.find((n) => n.slug === 'the-year-1927') ?? nar[0];
+const members = new Set(start.items);
+const ticks = [1600, 1700, 1800, 1850, 1875, 1900, 1925, 1950, 1975].map((y) => ({ label: String(y), left: (fx(y) * 100).toFixed(2) + '%' }));
+const allYears = items.map(yearOf).filter(Boolean);
+const span = Math.min(...allYears) + '–' + Math.max(...allYears);
+const islandCount = items.filter(island).length;
+
+const stars = items.map((it) => {
+  const on = members.has(it.slug);
+  return {
+    slug: it.slug, left: (pos[it.slug][0] * 100).toFixed(3) + '%', top: (pos[it.slug][1] * 100).toFixed(3) + '%',
+    size: (it.featured ? 7 : verified(it) ? 4.5 : 4) + 'px', color: island(it) ? '#F2CF85' : '#F6F0E2',
+    glow: on ? '0 0 12px 4px rgba(255,240,205,.75),0 0 30px 10px rgba(211,179,112,.35)' : it.featured ? '0 0 10px 3px rgba(255,240,205,.55)' : '0 0 6px 1.5px rgba(255,240,205,.32)',
+    scale: on ? 1.45 : 1, z: on ? 2 : 1, ring: !verified(it), tag: on, year: String(yearOf(it)),
+  };
+});
+const lab = { left: Math.min(84, Math.max(16, start.lx)).toFixed(2) + '%', top: Math.max(4, start.ly - 4).toFixed(2) + '%' };
+
+const data = {
+  feats, start: start.slug,
+  items: items.map((it) => ({
+    slug: it.slug, name: it.name, short: it.shortDescription, featured: it.featured, verified: verified(it), pos: pos[it.slug],
+    meta: it.dateLabel + ' · ' + it.era + ' · ' + it.originCountry,
+    verification: it.verification, n: narratives.filter((n) => n.itemIds.includes(bare(it.id))).length,
+  })),
+  nar: nar.map((n) => ({ slug: n.slug, name: n.name, premise: n.premise, items: n.items, lx: n.lx, ly: n.ly, span: n.span, count: n.count })),
+};
+const words = id.epigraph.split(' ');
 ---
 
-<NightSky title="The Meridian" />
+<NightSky title="The Meridian" description={id.epigraph} legible>
+  <div class="hm" data-home>
+    <section class="hm-hero" data-hero>
+      <canvas class="hm-canvas" data-canvas></canvas>
+      <div class="hm-line" data-c="line"></div>
+      <div class="hm-horizon"></div>
+
+      <SiteHeader overlay z={6} data-c="head" />
+
+      <div class="hm-stage">
+        <p class="hm-epi" data-c="epi-small">{id.epigraph}</p>
+        <div class="hm-star" data-c="star">
+          <span class="hm-star-h"></span>
+          <span class="hm-star-v"></span>
+          <span class="hm-flare" data-c="flare"></span>
+        </div>
+
+        <div class="hm-feature">
+          <div class="hm-flank-l" data-c="flank-l">
+            <div class="hm-culm">Culminating today · <span data-today>{today}</span></div>
+            <h1 class="hm-name" data-f="name">{feat?.name}</h1>
+            <div class="hm-date"><span data-f="date">{feat?.date}</span> · <span data-f="origin">{feat?.origin}</span></div>
+            <div class="hm-maker" data-f="maker">{feat?.maker}</div>
+          </div>
+
+          <div class="hm-aperture" data-c="aperture">
+            <div class="hm-ticks" data-c="ticks">
+              <div class="hm-ticks-spin" data-c="ticks-spin"></div>
+              <div class="hm-ticks-major"></div>
+              <div class="hm-ticks-ring"></div>
+            </div>
+            <div class="hm-lens" data-c="lens">
+              <img data-f="img" src={feat?.image || undefined} alt={feat?.alt} hidden={!feat?.image} decoding="async" />
+            </div>
+          </div>
+
+          <div class="hm-flank-r" data-c="flank-r">
+            <p class="hm-short" data-f="short">{feat?.short}</p>
+            <div class="hm-acts">
+              <span class="hm-seal">
+                <span class="hm-seal-ring" data-f="seal" style={`border-style:${feat?.verified ? 'solid' : 'dashed'}`}><span style={`opacity:${feat?.verified ? 1 : 0}`}></span></span>
+                <span data-f="ver">{feat?.verification}</span>
+              </span>
+              <a href={`/collection/${feat?.slug}`} class="hm-enter" data-f="href">Enter the object →</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="hm-cue" data-c="cue">
+          <span>{items.length} objects in the sky below</span>
+          <span class="hm-cue-line"></span>
+        </div>
+      </div>
+
+      <div class="hm-epi-big" data-c="epi-big" aria-hidden="true">
+        <div class="hm-noun" data-w="1">Meridian · noun</div>
+        <p class="hm-epi-big-p" data-c="epi-big-p">{words.map((w, i) => <Fragment>{i > 0 && ' '}<span data-w="1">{w}</span></Fragment>)}</p>
+      </div>
+
+      <button type="button" class="hm-replay" data-replay>↺ Replay the opening</button>
+    </section>
+
+    <section class="hm-sky">
+      <div class="hm-sky-head" data-reveal="1">
+        <div>
+          <div class="hm-eyebrow">The sky · {items.length} objects · {span}</div>
+          <h2 class="hm-sky-h2">Every object is a star, placed in the year it was made.</h2>
+        </div>
+        <p class="hm-sky-p">Gold stars belong to the Island thread. A ringed star is still being researched. The constellations are the narratives: stories drawn between objects across the years.</p>
+      </div>
+
+      <div class="hm-chart" data-chart>
+        {ticks.map((t) => (
+          <div class="hm-tick" style={`left:${t.left}`}><span>{t.label}</span></div>
+        ))}
+        <div class="hm-layer" data-c="starlayer">
+          {nar.map((n) => (
+            <svg viewBox="0 0 1320 600" class="hm-svg" aria-hidden="true">
+              <path data-path={n.slug} d={n.d} style={n.slug === start.slug ? 'stroke:rgba(232,206,150,.78);stroke-width:1.3' : 'stroke:rgba(238,231,215,.07);stroke-width:1'} />
+            </svg>
+          ))}
+          <div class="hm-lab" data-lab style={`left:${lab.left};top:${lab.top}`}>{start.name}</div>
+          {stars.map((s) => (
+            <div class="hm-st" data-st={s.slug} style={`left:${s.left};top:${s.top};z-index:${s.z}`}>
+              <span data-tw="1" style={`width:${s.size};height:${s.size};background:${s.color};box-shadow:${s.glow};transform:scale(${s.scale})`}></span>
+              {s.ring && <span class="hm-st-ring"></span>}
+              <span class="hm-st-tag" hidden={!s.tag}>{s.year}</span>
+            </div>
+          ))}
+        </div>
+        <div class="hm-hc" data-hc hidden>
+          <div class="hm-hc-meta" data-hc-meta></div>
+          <div class="hm-hc-name" data-hc-name></div>
+          <p class="hm-hc-short" data-hc-short></p>
+          <div class="hm-hc-foot" data-hc-foot></div>
+        </div>
+      </div>
+
+      <div class="hm-below">
+        <div>
+          <div class="hm-legend-label">Constellations · choose one</div>
+          <div class="hm-legend">
+            {nar.map((n) => (
+              <button type="button" class="hm-leg" data-leg={n.slug} style={n.slug === start.slug ? 'color:#F2D493;border-bottom-color:rgba(211,179,112,.8)' : ''}>{n.name}</button>
+            ))}
+          </div>
+        </div>
+        <div class="hm-caption" data-c="caption">
+          <div class="hm-cap-count"><span data-cap-count>{start.count}</span> objects · <span data-cap-span>{start.span}</span></div>
+          <h3 class="hm-cap-name" data-cap-name>{start.name}</h3>
+          <p class="hm-cap-premise" data-cap-premise>{start.premise}</p>
+          <div class="hm-cap-row">
+            <a href={`/narratives/${start.slug}`} class="hm-follow" data-cap-href>Follow the constellation →</a>
+            <span class="hm-bar" data-bar-track><span data-c="bar"></span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hm-cons">
+      <div class="hm-cons-head" data-reveal="1">
+        <div class="hm-eyebrow">Narratives</div>
+        <h2 class="hm-cons-h2">{cap(inWords(narratives.length))} constellations</h2>
+        <p class="hm-cons-p">Each narrative connects objects acquired separately into a single account: a year, a maker, a war, a way of seeing.</p>
+      </div>
+      <div class="hm-cards">
+        {nar.map((n) => (
+          <a href={`/narratives/${n.slug}`} class="hm-card" data-card={n.slug}>
+            <div class="hm-glyph">
+              <svg viewBox="0 0 168 76" aria-hidden="true"><path d={n.gd} /></svg>
+              {n.dots.map((p) => <span style={`left:${p.left};top:${p.top}`}></span>)}
+            </div>
+            <div class="hm-card-count">{n.count} objects · {n.span}</div>
+            <h3 class="hm-card-name">{n.name}</h3>
+            <p class="hm-card-premise">{n.premise}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="hm-threads">
+      <div class="hm-threads-rule"></div>
+      <div class="hm-threads-grid">
+        <div class="hm-thread hm-thread-l" data-reveal="1">
+          <div class="hm-eyebrow">Thread one · {islandCount} objects</div>
+          <h3 class="hm-thread-h" style="color:#F2CF85">The Island</h3>
+          <p class="hm-thread-p">{cap(id.island)}</p>
+          <a href="/the-island" class="hm-thread-a">← Walk the Island thread</a>
+        </div>
+        <div class="hm-thread hm-thread-r" data-reveal="1">
+          <div class="hm-eyebrow">Thread two · {items.length - islandCount} objects</div>
+          <h3 class="hm-thread-h">The Instruments of Progress</h3>
+          <p class="hm-thread-p">{cap(id.instruments)}</p>
+          <a href="/collection" class="hm-thread-a">Walk the Instruments thread →</a>
+        </div>
+      </div>
+    </section>
+
+    <MottoFooter variant="home" />
+  </div>
+  <script type="application/json" id="hm-data" set:html={JSON.stringify(data)} />
+</NightSky>
+
+<style>
+  .hm{position:relative;background:#070A14;color:#EEE7D7;overflow-x:clip}
+
+  .hm-hero{position:relative;min-height:max(100vh,820px);display:flex;flex-direction:column;align-items:center;overflow:hidden;background:radial-gradient(ellipse 72% 58% at 50% 32%,#151D3A 0%,#0B1124 46%,#070A14 100%)}
+  .hm-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .hm-line{position:absolute;left:50%;top:0;bottom:0;width:1px;margin-left:-0.5px;transform-origin:50% 0;background:linear-gradient(to bottom,rgba(211,179,112,0) 0%,rgba(211,179,112,.55) 16%,rgba(211,179,112,.26) 80%,rgba(211,179,112,0) 100%)}
+  .hm-horizon{position:absolute;left:50%;top:calc(100% - 58px);width:3200px;height:3200px;margin-left:-1600px;border-radius:50%;border-top:1px solid rgba(211,179,112,.24);background:radial-gradient(circle at 50% 0,#0D1329 0%,#070A14 10%);z-index:4;pointer-events:none}
+
+  .hm-stage{position:relative;z-index:2;flex:1;width:100%;max-width:1320px;box-sizing:border-box;padding:136px clamp(20px,4.5vw,64px) 104px;display:flex;flex-direction:column;align-items:center}
+  .hm-epi{margin:0;max-width:560px;text-align:center;font:400 20px/1.42 Gloock,Georgia,serif;color:#B8B2A5;text-wrap:balance}
+  .hm-star{position:relative;width:8px;height:8px;margin:34px 0 34px;border-radius:50%;background:#FFF8E8;box-shadow:0 0 10px 3px rgba(255,248,232,.6),0 0 40px 12px rgba(211,179,112,.25)}
+  .hm-star-h{position:absolute;left:50%;top:50%;width:70px;height:1px;margin:-0.5px 0 0 -35px;background:linear-gradient(90deg,rgba(255,248,232,0),rgba(255,248,232,.85),rgba(255,248,232,0))}
+  .hm-star-v{position:absolute;left:50%;top:50%;width:1px;height:70px;margin:-35px 0 0 -0.5px;background:linear-gradient(rgba(255,248,232,0),rgba(255,248,232,.85),rgba(255,248,232,0))}
+  .hm-flare{position:absolute;left:50%;top:50%;width:180px;height:180px;margin:-90px 0 0 -90px;border-radius:50%;border:1px solid rgba(211,179,112,.7);opacity:0}
+
+  .hm-feature{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;column-gap:clamp(28px,4.4vw,76px);width:100%}
+  .hm-flank-l{justify-self:end;max-width:380px;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:16px}
+  .hm-culm{font:500 10.5px/1.6 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#D3B370}
+  .hm-name{margin:0;font:400 clamp(30px,3.1vw,46px)/1.08 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .hm-date{font:500 11px/1.7 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8D897F}
+  .hm-maker{font:italic 400 16px/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5;max-width:330px;text-wrap:pretty}
+
+  .hm-aperture{position:relative;width:min(400px,34vw);aspect-ratio:1/1}
+  .hm-ticks{position:absolute;inset:-28px;pointer-events:none}
+  .hm-ticks-spin{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(211,179,112,.55) 0deg 0.4deg,rgba(211,179,112,0) 0.4deg 5deg);mask-image:radial-gradient(closest-side,rgba(0,0,0,0) 95%,#000 95.5%)}
+  .hm-ticks-major{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(rgba(243,236,220,.9) 0deg 0.6deg,rgba(243,236,220,0) 0.6deg 30deg);mask-image:radial-gradient(closest-side,rgba(0,0,0,0) 91%,#000 91.5%)}
+  .hm-ticks-ring{position:absolute;inset:21px;border-radius:50%;border:1px solid rgba(211,179,112,.35)}
+  .hm-lens{position:absolute;inset:0;border-radius:50%;overflow:hidden;color:#B8B2A5;background:#0B1124;box-shadow:0 0 0 1px rgba(211,179,112,.25),0 30px 90px rgba(0,0,0,.6)}
+  .hm-lens img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .hm-lens img[hidden]{display:none}
+
+  .hm-flank-r{max-width:380px;display:flex;flex-direction:column;gap:24px}
+  .hm-short{margin:0;font:400 19px/1.55 'EB Garamond',Georgia,serif;color:#E2DBCB;text-wrap:pretty}
+  .hm-acts{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+  .hm-seal{display:inline-flex;align-items:center;gap:10px;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#D3B370}
+  .hm-seal-ring{width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:1px solid #D3B370;display:grid;place-items:center}
+  .hm-seal-ring span{width:6px;height:6px;border-radius:50%;background:#D3B370}
+  .hm-enter{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:7px}
+
+  .hm-cue{margin-top:auto;padding-top:44px;display:flex;flex-direction:column;align-items:center;gap:12px;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F}
+  .hm-cue-line{width:1px;height:40px;background:linear-gradient(#D3B370,rgba(211,179,112,0))}
+
+  .hm-epi-big{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;padding:150px 24px 0;box-sizing:border-box;pointer-events:none;opacity:0}
+  .hm-noun{font:500 11px/1 'IBM Plex Mono',monospace;letter-spacing:.34em;text-transform:uppercase;color:#D3B370}
+  .hm-epi-big-p{margin:0;max-width:940px;text-align:center;font:400 clamp(30px,3.7vw,54px)/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .hm-epi-big-p span{display:inline-block}
+
+  .hm-replay{position:absolute;left:clamp(20px,4.5vw,64px);bottom:22px;z-index:6;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F}
+  .hm-replay:hover{color:#D3B370}
+
+  /* Before the ceremony starts, everything it brings in is held back. */
+  :global(html.js .hm [data-c="line"]){transform:scaleY(0)}
+  :global(html.js .hm [data-c="lens"]){clip-path:circle(0% at 50% 50%)}
+  :global(html.js .hm :is([data-c="star"],[data-c="epi-small"],[data-c="ticks"],[data-c="flank-l"],[data-c="flank-r"],[data-c="head"],[data-c="cue"],[data-w])){opacity:0}
+
+  .hm-eyebrow{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+
+  .hm-sky{position:relative;max-width:1440px;margin:0 auto;box-sizing:border-box;padding:clamp(88px,9vw,140px) clamp(20px,4.5vw,64px) 40px}
+  .hm-sky-head{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:48px;align-items:end;margin-bottom:44px}
+  .hm-sky-h2{margin:20px 0 0;font:400 clamp(34px,4vw,58px)/1.06 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .hm-sky-p{margin:0;justify-self:end;max-width:430px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+
+  .hm-chart{position:relative;width:100%;aspect-ratio:1320/600;border-top:1px solid rgba(238,231,215,.1);border-bottom:1px solid rgba(238,231,215,.1);background:radial-gradient(ellipse 60% 70% at 62% 50%,rgba(21,29,58,.55),rgba(7,10,20,0) 70%)}
+  .hm-tick{position:absolute;top:0;bottom:0;width:1px;background:repeating-linear-gradient(to bottom,rgba(238,231,215,.1) 0 3px,rgba(238,231,215,0) 3px 10px)}
+  .hm-tick span{position:absolute;bottom:-30px;left:0;transform:translateX(-50%);font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#8D897F}
+  .hm-layer{position:absolute;inset:0;transition:transform 1.4s cubic-bezier(.16,1,.3,1)}
+  .hm-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+  .hm-svg path{fill:none;stroke-linecap:round;stroke-linejoin:round;transition:stroke .8s ease}
+  .hm-lab{position:absolute;transform:translate(-50%,-100%);font:italic 400 18px/1 'EB Garamond',Georgia,serif;letter-spacing:.05em;color:#E8CE96;white-space:nowrap;pointer-events:none;text-shadow:0 0 18px #070A14}
+  .hm-st{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;display:grid;place-items:center;cursor:pointer}
+  .hm-st > span[data-tw]{border-radius:50%;transition:transform .45s cubic-bezier(.16,1,.3,1),box-shadow .45s}
+  .hm-st-ring{position:absolute;inset:4px;border-radius:50%;border:1px dashed rgba(211,179,112,.6)}
+  .hm-st-tag{position:absolute;left:19px;top:-2px;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.1em;color:#E8CE96;white-space:nowrap;pointer-events:none}
+  .hm-st-tag[hidden]{display:none}
+  .hm-hc{position:absolute;width:310px;box-sizing:border-box;padding:20px 22px 18px;background:rgba(10,15,32,.94);border:1px solid rgba(211,179,112,.32);box-shadow:0 24px 60px rgba(0,0,0,.5);pointer-events:none;z-index:20;display:flex;flex-direction:column;gap:10px}
+  .hm-hc[hidden]{display:none}
+  .hm-hc-meta{font:500 9.5px/1.5 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .hm-hc-name{font:400 22px/1.15 Gloock,Georgia,serif;color:#F3ECDC}
+  .hm-hc-short{margin:0;font:400 15.5px/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .hm-hc-foot{font:500 9.5px/1.5 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#D3B370}
+
+  .hm-below{margin-top:84px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(32px,5vw,72px);align-items:start}
+  .hm-legend-label{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F}
+  .hm-legend{margin-top:20px;display:flex;flex-wrap:wrap;gap:4px 24px}
+  .hm-leg{font:italic 400 18px/1.55 'EB Garamond',Georgia,serif;text-align:left;color:#B8B2A5;border-bottom:1px solid rgba(211,179,112,0);transition:color .4s}
+  .hm-caption{border-left:1px solid rgba(211,179,112,.32);padding:4px 0 4px clamp(24px,3vw,40px);min-height:200px;display:flex;flex-direction:column;gap:14px}
+  .hm-cap-count{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#D3B370}
+  .hm-cap-name{margin:0;font:400 clamp(26px,2.6vw,36px)/1.12 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .hm-cap-premise{margin:0;max-width:540px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .hm-cap-row{display:flex;align-items:center;gap:22px;margin-top:6px}
+  .hm-follow{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:7px}
+  .hm-bar{position:relative;flex:1;max-width:160px;height:1px;background:rgba(238,231,215,.12)}
+  .hm-bar span{position:absolute;inset:0;background:#D3B370;transform-origin:0 50%;transform:scaleX(0)}
+
+  .hm-cons{max-width:1440px;margin:0 auto;box-sizing:border-box;padding:clamp(100px,10vw,160px) clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)}
+  .hm-cons-head{max-width:820px;margin:0 auto 72px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px}
+  .hm-cons-h2{margin:0;font:400 clamp(36px,4.4vw,62px)/1.04 Gloock,Georgia,serif;color:#F3ECDC}
+  .hm-cons-p{margin:0;max-width:600px;font:400 19px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .hm-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));column-gap:clamp(28px,4vw,56px)}
+  .hm-card{display:flex;flex-direction:column;gap:14px;padding:34px 0 44px;border-top:1px solid rgba(238,231,215,.12);color:#EEE7D7}
+  .hm-card:hover{border-top-color:rgba(211,179,112,.6)}
+  .hm-glyph{position:relative;width:168px;height:76px;margin-bottom:6px}
+  .hm-glyph svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .hm-glyph path{fill:none;stroke:rgba(211,179,112,.6);stroke-width:1;stroke-linejoin:round}
+  .hm-glyph span{position:absolute;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#FFF6E2;box-shadow:0 0 8px 2px rgba(255,240,205,.4)}
+  .hm-card-count{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F}
+  .hm-card-name{margin:0;font:400 25px/1.15 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .hm-card-premise{margin:0;font:400 16.5px/1.5 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+
+  .hm-threads{position:relative;border-top:1px solid rgba(238,231,215,.1);border-bottom:1px solid rgba(238,231,215,.1)}
+  .hm-threads-rule{position:absolute;left:50%;top:0;bottom:0;width:1px;margin-left:-0.5px;background:rgba(211,179,112,.4)}
+  .hm-threads-grid{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .hm-thread{display:flex;flex-direction:column;gap:18px}
+  .hm-thread-l{padding:clamp(72px,8vw,120px) clamp(28px,5vw,80px) clamp(72px,8vw,120px) clamp(20px,4.5vw,64px);align-items:flex-end;text-align:right}
+  .hm-thread-r{padding:clamp(72px,8vw,120px) clamp(20px,4.5vw,64px) clamp(72px,8vw,120px) clamp(28px,5vw,80px);align-items:flex-start}
+  .hm-thread-h{margin:0;font:400 clamp(34px,3.8vw,52px)/1.05 Gloock,Georgia,serif;color:#F3ECDC}
+  .hm-thread-p{margin:0;max-width:440px;font:400 19px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .hm-thread-a{margin-top:8px;font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:7px}
+</style>
+
+<script>
+  // Port of the reference's componentDidMount, ceremony, startSky,
+  // setupReveals, twinkle, drawActive, tick and renderVals.
+  type Feat = { slug: string; name: string; date: string; origin: string; maker: string; short: string; verification: string; verified: boolean; image: string; alt: string };
+  type HItem = { slug: string; name: string; short: string; featured: boolean; verified: boolean; pos: [number, number]; meta: string; verification: string; n: number };
+  type HNar = { slug: string; name: string; premise: string; items: string[]; lx: number; ly: number; span: string; count: number };
+
+  const root = document.querySelector<HTMLElement>('[data-home]');
+  const json = document.getElementById('hm-data');
+  if (root && json) {
+    const D: { feats: Feat[]; start: string; items: HItem[]; nar: HNar[] } = JSON.parse(json.textContent ?? '{}');
+    const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const hero = root.querySelector<HTMLElement>('[data-hero]')!;
+    const q = (s: string) => root.querySelector<HTMLElement>('[data-c="' + s + '"]');
+    const E = 'cubic-bezier(.16,1,.3,1)';
+
+    // Today's culminating object and date.
+    const now = new Date();
+    const today = root.querySelector('[data-today]');
+    if (today) today.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (D.feats.length) {
+      const f = D.feats[Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 86400000) % D.feats.length];
+      const set = (k: string, v: string) => { const el = root.querySelector('[data-f="' + k + '"]'); if (el) el.textContent = v; };
+      set('name', f.name); set('date', f.date); set('origin', f.origin); set('maker', f.maker); set('short', f.short); set('ver', f.verification);
+      const seal = root.querySelector<HTMLElement>('[data-f="seal"]')!;
+      seal.style.borderStyle = f.verified ? 'solid' : 'dashed';
+      (seal.firstElementChild as HTMLElement).style.opacity = f.verified ? '1' : '0';
+      root.querySelector<HTMLAnchorElement>('[data-f="href"]')!.href = '/collection/' + f.slug;
+      const img = root.querySelector<HTMLImageElement>('[data-f="img"]')!;
+      if (f.image) { if (img.getAttribute('src') !== f.image) img.src = f.image; img.alt = f.alt; img.hidden = false; } else img.hidden = true;
+    }
+
+    // The ceremony.
+    let cer: Animation[] = [], spin: Animation | null = null;
+    const ceremony = () => {
+      cer.forEach((a) => a.cancel());
+      cer = [];
+      const A = (el: Element | null, kf: Keyframe[], delay: number, dur: number, easing?: string) => { if (el) cer.push(el.animate(kf, { delay, duration: dur, easing: easing || E, fill: 'both' })); };
+      const star = q('star')!, hb = hero.getBoundingClientRect(), sb = star.getBoundingClientRect();
+      const dy = Math.max(220, hb.bottom - 30 - (sb.top + sb.height / 2));
+      A(q('line'), [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], 0, 2000, 'cubic-bezier(.65,0,.35,1)');
+      A(star, [{ transform: 'translateY(' + dy + 'px) scale(.6)', opacity: 0 }, { opacity: 1, offset: 0.15 }, { transform: 'translateY(0) scale(1)', opacity: 1 }], 400, 2800, 'cubic-bezier(.2,.7,.2,1)');
+      A(q('flare'), [{ transform: 'scale(.05)', opacity: 1 }, { transform: 'scale(1.8)', opacity: 0 }], 3150, 2000);
+      A(q('epi-big'), [{ opacity: 1 }, { opacity: 1, offset: 0.86 }, { opacity: 0 }], 0, 8000, 'linear');
+      A(q('epi-big-p'), [{ transform: 'none', filter: 'blur(0px)' }, { transform: 'none', filter: 'blur(0px)', offset: 0.85 }, { transform: 'translateY(-30px)', filter: 'blur(6px)' }], 0, 8000, 'linear');
+      root.querySelectorAll('[data-w]').forEach((w, i) => A(w, [{ opacity: 0, transform: 'translateY(16px)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], 3200 + i * 65, 1100));
+      A(q('epi-small'), [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], 7000, 1400);
+      A(q('lens'), [{ clipPath: 'circle(0% at 50% 50%)', transform: 'scale(.9)' }, { clipPath: 'circle(160% at 50% 50%)', transform: 'scale(1)' }], 6900, 2200, 'cubic-bezier(.7,0,.2,1)');
+      A(q('ticks'), [{ opacity: 0, transform: 'rotate(-50deg) scale(.94)' }, { opacity: 1, transform: 'none' }], 7300, 2400);
+      A(q('flank-l'), [{ opacity: 0, transform: 'translateX(48px)' }, { opacity: 1, transform: 'none' }], 7700, 1400);
+      A(q('flank-r'), [{ opacity: 0, transform: 'translateX(-48px)' }, { opacity: 1, transform: 'none' }], 7800, 1400);
+      A(q('head'), [{ opacity: 0 }, { opacity: 1 }], 8000, 1400);
+      A(q('cue'), [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], 8500, 1200);
+      if (reduced) cer.forEach((a) => a.finish());
+      if (!spin) { const s = q('ticks-spin'); if (s) spin = s.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 300000, iterations: Infinity }); }
+    };
+    requestAnimationFrame(ceremony);
+    const skip = () => cer.forEach((a) => { if (a.playState === 'running') a.playbackRate = 7; });
+    ['wheel', 'keydown', 'touchstart'].forEach((e) => window.addEventListener(e, skip, { passive: true }));
+    root.querySelector('[data-replay]')!.addEventListener('click', ceremony);
+
+    // The hero's field of stars, drifting a little against the pointer.
+    const cv = root.querySelector<HTMLCanvasElement>('[data-canvas]')!;
+    const ctx = cv.getContext('2d')!, dpr = Math.min(2, window.devicePixelRatio || 1);
+    let W = 0, H = 0, tx = 0, ty = 0, mx = 0, my = 0, heroHidden = false;
+    const field = Array.from({ length: 460 }, () => ({ x: Math.random(), y: Math.random() * 0.95, r: Math.random() * Math.random() * 1.35 + 0.25, a: Math.random() * 0.65 + 0.2, s: Math.random() * 1.8 + 0.4, p: Math.random() * 6.28, d: Math.random() * 0.8 + 0.2 }));
+    const size = () => { const r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; };
+    size();
+    new ResizeObserver(size).observe(cv);
+    window.addEventListener('pointermove', (e) => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
+    new IntersectionObserver(([e]) => { heroHidden = !e.isIntersecting; }).observe(cv);
+    const draw = (t: number) => {
+      requestAnimationFrame(draw);
+      if (heroHidden) return;
+      tx += (mx - tx) * 0.04; ty += (my - ty) * 0.04;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      for (const s of field) {
+        ctx.globalAlpha = s.a * (0.55 + 0.45 * Math.sin((t / 1000) * s.s + s.p));
+        ctx.fillStyle = s.r > 1 ? '#FFF4DC' : '#D9E1F4';
+        ctx.beginPath(); ctx.arc(s.x * W - tx * 26 * s.d, s.y * H - ty * 18 * s.d, s.r, 0, 6.283); ctx.fill();
+      }
+    };
+    requestAnimationFrame(draw);
+
+    // Sections below the fold rise in as they arrive.
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return;
+      io.unobserve(e.target);
+      e.target.animate([{ opacity: 0, transform: 'translateY(28px)' }, { opacity: 1, transform: 'none' }], { duration: 1300, easing: E, fill: 'both' });
+    }), { threshold: 0.15 });
+    root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => { if (el.getBoundingClientRect().top > innerHeight) { el.style.opacity = '0'; io.observe(el); } });
+
+    // The sky: one constellation at a time, cycling every 5.2 s unless chosen,
+    // pointed at, or the pointer is over the chart.
+    const chart = root.querySelector<HTMLElement>('[data-chart]')!;
+    const layer = q('starlayer')!;
+    const paths = new Map([...root.querySelectorAll<SVGPathElement>('[data-path]')].map((p) => [p.dataset.path!, p]));
+    const stars = new Map([...root.querySelectorAll<HTMLElement>('[data-st]')].map((s) => [s.dataset.st!, s]));
+    const legs = new Map([...root.querySelectorAll<HTMLElement>('[data-leg]')].map((b) => [b.dataset.leg!, b]));
+    const labEl = root.querySelector<HTMLElement>('[data-lab]')!;
+    const hcEl = root.querySelector<HTMLElement>('[data-hc]')!;
+    const caption = q('caption')!, bar = q('bar')!, track = root.querySelector<HTMLElement>('[data-bar-track]')!;
+    const bySlug = new Map(D.items.map((it) => [it.slug, it]));
+    let active = D.start, hover: string | null = null, locked = false, paused = false, chartHover = false, barA: Animation | null = null;
+
+    const render = () => {
+      const actN = D.nar.find((n) => n.slug === active)!;
+      const members = new Set(actN.items);
+      D.items.forEach((it) => {
+        const el = stars.get(it.slug)!, dot = el.children[0] as HTMLElement, tag = el.querySelector<HTMLElement>('.hm-st-tag')!;
+        const on = members.has(it.slug), isH = hover === it.slug;
+        dot.style.boxShadow = on || isH ? '0 0 12px 4px rgba(255,240,205,.75),0 0 30px 10px rgba(211,179,112,.35)' : it.featured ? '0 0 10px 3px rgba(255,240,205,.55)' : '0 0 6px 1.5px rgba(255,240,205,.32)';
+        dot.style.transform = 'scale(' + (isH ? 1.9 : on ? 1.45 : 1) + ')';
+        el.style.zIndex = String(isH ? 3 : on ? 2 : 1);
+        tag.hidden = !on;
+      });
+      D.nar.forEach((n) => {
+        const p = paths.get(n.slug)!;
+        p.style.stroke = n.slug === active ? 'rgba(232,206,150,.78)' : 'rgba(238,231,215,.07)';
+        p.style.strokeWidth = n.slug === active ? '1.3' : '1';
+        const b = legs.get(n.slug)!;
+        b.style.color = n.slug === active ? '#F2D493' : '#B8B2A5';
+        b.style.borderBottomColor = n.slug === active ? 'rgba(211,179,112,.8)' : 'rgba(211,179,112,0)';
+      });
+      labEl.textContent = actN.name;
+      labEl.style.left = Math.min(84, Math.max(16, actN.lx)).toFixed(2) + '%';
+      labEl.style.top = Math.max(4, actN.ly - 4).toFixed(2) + '%';
+      const it = hover ? bySlug.get(hover) : null;
+      hcEl.hidden = !it;
+      if (it) {
+        const right = it.pos[0] > 0.62;
+        hcEl.style.left = (it.pos[0] * 100).toFixed(2) + '%';
+        hcEl.style.top = (Math.min(Math.max(it.pos[1], 0.2), 0.8) * 100).toFixed(2) + '%';
+        hcEl.style.transform = right ? 'translate(calc(-100% - 22px),-50%)' : 'translate(22px,-50%)';
+        hcEl.querySelector('[data-hc-meta]')!.textContent = it.meta;
+        hcEl.querySelector('[data-hc-name]')!.textContent = it.name;
+        hcEl.querySelector('[data-hc-short]')!.textContent = it.short;
+        hcEl.querySelector('[data-hc-foot]')!.textContent = it.verification + (it.n ? ' · in ' + it.n + ' constellation' + (it.n > 1 ? 's' : '') : '');
+      }
+      root.querySelector('[data-cap-count]')!.textContent = String(actN.count);
+      root.querySelector('[data-cap-span]')!.textContent = actN.span;
+      root.querySelector('[data-cap-name]')!.textContent = actN.name;
+      root.querySelector('[data-cap-premise]')!.textContent = actN.premise;
+      root.querySelector<HTMLAnchorElement>('[data-cap-href]')!.href = '/narratives/' + actN.slug;
+      track.style.opacity = locked ? '0' : '1';
+    };
+
+    const drawActive = () => {
+      const p = paths.get(active);
+      if (p) {
+        const L = Math.ceil(p.getTotalLength());
+        p.animate([{ strokeDasharray: L + ' ' + L, strokeDashoffset: L }, { strokeDasharray: L + ' ' + L, strokeDashoffset: 0 }], { duration: 1900, easing: 'cubic-bezier(.6,0,.2,1)' });
+      }
+      caption.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 800, easing: E });
+      barA && barA.cancel();
+      barA = bar.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 5200, easing: 'linear', fill: 'both' });
+    };
+    const setActive = (slug: string) => { if (slug === active) { render(); return; } active = slug; render(); drawActive(); };
+
+    setInterval(() => {
+      if (locked || paused || chartHover) return;
+      const i = D.nar.findIndex((n) => n.slug === active);
+      setActive(D.nar[(i + 1) % D.nar.length].slug);
+    }, 5200);
+
+    stars.forEach((el, slug) => {
+      el.addEventListener('mouseenter', () => { hover = slug; render(); });
+      el.addEventListener('mouseleave', () => { hover = null; render(); });
+    });
+    legs.forEach((b, slug) => {
+      b.addEventListener('click', () => { locked = true; setActive(slug); });
+      b.addEventListener('mouseenter', () => { paused = true; setActive(slug); });
+      b.addEventListener('mouseleave', () => { paused = false; });
+    });
+    root.querySelectorAll<HTMLElement>('[data-card]').forEach((c) => c.addEventListener('mouseenter', () => setActive(c.dataset.card!)));
+    chart.addEventListener('mousemove', (e) => {
+      const r = chart.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+      layer.style.transform = 'translate(' + (-x * 12).toFixed(1) + 'px,' + (-y * 9).toFixed(1) + 'px)';
+      chartHover = true;
+    });
+    chart.addEventListener('mouseleave', () => { layer.style.transform = ''; chartHover = false; });
+
+    // Stars twinkle out of step.
+    if (!reduced) root.querySelectorAll<HTMLElement>('[data-tw]').forEach((el) => {
+      el.animate([{ opacity: 1 }, { opacity: 0.4 + Math.random() * 0.35 }, { opacity: 1 }], { duration: 2200 + Math.random() * 4200, delay: -Math.random() * 4000, iterations: Infinity, easing: 'ease-in-out' });
+    });
+    render();
+    drawActive();
+  }
+</script>

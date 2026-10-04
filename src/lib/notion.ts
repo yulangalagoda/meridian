@@ -11,6 +11,10 @@ const DATA_SOURCES = {
 
 export const ABOUT_PAGE_ID = '36356d83-11d2-804e-b7a8-c2494f19a19c';
 
+// The root "The Meridian" page: its opening paragraph is the epigraph, and the
+// Charter's Thesis lists the two threads.
+export const ROOT_PAGE_ID = '36156d83-11d2-81c5-8752-fcd5bf419dd7';
+
 // Public policy / archive pages maintained as Notion sub-pages
 export const POLICY_PAGES = {
   'collecting-policy': {
@@ -328,6 +332,26 @@ export async function fetchPageBlocks(pageId: string): Promise<any[]> {
   const blocks = await fetchBlockTree(notionClient(), pageId);
   _blockTreeCache.set(pageId, blocks);
   return blocks;
+}
+
+// The public identity lines from the root page: the epigraph and the two thread
+// descriptions ("The Island: …", "The Instruments of Progress: …"), each with
+// its label removed. The build fails if any is missing.
+export interface Identity { epigraph: string; island: string; instruments: string }
+let _identity: Identity | null = null;
+export async function fetchIdentity(): Promise<Identity> {
+  if (_identity) return _identity;
+  const blocks = await fetchAllBlocks(notionClient(), ROOT_PAGE_ID);
+  const text = (b: any) => plainText(b[b.type]?.rich_text ?? []).trim();
+  const epigraph = text(blocks.find((b) => b.type === 'paragraph' && text(b)) ?? {});
+  const thread = (label: string) => {
+    const b = blocks.find((x) => x.type === 'numbered_list_item' && text(x).startsWith(label + ':'));
+    return b ? text(b).slice(label.length + 1).trim() : '';
+  };
+  const id = { epigraph, island: thread('The Island'), instruments: thread('The Instruments of Progress') };
+  if (!id.epigraph || !id.island || !id.instruments) throw new Error('fetchIdentity: epigraph or thread missing from the root page');
+  _identity = id;
+  return id;
 }
 
 // Fetches the full block content for a single item page.
