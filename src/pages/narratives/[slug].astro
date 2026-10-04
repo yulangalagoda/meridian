@@ -199,10 +199,10 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
 </NightSky>
 
 <style>
-  .nr{position:relative;background:#070A14;color:#EEE7D7}
+  .nr{position:relative;background:transparent;color:#EEE7D7}
   .nr-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
   .nr-left{position:relative}
-  .nr-stage{position:sticky;top:0;height:100vh;min-height:640px;overflow:hidden;background:radial-gradient(ellipse 80% 70% at 50% 45%,#151D3A 0%,#0B1124 50%,#070A14 100%)}
+  .nr-stage{position:sticky;top:0;height:100vh;min-height:640px;overflow:hidden;background:radial-gradient(ellipse 80% 70% at 50% 45%,rgba(42,58,115,.4) 0%,rgba(17,28,60,.4) 50%,rgba(7,10,20,0) 100%)}
   .nr-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .nr-ghost{position:absolute;left:0;right:0;bottom:6%;text-align:center;font:400 clamp(160px,19vw,300px)/1 Gloock,Georgia,serif;color:rgba(211,179,112,.06);letter-spacing:-.02em;pointer-events:none}
   .nr-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}

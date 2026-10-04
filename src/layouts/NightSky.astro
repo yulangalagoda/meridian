@@ -14,6 +14,8 @@ interface Props {
   legible?: boolean;
 }
 
+import StarField from '../components/StarField.astro';
+
 const { title, description, legible = false, image, type = 'website', noindex = false, jsonLd } = Astro.props;
 const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 const site = Astro.site ?? new URL('https://meridian.yulan.me');
@@ -55,12 +57,16 @@ const ogImage = new URL(image || '/og-default.png', site).href;
     />
   </head>
   <body class:list={[{ legible }]}>
+    <StarField />
     <slot />
   </body>
 </html>
 
 <style is:global>
-  html,body{margin:0;background:#070A14}
+  html,body{margin:0}
+  /* The night is painted on html; body stays clear so the star field (z-index -1) shows above it. */
+  html{background:#070A14}
+  body{background:transparent}
   body{color:#EEE7D7;font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased}
   body.legible{text-rendering:optimizeLegibility}
   a{color:inherit;text-decoration:none}

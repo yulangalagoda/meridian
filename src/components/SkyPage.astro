@@ -8,9 +8,12 @@ interface Props {
 }
 
 const { depth = '40%', glow = '#141C38' } = Astro.props;
+// The sky colours are see-through equivalents (40% alpha) of the design's (same colour over
+// #070A14), so the star field behind the page shows through.
+const VEIL: Record<string, string> = { '#141C38': 'rgba(40,55,110,.4)', '#1A1C2E': 'rgba(55,55,85,.4)' };
 ---
 
-<div class="sky" style={`background:radial-gradient(ellipse 70% ${depth} at 50% 0%,${glow} 0%,#0B1124 45%,#070A14 100%)`}>
+<div class="sky" style={`background:radial-gradient(ellipse 70% ${depth} at 50% 0%,${VEIL[glow]} 0%,rgba(17,28,60,.4) 45%,rgba(7,10,20,0) 100%)`}>
   <slot />
 </div>
 
