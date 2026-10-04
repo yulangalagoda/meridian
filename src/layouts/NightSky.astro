@@ -1,0 +1,42 @@
+---
+// The bare Night Sky document: fonts and body reset only, copied from the
+// <helmet> of the reference designs. Type: Gloock (display), EB Garamond (body),
+// IBM Plex Mono (labels). Background #070A14.
+interface Props {
+  title: string;
+  description?: string;
+  // Home, Timeline, Object and Narrative references add text-rendering:optimizeLegibility.
+  legible?: boolean;
+}
+
+const { title, description, legible = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Gloock&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+  </head>
+  <body class:list={[{ legible }]}>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  html,body{margin:0;background:#070A14}
+  body{color:#EEE7D7;font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased}
+  body.legible{text-rendering:optimizeLegibility}
+  a{color:inherit;text-decoration:none}
+  a:hover{color:#D3B370}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  ::selection{background:#D3B370;color:#070A14}
+</style>

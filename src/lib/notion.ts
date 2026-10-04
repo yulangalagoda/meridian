@@ -1,7 +1,7 @@
 import { Client } from '@notionhq/client';
 import { ensureImagesDir, downloadPrimary, downloadGallery, downloadCategoryImage } from './images';
-import { fetchAllBlocks, renderBlocks, plainText } from './richtext';
-import type { Item, Category, Narrative, SiteData } from './types';
+import { fetchAllBlocks, renderBlocks, renderSpans, plainText } from './richtext';
+import type { Item, ItemDetail, Category, Narrative, NarrativeContent, NarrativeSection, SiteData } from './types';
 
 const DATA_SOURCES = {
   items: '91ecf100-9c66-4f70-a03a-a11e0dfd2d20',
@@ -86,6 +86,28 @@ function getNumber(props: AnyProps, name: string): number {
   if (p.type === 'unique_id') return p.unique_id?.number ?? 0;
   if (typeof p === 'number') return p;
   return 0;
+}
+
+function getNumberOrNull(props: AnyProps, name: string): number | null {
+  const p = props?.[name];
+  if (p?.type === 'number') return typeof p.number === 'number' ? p.number : null;
+  return null;
+}
+
+// Details is a JSON text property: [{x, y, label, text}] with x and y as 0–1 fractions.
+// Anything malformed is dropped rather than failing the build.
+function getDetails(props: AnyProps, name: string): ItemDetail[] {
+  const raw = getText(props, name).trim();
+  if (!raw) return [];
+  let parsed: unknown;
+  try { parsed = JSON.parse(raw); } catch { return []; }
+  if (!Array.isArray(parsed)) return [];
+  return parsed.filter(
+    (d: any): d is ItemDetail =>
+      d && typeof d.x === 'number' && typeof d.y === 'number' &&
+      d.x >= 0 && d.x <= 1 && d.y >= 0 && d.y <= 1 &&
+      typeof d.label === 'string' && typeof d.text === 'string'
+  );
 }
 
 function getCheckbox(props: AnyProps, name: string): boolean {
@@ -253,6 +275,10 @@ export async function fetchSiteData(): Promise<SiteData> {
         displayOrder: getNumber(props, 'Display Order'),
         publishStatus: getSelect(props, 'Publish Status'),
         itemId: getNumber(props, 'Item ID'),
+        thread: getSelect(props, 'Thread'),
+        yearFrom: getNumberOrNull(props, 'Year From'),
+        yearTo: getNumberOrNull(props, 'Year To'),
+        details: getDetails(props, 'Details'),
       } satisfies Item;
     })
   );
@@ -295,6 +321,55 @@ export async function fetchItemContent(pageId: string): Promise<string> {
   const client = notionClient();
   const blocks = await fetchAllBlocks(client, pageId);
   return renderBlocks(blocks);
+}
+
+// Fetches a narrative page body and splits it into opening, one section per
+// object (H3 = the object's exact name, then a 📍 callout), and the close
+// (everything after the divider that ends the last section).
+const _narrativeCache = new Map<string, NarrativeContent>();
+
+export function splitNarrativeBlocks(blocks: any[]): NarrativeContent {
+  const opening: any[] = [];
+  const close: any[] = [];
+  const sections: { names: string[]; place: any[]; body: any[] }[] = [];
+  let phase: 'opening' | 'sections' | 'close' = 'opening';
+
+  for (const block of blocks) {
+    if (phase !== 'close' && block.type === 'heading_3') {
+      const name = plainText(block.heading_3.rich_text).trim();
+      const last = sections[sections.length - 1];
+      // Consecutive H3s with nothing between them share one section.
+      if (phase === 'sections' && last && !last.place.length && !last.body.length) last.names.push(name);
+      else sections.push({ names: [name], place: [], body: [] });
+      phase = 'sections';
+      continue;
+    }
+    if (phase === 'opening') { opening.push(block); continue; }
+    if (phase === 'close') { close.push(block); continue; }
+    if (block.type === 'divider') { phase = 'close'; continue; }
+    const cur = sections[sections.length - 1];
+    if (block.type === 'callout' && !cur.place.length && !cur.body.length) cur.place.push(block);
+    else cur.body.push(block);
+  }
+
+  return {
+    openingHtml: renderBlocks(opening),
+    sections: sections.map((s): NarrativeSection => ({
+      names: s.names,
+      placeHtml: s.place.map((b) => renderSpans(b.callout?.rich_text ?? [])).join(''),
+      html: renderBlocks(s.body),
+    })),
+    closeHtml: renderBlocks(close),
+  };
+}
+
+export async function fetchNarrativeContent(pageId: string): Promise<NarrativeContent> {
+  const cached = _narrativeCache.get(pageId);
+  if (cached) return cached;
+  const client = notionClient();
+  const content = splitNarrativeBlocks(await fetchAllBlocks(client, pageId));
+  _narrativeCache.set(pageId, content);
+  return content;
 }
 
 // Build-time cache so getStaticPaths and individual page renders share one fetch.
