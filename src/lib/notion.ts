@@ -271,6 +271,7 @@ export async function fetchSiteData(): Promise<SiteData> {
         narrativeIds: getRelationIds(props, 'Narratives'),
         primaryImage,
         galleryImages,
+        galleryCaptions: getText(props, 'Gallery Captions').split('\n').map((c) => c.trim()).filter(Boolean),
         imageAltText: getText(props, 'Image Alt Text'),
         featured: getCheckbox(props, 'Featured'),
         displayOrder: getNumber(props, 'Display Order'),

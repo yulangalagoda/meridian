@@ -22,6 +22,7 @@ export interface Item {
   narrativeIds: string[];
   primaryImage: string | null;
   galleryImages: string[];
+  galleryCaptions: string[]; // one per gallery image, in order (Notion: one per line)
   imageAltText: string;
   featured: boolean;
   displayOrder: number;
