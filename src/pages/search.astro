@@ -10,7 +10,7 @@ import { getSiteData } from '../lib/notion';
 const { items, narratives } = await getSiteData();
 ---
 
-<NightSky title="Search · The Meridian" description={'Search ' + items.length + ' objects and ' + narratives.length + ' narratives'}>
+<NightSky title="Search · The Meridian" description={`Search ${items.length} objects and ${narratives.length} narratives in The Meridian, and the archive pages.`} noindex>
   <SkyPage>
     <SiteHeader current="search" />
     <SearchPanel />

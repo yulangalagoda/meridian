@@ -6,18 +6,22 @@ import SiteHeader from '../SiteHeader.astro';
 import MottoFooter from '../MottoFooter.astro';
 import ArchiveRail from './ArchiveRail.astro';
 import type { ArchiveSlug } from './types';
+import { breadcrumbs, webPage } from '../seo';
 
 interface Props {
   current: ArchiveSlug;
   title: string;
   description?: string;
   width: 680 | 720 | 760; // the reading column's max-width in the reference
+  jsonLd?: object[];
 }
 
 const { current, title, description, width } = Astro.props;
+const path = `/${current}/`;
+const jsonLd = Astro.props.jsonLd ?? [webPage(`${title} — The Meridian`, path, description ?? ''), breadcrumbs([['The Meridian', '/'], [title, path]])];
 ---
 
-<NightSky title={`${title} · The Meridian`} description={description}>
+<NightSky title={`${title} · The Meridian`} description={description} jsonLd={jsonLd}>
   <SkyPage depth="50%">
     <SiteHeader current={current === 'about' ? 'about' : undefined} />
     <main class="ap">

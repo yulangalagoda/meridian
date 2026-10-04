@@ -11,6 +11,7 @@ import ShelfLabel from '../../components/ShelfLabel.astro';
 import ObjectCard from '../../components/ObjectCard.astro';
 import { getSiteData } from '../../lib/notion';
 import { ERA_OPTIONS, type Item } from '../../lib/types';
+import { breadcrumbs, listPage, yearSpan } from '../../components/seo';
 
 const { items, categories } = await getSiteData();
 
@@ -47,9 +48,14 @@ const card = (it: Item) => ({
   verified: verified(it), island: island(it), image: it.primaryImage, alt: it.imageAltText,
   'data-slug': it.slug, 'data-year': String(it.year ?? ''), 'data-island': island(it) ? '1' : '0', 'data-research': verified(it) ? '0' : '1',
 });
+const description = `All ${items.length} objects in The Meridian, ${yearSpan(items)}: antique maps, scientific instruments, rare books, early photographs and documents, arranged by field, era or A–Z.`;
+const jsonLd = [
+  listPage('Collection — The Meridian', '/collection/', description, items.map((it) => ({ name: it.name, path: `/collection/${it.slug}/` }))),
+  breadcrumbs([['The Meridian', '/'], ['Collection', '/collection/']]),
+];
 ---
 
-<NightSky title="Collection · The Meridian" description="Every object in the archive.">
+<NightSky title="Collection · The Meridian" description={description} jsonLd={jsonLd}>
   <SkyPage>
     <SiteHeader current="collection" />
     <main class="cl">

@@ -12,6 +12,7 @@ import Star from '../components/Star.astro';
 import VerificationRing from '../components/VerificationRing.astro';
 import { getSiteData, fetchPageBlocks, POLICY_PAGES } from '../lib/notion';
 import { blockSpans, splitBoldLead } from '../lib/richtext';
+import { breadcrumbs, listPage } from '../components/seo';
 
 const { items } = await getSiteData();
 const [policy, seeking] = await Promise.all([
@@ -25,8 +26,6 @@ const wants = seeking
   .filter((spans) => spans[0]?.annotations?.bold && spans[0].annotations.color === 'yellow')
   .map((spans) => splitBoldLead(spans)!.lead);
 
-// The hero text as plain text, for the page description.
-const intro = thread?.restHtml.replace(/<[^>]+>/g, '').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim() || undefined;
 const its = items.filter((it) => it.thread === 'The Island').sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.displayOrder - b.displayOrder);
 const entries = its.map((it, i) => {
   const g = i ? (it.year ?? 0) - (its[i - 1].year ?? 0) : 0;
@@ -37,9 +36,14 @@ const entries = its.map((it, i) => {
   };
 });
 const span = its.length ? its[0].year + '–' + its[its.length - 1].year : '';
+const description = `The Island thread: ${its.length} objects from Sri Lanka and Ceylon across every century (maps, photographs, documents and books) in the order they were made, and what the thread is still seeking.`;
+const jsonLd = [
+  listPage('The Island — The Meridian', '/the-island/', description, its.map((it) => ({ name: it.name, path: `/collection/${it.slug}/` }))),
+  breadcrumbs([['The Meridian', '/'], ['The Island', '/the-island/']]),
+];
 ---
 
-<NightSky title="The Island · The Meridian" description={intro}>
+<NightSky title="The Island · The Meridian" description={description} jsonLd={jsonLd}>
   <SkyPage glow="#1A1C2E">
     <SiteHeader current="island" />
 

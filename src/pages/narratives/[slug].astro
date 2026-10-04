@@ -19,6 +19,7 @@ import { storyPoints } from '../../components/sky/geometry';
 import { inWords, roman } from '../../components/words';
 import { fetchNarrativeContent, getSiteData } from '../../lib/notion';
 import type { Item, Narrative } from '../../lib/types';
+import { narrativeData } from '../../components/seo';
 
 export async function getStaticPaths() {
   const { narratives } = await getSiteData();
@@ -106,9 +107,11 @@ const P0 = frac.map((f) => [f[0] * W0, f[1] * H0]);
 const segs0 = stars.slice(1).map((_, j) => seg(P0[j], P0[j + 1]));
 
 const data = { raw, stars: stars.map((s) => ({ sec: s.sec, first: s.first })), S, F, final: finalStation, wait: Boolean(year) };
+const ogImage = stars.find((s) => s.it.primaryImage)?.it.primaryImage;
+const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
 ---
 
-<NightSky title={`${narrative.name} · The Meridian`} description={narrative.premise} image={stars.find((s) => s.it.primaryImage)?.it.primaryImage} type="article" legible>
+<NightSky title={`${narrative.name} · The Meridian`} description={narrative.premise} image={ogImage} jsonLd={jsonLd} type="article" legible>
   <div class="nr" data-narrative>
     <SiteHeader current="narratives" overlay z={20} passThrough />
 

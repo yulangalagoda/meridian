@@ -8,12 +8,14 @@ interface Props {
   description?: string;
   image?: string | null; // site path or absolute URL for og:image; defaults to /og-default.png
   type?: 'website' | 'article';
-  noindex?: boolean; // the 404
+  noindex?: boolean; // the 404 and the search page (followed, not indexed)
+  jsonLd?: object | object[]; // schema.org blocks for crawlers
   // Home, Timeline, Object and Narrative references add text-rendering:optimizeLegibility.
   legible?: boolean;
 }
 
-const { title, description, legible = false, image, type = 'website', noindex = false } = Astro.props;
+const { title, description, legible = false, image, type = 'website', noindex = false, jsonLd } = Astro.props;
+const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 const site = Astro.site ?? new URL('https://meridian.yulan.me');
 const canonical = new URL(Astro.url.pathname, site).href;
 const ogImage = new URL(image || '/og-default.png', site).href;
@@ -27,7 +29,10 @@ const ogImage = new URL(image || '/og-default.png', site).href;
     <title>{title}</title>
     <script is:inline>document.documentElement.classList.add('js');addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key&&e.key.toLowerCase()==='k'&&!/^\/search\/?$/.test(location.pathname)){e.preventDefault();location.href='/search'}})</script>
     {description && <meta name="description" content={description} />}
-    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+    {!noindex && <link rel="canonical" href={canonical} />}
+    <meta name="author" content="Yulan Galagoda" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta name="theme-color" content="#070A14" />
     <meta property="og:site_name" content="The Meridian" />
@@ -36,10 +41,12 @@ const ogImage = new URL(image || '/og-default.png', site).href;
     {description && <meta property="og:description" content={description} />}
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="en_GB" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     {description && <meta name="twitter:description" content={description} />}
     <meta name="twitter:image" content={ogImage} />
+    {ld.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block).replace(/</g, '\\u003c')} />)}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

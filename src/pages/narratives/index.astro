@@ -10,6 +10,7 @@ import { bandPositions, curve, xr } from '../../components/sky/geometry';
 import { inWords } from '../../components/words';
 import { getSiteData } from '../../lib/notion';
 import type { Item } from '../../lib/types';
+import { breadcrumbs, listPage } from '../../components/seo';
 
 const { items, narratives } = await getSiteData();
 const bare = (id: string) => id.replace(/-/g, '');
@@ -36,9 +37,14 @@ const allLabel = 'All ' + inWords(narratives.length) + ' constellations, by year
 const stars = items.map((it) => ({ slug: it.slug, left: (pos[it.slug][0] * 100).toFixed(2) + '%', top: (pos[it.slug][1] * 100).toFixed(2) + '%', color: it.thread === 'The Island' ? '#F2CF85' : '#F6F0E2' }));
 const axis = [1600, 1700, 1800, 1850, 1900, 1950].map((y) => ({ y: String(y), left: (3 + xr(y) * 94).toFixed(2) + '%' }));
 const band = { label: allLabel, nar: nar.map((x) => ({ slug: x.slug, name: x.name, items: x.items })), stars: stars.map((s) => s.slug) };
+const description = `${narratives.length} narratives drawn as constellations across the objects of The Meridian: stories of a year, a maker, a war, a way of seeing.`;
+const jsonLd = [
+  listPage('Narratives — The Meridian', '/narratives/', description, narratives.map((n) => ({ name: n.name, path: `/narratives/${n.slug}/` }))),
+  breadcrumbs([['The Meridian', '/'], ['Narratives', '/narratives/']]),
+];
 ---
 
-<NightSky title="Narratives · The Meridian" description="Stories told across objects. Each narrative joins objects the way a constellation joins stars.">
+<NightSky title="Narratives · The Meridian" description={description} jsonLd={jsonLd}>
   <SkyPage>
     <SiteHeader current="narratives" />
 

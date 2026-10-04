@@ -13,6 +13,7 @@ import { skyPositions } from '../components/sky/geometry';
 import { view, constellationPath, ERAS, Y0, Y1, DEG, START, type TLData, type TLItem } from '../components/timeline/model';
 import { getSiteData } from '../lib/notion';
 import { ERA_OPTIONS, type Item } from '../lib/types';
+import { breadcrumbs, listPage, yearSpan } from '../components/seo';
 
 const { items, narratives } = await getSiteData();
 const bare = (id: string) => id.replace(/-/g, '');
@@ -54,9 +55,14 @@ const shelves = ERA_OPTIONS.map((e) => {
 
 const starStyle = (it: TLItem, s: (typeof v.stars)[number]) =>
   `width:${it.featured ? 7 : it.verified ? 4.5 : 4}px;height:${it.featured ? 7 : it.verified ? 4.5 : 4}px;transform:translate(-50%,-50%) scale(${s.scale});background:${it.island ? '#F2CF85' : '#F6F0E2'};box-shadow:${s.glow};opacity:${s.op}`;
+const description = `Every object in The Meridian as a star in the sky over time: wind the dial across ${yearSpan(items)}, watch the narratives form as constellations, and browse the shelves era by era.`;
+const jsonLd = [
+  listPage('Timeline — The Meridian', '/timeline/', description, sortedItems.map((it) => ({ name: it.name, path: `/collection/${it.slug}/` }))),
+  breadcrumbs([['The Meridian', '/'], ['Timeline', '/timeline/']]),
+];
 ---
 
-<NightSky title="Timeline · The Meridian" description="Every object, in the order it was made. Each case wakes when the dial passes its year. Open one to find its star in the sky, or follow a narrative and watch the cases it connects light up together." legible>
+<NightSky title="Timeline · The Meridian" description={description} jsonLd={jsonLd} legible>
   <div class="tl" data-timeline>
     <section class="tl-stage" data-stage>
       <SiteHeader current="timeline" overlay z={20} />

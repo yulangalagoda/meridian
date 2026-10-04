@@ -13,6 +13,7 @@ import MottoFooter from '../components/MottoFooter.astro';
 import { skyPositions, glyph, xr } from '../components/sky/geometry';
 import { constellationPath } from '../components/timeline/model';
 import { inWords } from '../components/words';
+import { website, yearSpan } from '../components/seo';
 import { fetchIdentity, getSiteData } from '../lib/notion';
 import type { Item } from '../lib/types';
 
@@ -79,9 +80,10 @@ const data = {
   nar: nar.map((n) => ({ slug: n.slug, name: n.name, premise: n.premise, items: n.items, lx: n.lx, ly: n.ly, span: n.span, count: n.count })),
 };
 const words = id.epigraph.split(' ');
+const description = `A private archive of ${items.length} antiques and historical objects, ${yearSpan(items)}, kept by Yulan Galagoda: Sri Lanka and Ceylon across every century, and the instruments by which people learned to measure, record, calculate and see.`;
 ---
 
-<NightSky title="The Meridian" description={id.epigraph} legible>
+<NightSky title="The Meridian" description={description} jsonLd={website(description, items)} legible>
   <div class="hm" data-home>
     <section class="hm-hero" data-hero>
       <canvas class="hm-canvas" data-canvas></canvas>

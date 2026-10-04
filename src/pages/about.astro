@@ -4,12 +4,11 @@
 import ArchivePage from '../components/archive/ArchivePage.astro';
 import ArchiveHead from '../components/archive/ArchiveHead.astro';
 import { CONTACT_EMAIL } from '../components/archive/types';
+import { CURATOR, breadcrumbs, webPage } from '../components/seo';
 import { fetchPageBlocks, ABOUT_PAGE_ID } from '../lib/notion';
-import { blockSpans, plainText, renderSpans } from '../lib/richtext';
+import { blockSpans, renderSpans } from '../lib/richtext';
 
 const blocks = await fetchPageBlocks(ABOUT_PAGE_ID);
-const ledeBlock = blocks.find((b) => b.type === 'paragraph' && blockSpans(b).length);
-const description = ledeBlock ? plainText(blockSpans(ledeBlock)).trim() : undefined;
 
 // Runs of paragraphs become one prose block; each quote stands on its own.
 type Part = { kind: 'prose'; paras: { cls: string; html: string }[] } | { kind: 'quote'; html: string };
@@ -29,9 +28,15 @@ for (const b of blocks) {
   if (last?.kind === 'prose') last.paras.push(para);
   else parts.push({ kind: 'prose', paras: [para] });
 }
+
+const description = 'About The Meridian and its curator, Yulan Galagoda: what the archive collects, why, and how to get in touch about research, viewing or objects.';
+const jsonLd = [
+  { ...webPage('About — The Meridian', '/about/', description, 'ProfilePage'), mainEntity: CURATOR },
+  breadcrumbs([['The Meridian', '/'], ['About', '/about/']]),
+];
 ---
 
-<ArchivePage current="about" title="About" description={description} width={680}>
+<ArchivePage current="about" title="About" description={description} width={680} jsonLd={jsonLd}>
   <ArchiveHead eyebrow="About · Yulan Galagoda" title="About me" gap={44} />
   {parts.map((part) =>
     part.kind === 'prose' ? (

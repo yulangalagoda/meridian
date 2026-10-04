@@ -24,5 +24,6 @@ const syncImages = {
 export default defineConfig({
   site: 'https://meridian.yulan.me',
   output: 'static',
-  integrations: [sitemap(), syncImages],
+  // /search is followed but not indexed, so it stays out of the sitemap.
+  integrations: [sitemap({ filter: (page) => !/\/search\/$/.test(page) }), syncImages],
 });
