@@ -67,3 +67,45 @@ export function glyph(pos: Record<string, [number, number]>, years: Record<strin
     }),
   };
 }
+
+// A constellation line through points in order: quadratic curves bowed by a hash
+// of the seed and segment, at most `cap` px (Timeline 64, Narratives 40).
+export function curve(pts: [number, number][], seed: string, cap: number): string {
+  let d = '';
+  pts.forEach((p, i) => {
+    if (!i) { d = 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); return; }
+    const q = pts[i - 1], mx = (q[0] + p[0]) / 2, my = (q[1] + p[1]) / 2, dx = p[0] - q[0], dy = p[1] - q[1];
+    const L = Math.hypot(dx, dy) || 1, o = (hash(seed + i) - 0.5) * Math.min(cap, L * 0.3);
+    d += ' Q' + (mx - (dy / L) * o).toFixed(1) + ' ' + (my + (dx / L) * o).toFixed(1) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1);
+  });
+  return d;
+}
+
+// The Narratives sky band (Narratives prep()): x straight from the year scale,
+// y over 0.08–0.92, same-year objects spiralled a little wider.
+export function bandPositions(items: SkyItem[]): Record<string, [number, number]> {
+  const groups: Record<number, SkyItem[]> = {};
+  items.forEach((it) => (groups[it.year] = groups[it.year] || []).push(it));
+  const pos: Record<string, [number, number]> = {};
+  Object.keys(groups).forEach((y) => {
+    const a = groups[+y], cx = xr(+y), cy = 0.08 + hash(a[0].slug + 'y') * 0.84;
+    a.forEach((it, i) => {
+      const ang = i * 2.39996 + 0.6, r = a.length > 1 ? 0.035 * Math.sqrt(i + 0.5) : 0;
+      pos[it.slug] = [cx + Math.cos(ang) * r * 0.4, cy + Math.sin(ang) * r];
+    });
+  });
+  return pos;
+}
+
+// The narrative page's raw star points (Narrative points()): x straight from the
+// year scale, y the bare hash, same-year objects spiralled as in the Timeline.
+export function storyPoints(items: SkyItem[], slugs: string[]): [number, number][] {
+  const groups: Record<number, SkyItem[]> = {};
+  items.forEach((it) => (groups[it.year] = groups[it.year] || []).push(it));
+  return slugs.map((s) => {
+    const it = items.find((x) => x.slug === s)!, g = groups[it.year], i = g.indexOf(it), cx = xr(it.year), cy = hash(g[0].slug + 'y');
+    if (g.length === 1) return [cx, cy] as [number, number];
+    const ang = i * 2.39996 + 0.6, rad = 0.03 * Math.sqrt(i + 0.5);
+    return [cx + Math.cos(ang) * rad * 0.45, cy + Math.sin(ang) * rad] as [number, number];
+  });
+}
