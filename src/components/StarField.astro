@@ -1,0 +1,100 @@
+---
+// The sky behind every page: a fixed field of faint stars, dimmer and smaller
+// than the objects' stars, in three depths that drift against the pointer and
+// a little against the scroll, with the odd shooting star. It sits beneath the
+// page (z-index -1); the night-sky backgrounds above it are see-through
+// versions of the design's colours, so it shows through them softly while
+// cards, photos and panels stay clear. Under reduced motion it is drawn once
+// and holds still.
+---
+
+<canvas class="sf" data-starfield aria-hidden="true"></canvas>
+
+<style>
+  .sf{position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+</style>
+
+<script>
+  const cv = document.querySelector<HTMLCanvasElement>('[data-starfield]');
+  const ctx = cv?.getContext('2d');
+  if (cv && ctx) {
+    const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    type S = { x: number; y: number; r: number; a: number; s: number; p: number; d: number; warm: boolean };
+    let W = 0, H = 0, stars: S[] = [];
+
+    // Roughly one star per 2,200 px² of screen: many, and fainter and smaller
+    // than the objects' stars (alpha .1–.48, up to 1.4 px).
+    const seed = () => {
+      const n = Math.max(260, Math.min(1600, Math.round((W * H) / 2200)));
+      stars = Array.from({ length: n }, () => {
+        const d = [0.25, 0.55, 1][Math.floor(Math.random() * 3)];
+        return { x: Math.random(), y: Math.random(), r: 0.3 + Math.random() * Math.random() * (0.5 + d * 0.6), a: 0.1 + Math.random() * 0.38, s: 0.3 + Math.random() * 1.2, p: Math.random() * 6.28, d, warm: Math.random() < 0.18 };
+      });
+    };
+    const size = () => {
+      const w = cv.clientWidth, h = cv.clientHeight;
+      if (w === W && h === H) return;
+      const grew = !stars.length || w * h > W * H * 1.3;
+      W = w; H = h; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+      if (grew) seed();
+    };
+
+    // Pointer and scroll, eased so the field drifts rather than jumps.
+    let mx = 0, my = 0, tx = 0, ty = 0;
+    addEventListener('pointermove', (e) => { if (e.pointerType === 'mouse') { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; } }, { passive: true });
+
+    // Shooting stars: one every 6–16 s, a short gold-tailed streak across the upper sky.
+    type Shot = { x: number; y: number; vx: number; vy: number; len: number; t0: number; dur: number };
+    let shot: Shot | null = null, nextShot = performance.now() + 2500 + Math.random() * 5000;
+    const launchShot = (now: number) => {
+      const ang = (0.08 + Math.random() * 0.17) * Math.PI, dir = Math.random() < 0.5 ? 1 : -1;
+      const speed = 0.7 + Math.random() * 0.6; // px per ms
+      shot = { x: W * (0.15 + Math.random() * 0.7), y: H * (0.04 + Math.random() * 0.4), vx: Math.cos(ang) * speed * dir, vy: Math.sin(ang) * speed, len: 110 + Math.random() * 120, t0: now, dur: 650 + Math.random() * 550 };
+      nextShot = now + 6000 + Math.random() * 10000;
+    };
+
+    const wrap = (v: number, m: number) => ((v % m) + m) % m;
+    const draw = (now: number) => {
+      if (!reduced) requestAnimationFrame(draw);
+      if (document.hidden) return;
+      size();
+      tx += (mx - tx) * 0.05; ty += (my - ty) * 0.05;
+      const sy = reduced ? 0 : scrollY;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      const pad = 60, PW = W + pad * 2, PH = H + pad * 2;
+      for (const s of stars) {
+        const x = wrap(s.x * PW - tx * 70 * s.d, PW) - pad;
+        const y = wrap(s.y * PH - ty * 48 * s.d - sy * 0.06 * s.d, PH) - pad;
+        const tw = reduced ? 1 : 0.62 + 0.38 * Math.sin((now / 1000) * s.s + s.p);
+        ctx.globalAlpha = s.a * tw;
+        ctx.fillStyle = s.warm ? '#FFF4DC' : '#D9E1F4';
+        ctx.beginPath(); ctx.arc(x, y, s.r, 0, 6.283); ctx.fill();
+      }
+      if (reduced) return;
+      if (!shot && now >= nextShot) launchShot(now);
+      if (shot) {
+        const k = (now - shot.t0) / shot.dur;
+        if (k >= 1) shot = null;
+        else {
+          const hx = shot.x + shot.vx * (now - shot.t0), hy = shot.y + shot.vy * (now - shot.t0);
+          const sp = Math.hypot(shot.vx, shot.vy), ex = hx - (shot.vx / sp) * shot.len, ey = hy - (shot.vy / sp) * shot.len;
+          const fade = Math.min(1, k / 0.12) * Math.min(1, (1 - k) / 0.35);
+          const g = ctx.createLinearGradient(hx, hy, ex, ey);
+          g.addColorStop(0, 'rgba(255,248,232,.9)');
+          g.addColorStop(0.3, 'rgba(242,212,147,.35)');
+          g.addColorStop(1, 'rgba(211,179,112,0)');
+          ctx.globalAlpha = fade;
+          ctx.strokeStyle = g; ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(ex, ey); ctx.stroke();
+          ctx.fillStyle = '#FFF8E8'; ctx.globalAlpha = fade * 0.9;
+          ctx.beginPath(); ctx.arc(hx, hy, 1.3, 0, 6.283); ctx.fill();
+        }
+      }
+    };
+    size();
+    if (reduced) { draw(0); new ResizeObserver(() => { size(); draw(0); }).observe(cv); }
+    else requestAnimationFrame(draw);
+  }
+</script>

@@ -1,0 +1,18 @@
+---
+// Search, from the Search reference. ?q= fills the box; ⌘K / Ctrl-K selects it
+// here and brings every other page here.
+import NightSky from '../layouts/NightSky.astro';
+import SkyPage from '../components/SkyPage.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SearchPanel from '../components/search/SearchPanel.astro';
+import { getSiteData } from '../lib/notion';
+
+const { items, narratives } = await getSiteData();
+---
+
+<NightSky title="Search · The Meridian" description={`Search ${items.length} objects and ${narratives.length} narratives in The Meridian, and the archive pages.`} noindex>
+  <SkyPage>
+    <SiteHeader current="search" />
+    <SearchPanel />
+  </SkyPage>
+</NightSky>

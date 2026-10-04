@@ -21,10 +21,28 @@
   Cache-Control: no-cache
   Link: <https://meridian.yulan.me/sitemap-index.xml>; rel="sitemap", <https://meridian.yulan.me/.well-known/api-catalog>; rel="api-catalog"
 
+/collection
+  Cache-Control: no-cache
+
 /collection/*
   Cache-Control: no-cache
 
+/timeline
+  Cache-Control: no-cache
+
+/the-island
+  Cache-Control: no-cache
+
+/search
+  Cache-Control: no-cache
+
+/search-index.json
+  Cache-Control: no-cache
+
 /categories/*
+  Cache-Control: no-cache
+
+/narratives
   Cache-Control: no-cache
 
 /narratives/*

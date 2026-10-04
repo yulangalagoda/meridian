@@ -1,0 +1,77 @@
+---
+// The bare Night Sky document: fonts and body reset only, copied from the
+// <helmet> of the reference designs. Type: Gloock (display), EB Garamond (body),
+// IBM Plex Mono (labels). Background #070A14. ⌘K / Ctrl-K on any page opens
+// /search (the search page itself uses it to select its box).
+interface Props {
+  title: string;
+  description?: string;
+  image?: string | null; // site path or absolute URL for og:image; defaults to /og-default.png
+  type?: 'website' | 'article';
+  noindex?: boolean; // the 404 and the search page (followed, not indexed)
+  jsonLd?: object | object[]; // schema.org blocks for crawlers
+  // Home, Timeline, Object and Narrative references add text-rendering:optimizeLegibility.
+  legible?: boolean;
+}
+
+import StarField from '../components/StarField.astro';
+
+const { title, description, legible = false, image, type = 'website', noindex = false, jsonLd } = Astro.props;
+const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const site = Astro.site ?? new URL('https://meridian.yulan.me');
+const canonical = new URL(Astro.url.pathname, site).href;
+const ogImage = new URL(image || '/og-default.png', site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <script is:inline>document.documentElement.classList.add('js');addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key&&e.key.toLowerCase()==='k'&&!/^\/search\/?$/.test(location.pathname)){e.preventDefault();location.href='/search'}})</script>
+    {description && <meta name="description" content={description} />}
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <meta name="robots" content="index, follow, max-image-preview:large" />}
+    {!noindex && <link rel="canonical" href={canonical} />}
+    <meta name="author" content="Yulan Galagoda" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#070A14" />
+    <meta property="og:site_name" content="The Meridian" />
+    <meta property="og:type" content={type} />
+    <meta property="og:title" content={title} />
+    {description && <meta property="og:description" content={description} />}
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="en_GB" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    {description && <meta name="twitter:description" content={description} />}
+    <meta name="twitter:image" content={ogImage} />
+    {ld.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block).replace(/</g, '\\u003c')} />)}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Gloock&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+  </head>
+  <body class:list={[{ legible }]}>
+    <StarField />
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  html,body{margin:0}
+  /* The night is painted on html; body stays clear so the star field (z-index -1) shows above it. */
+  html{background:#070A14}
+  body{background:transparent}
+  body{color:#EEE7D7;font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased}
+  body.legible{text-rendering:optimizeLegibility}
+  a{color:inherit;text-decoration:none}
+  a:hover{color:#D3B370}
+  button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+  ::selection{background:#D3B370;color:#070A14}
+  :focus-visible{outline:1px solid #D3B370;outline-offset:3px}
+</style>

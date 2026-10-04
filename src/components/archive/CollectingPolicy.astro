@@ -1,0 +1,63 @@
+---
+// Collecting Policy: lede; each bold-led paragraph is a thread card; the
+// paragraph–quote–paragraph around the test question is set large and centred;
+// everything after the divider closes the page.
+import Lede from './Lede.astro';
+import { blockSpans, renderSpans, splitBoldLead } from '../../lib/richtext';
+
+interface Props { blocks: any[] }
+const { blocks } = Astro.props;
+
+const ORDINAL = ['one', 'two', 'three', 'four', 'five', 'six'];
+const html = (b: any) => renderSpans(blockSpans(b));
+const isLed = (b: any) => b.type === 'paragraph' && splitBoldLead(blockSpans(b));
+
+const lede = blocks[0];
+const cards = blocks.filter(isLed).map((b) => splitBoldLead(blockSpans(b))!);
+const qi = blocks.findIndex((b) => b.type === 'quote');
+const di = blocks.findIndex((b) => b.type === 'divider');
+const before = qi > 0 && blocks[qi - 1].type === 'paragraph' && !isLed(blocks[qi - 1]) && blocks[qi - 1] !== lede ? blocks[qi - 1] : null;
+const after = qi >= 0 && blocks[qi + 1]?.type === 'paragraph' && (di < 0 || qi + 1 < di) ? blocks[qi + 1] : null;
+const closing = di >= 0 ? blocks.slice(di + 1).filter((b) => b.type === 'paragraph') : [];
+---
+
+<Lede html={html(lede)} after={32} />
+
+<div class="cp-threads">
+  {cards.map((c, i) => (
+    <div class="cp-card">
+      <span class="cp-num">Thread {ORDINAL[i]}</span>
+      <h2 class="cp-title" style={c.lead.startsWith('The Island') ? 'color:#F2CF85' : undefined}>{c.lead}</h2>
+      <p class="cp-text" set:html={c.restHtml} />
+    </div>
+  ))}
+</div>
+
+{qi >= 0 && (
+  <div class="cp-test">
+    {before && <p class="cp-say" set:html={html(before)} />}
+    <p class="cp-question" set:html={html(blocks[qi])} />
+    {after && <p class="cp-say" set:html={html(after)} />}
+  </div>
+)}
+
+{closing.length > 0 && (
+  <div class="cp-close">{closing.map((b) => <p set:html={html(b)} />)}</div>
+)}
+
+<style>
+  .cp-threads{display:flex;flex-wrap:wrap;gap:20px}
+  .cp-card{flex:1 1 280px;display:flex;flex-direction:column;gap:14px;padding:30px 28px 32px;background:rgba(11,17,36,.7);border:1px solid rgba(238,231,215,.1)}
+  .cp-num{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
+  .cp-title{margin:0;font:400 clamp(26px,2.6vw,34px)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+  .cp-text{margin:0;font:400 19px/1.58 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+
+  .cp-test{margin:72px 0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px}
+  .cp-say{margin:0;max-width:520px;font:400 21px/1.62 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .cp-question{margin:0;font:400 clamp(34px,4vw,52px)/1.1 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+
+  .cp-close{max-width:680px;padding-top:36px;border-top:1px solid rgba(238,231,215,.12);font:400 21px/1.62 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .cp-close p{margin:0 0 1.1em}
+  .cp-close p:last-child{margin:0}
+  .cp-close :global(a){color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)}
+</style>

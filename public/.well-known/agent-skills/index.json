@@ -4,20 +4,38 @@
     {
       "name": "browse-collection",
       "type": "service",
-      "description": "Browse the full catalogue of historical objects in The Meridian archive. Each object has a name, era, origin country, condition, category, year, and a set of tags.",
-      "url": "https://meridian.yulan.me/collection"
+      "description": "Browse every object in The Meridian archive, arranged by field, by era or A–Z, and narrowed to The Island thread or to objects whose research is ongoing. Each object page gives its maker, materials, origin, era, verification status, provenance, a researched story with references, and a citation.",
+      "url": "https://meridian.yulan.me/collection/"
     },
     {
-      "name": "browse-categories",
+      "name": "explore-timeline",
       "type": "service",
-      "description": "Explore objects grouped by their collecting category (e.g. maps, instruments, documents, photographs).",
-      "url": "https://meridian.yulan.me/categories"
+      "description": "The sky over time: a dial across the centuries in which every object rises as a star in the year it was made, narratives form as constellations, and era shelves hold every object.",
+      "url": "https://meridian.yulan.me/timeline/"
+    },
+    {
+      "name": "read-narratives",
+      "type": "service",
+      "description": "Stories told across objects: each narrative joins objects acquired separately into a single account (a year, a maker, a war, a way of seeing), drawn as a constellation.",
+      "url": "https://meridian.yulan.me/narratives/"
+    },
+    {
+      "name": "the-island-thread",
+      "type": "service",
+      "description": "Sri Lanka and Ceylon across every century: the Island thread's maps, photographs, documents and books in year order, and what the thread is still seeking.",
+      "url": "https://meridian.yulan.me/the-island/"
+    },
+    {
+      "name": "search",
+      "type": "service",
+      "description": "Search objects, narratives, fields and the archive pages. Pass words as ?q=, for example /search/?q=Ceylon. The index behind it is at /search-index.json.",
+      "url": "https://meridian.yulan.me/search/"
     },
     {
       "name": "read-about",
       "type": "service",
-      "description": "Learn about The Meridian archive, its curatorial approach, and the collector behind it.",
-      "url": "https://meridian.yulan.me/about"
+      "description": "Learn about The Meridian archive, its collecting policy, verification standard and want list, and the collector behind it.",
+      "url": "https://meridian.yulan.me/about/"
     }
   ]
 }

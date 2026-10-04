@@ -109,6 +109,33 @@ export async function fetchAllBlocks(
   return blocks;
 }
 
+// Fetches a page's blocks with their nested blocks attached as block.children,
+// for layouts that depend on nesting (a list or callout under a paragraph).
+export async function fetchBlockTree(client: Client, blockId: string): Promise<any[]> {
+  const blocks = await fetchAllBlocks(client, blockId);
+  await Promise.all(
+    blocks.filter((b) => b.has_children).map(async (b) => { b.children = await fetchBlockTree(client, b.id); })
+  );
+  return blocks;
+}
+
+// The rich text of any text-bearing block (paragraph, heading, quote, callout, list item).
+export function blockSpans(block: any): any[] {
+  return block?.[block.type]?.rich_text ?? [];
+}
+
+// Splits rich text that opens with a bold run ("**The Island.** Sri Lanka…") into
+// the bold lead as plain text and the rest rendered. Null when it doesn't open bold.
+export function splitBoldLead(spans: any[]): { lead: string; restHtml: string } | null {
+  let i = 0;
+  while (i < spans.length && spans[i].annotations?.bold) i++;
+  if (i === 0) return null;
+  const rest = spans.slice(i).map((s, k) =>
+    k === 0 ? { ...s, plain_text: (s.plain_text ?? '').replace(/^\s+/, '') } : s
+  );
+  return { lead: plainText(spans.slice(0, i)).trim(), restHtml: renderSpans(rest) };
+}
+
 // Renders a flat list of Notion blocks to an HTML string.
 export function renderBlocks(blocks: any[]): string {
   let html = '';

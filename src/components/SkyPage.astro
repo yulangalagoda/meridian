@@ -1,0 +1,22 @@
+---
+// The page wrapper used by every in-flow page: full height, with the night-2
+// glow spreading down from the top. Archive pages use a 50% ellipse, the
+// index pages 40%; The Island warms the glow to #1A1C2E.
+interface Props {
+  depth?: '40%' | '50%';
+  glow?: '#141C38' | '#1A1C2E';
+}
+
+const { depth = '40%', glow = '#141C38' } = Astro.props;
+// The sky colours are see-through equivalents (40% alpha) of the design's (same colour over
+// #070A14), so the star field behind the page shows through.
+const VEIL: Record<string, string> = { '#141C38': 'rgba(40,55,110,.4)', '#1A1C2E': 'rgba(55,55,85,.4)' };
+---
+
+<div class="sky" style={`background:radial-gradient(ellipse 70% ${depth} at 50% 0%,${VEIL[glow]} 0%,rgba(17,28,60,.4) 45%,rgba(7,10,20,0) 100%)`}>
+  <slot />
+</div>
+
+<style>
+  .sky{min-height:100vh;color:#EEE7D7}
+</style>

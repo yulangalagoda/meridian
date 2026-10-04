@@ -1,0 +1,416 @@
+---
+// The Sky Over Time, from the Timeline reference. The sky and the shelves are
+// rendered at the start year; the script (a port of the reference's
+// componentDidMount, glideTo, togglePlay, down/move/up and renderVals) drives
+// the dial, the glide and momentum, play, the star card, routes and shelves.
+import NightSky from '../layouts/NightSky.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import MottoFooter from '../components/MottoFooter.astro';
+import ShelfLabel from '../components/ShelfLabel.astro';
+import ObjectCard from '../components/ObjectCard.astro';
+import VerificationRing from '../components/VerificationRing.astro';
+import { skyPositions } from '../components/sky/geometry';
+import { view, constellationPath, ERAS, Y0, Y1, DEG, START, type TLData, type TLItem } from '../components/timeline/model';
+import { getSiteData } from '../lib/notion';
+import { ERA_OPTIONS, type Item } from '../lib/types';
+import { breadcrumbs, listPage, yearSpan } from '../components/seo';
+
+const { items, narratives } = await getSiteData();
+const bare = (id: string) => id.replace(/-/g, '');
+const byId = new Map(items.map((it) => [bare(it.id), it]));
+const pos = skyPositions(items.map((it) => ({ slug: it.slug, year: it.year ?? 0 })));
+const yearOf = (it: Item) => it.year ?? 0;
+
+const tlItems: TLItem[] = items.map((it) => ({
+  slug: it.slug, name: it.name, year: yearOf(it),
+  rng: [Math.min(it.yearFrom ?? yearOf(it), yearOf(it)), Math.max(it.yearTo ?? yearOf(it), yearOf(it))],
+  date: it.dateLabel, origin: it.originCountry, short: it.shortDescription,
+  island: it.thread === 'The Island', verified: it.verification === 'Verified', verification: it.verification, featured: it.featured,
+  narratives: narratives.filter((n) => n.itemIds.includes(bare(it.id))).map((n) => n.slug),
+  pos: pos[it.slug],
+}));
+const sortedItems = items.slice().sort((a, b) => yearOf(a) - yearOf(b) || a.displayOrder - b.displayOrder);
+const data: TLData = {
+  items: tlItems,
+  sorted: sortedItems.map((it) => it.slug),
+  narratives: narratives.map((n) => {
+    const its = n.itemIds.map((id) => byId.get(id)).filter(Boolean) as Item[];
+    const pts = its.slice().sort((a, b) => yearOf(a) - yearOf(b)).map((it) => [pos[it.slug][0] * 1320, pos[it.slug][1] * 600] as [number, number]);
+    return { slug: n.slug, name: n.name, items: its.map((it) => it.slug), d: constellationPath(n.slug, pts), last: Math.max(...its.map(yearOf)) };
+  }),
+};
+
+const v = view(data, START, null, null);
+const ticks = [];
+for (let y = Y0; y <= 1980; y++) ticks.push({ a: ((y - Y0) * DEG).toFixed(2) + 'deg', h: y % 50 === 0 ? '24px' : y % 10 === 0 ? '14px' : '6px', c: y % 10 === 0 ? 'rgba(211,179,112,.8)' : 'rgba(238,231,215,.22)', label: y % 10 === 0 ? String(y) : '' });
+const marks = tlItems.map((it) => ({ a: ((it.year - Y0) * DEG).toFixed(2) + 'deg', c: it.island ? '#F2CF85' : '#F6F0E2' }));
+const eras = ERAS.map((e) => ({ name: e[0], a: (((Math.max(e[1], Y0) + Math.min(e[2], Y1)) / 2 - Y0) * DEG).toFixed(2) + 'deg' }));
+
+const shelves = ERA_OPTIONS.map((e) => {
+  const its = sortedItems.filter((it) => it.era === e);
+  if (!its.length) return null;
+  const a = its[0].year, b = its[its.length - 1].year;
+  return { name: e, note: its.length + (its.length === 1 ? ' object · ' : ' objects · ') + (a === b ? a : a + '–' + b), its };
+}).filter(Boolean) as { name: string; note: string; its: Item[] }[];
+
+const starStyle = (it: TLItem, s: (typeof v.stars)[number]) =>
+  `width:${it.featured ? 7 : it.verified ? 4.5 : 4}px;height:${it.featured ? 7 : it.verified ? 4.5 : 4}px;transform:translate(-50%,-50%) scale(${s.scale});background:${it.island ? '#F2CF85' : '#F6F0E2'};box-shadow:${s.glow};opacity:${s.op}`;
+const description = `Every object in The Meridian as a star in the sky over time: wind the dial across ${yearSpan(items)}, watch the narratives form as constellations, and browse the shelves era by era.`;
+const jsonLd = [
+  listPage('Timeline — The Meridian', '/timeline/', description, sortedItems.map((it) => ({ name: it.name, path: `/collection/${it.slug}/` }))),
+  breadcrumbs([['The Meridian', '/'], ['Timeline', '/timeline/']]),
+];
+---
+
+<NightSky title="Timeline · The Meridian" description={description} jsonLd={jsonLd} legible>
+  <div class="tl" data-timeline>
+    <section class="tl-stage" data-stage>
+      <SiteHeader current="timeline" overlay z={20} />
+      <div class="tl-meridian"></div>
+
+      <div class="tl-sky" data-sky style={`z-index:${v.skyZ}`}>
+        {data.narratives.map((n, i) => (
+          <svg viewBox="0 0 1320 600" preserveAspectRatio="none" class="tl-svg" aria-hidden="true">
+            <path data-path={n.slug} d={n.d} class="tl-path" style={`opacity:${v.paths[i].op}`} />
+          </svg>
+        ))}
+        {tlItems.map((it, i) => (
+          <div class="tl-star" style={`left:${(it.pos[0] * 100).toFixed(3)}%;top:${(it.pos[1] * 100).toFixed(3)}%`}>
+            <span class="tl-dot" data-dot style={starStyle(it, v.stars[i])}></span>
+            <span class="tl-tag" data-tag hidden={!v.stars[i].tag}>{it.name}</span>
+            <button type="button" class="tl-hit" data-pick={it.slug} aria-label={it.name} title={it.name} style={`pointer-events:${v.stars[i].pe};--ring:${v.stars[i].ring}`}></button>
+          </div>
+        ))}
+        <div class="tl-sel" data-sel hidden>
+          <div class="tl-card" data-card>
+            <div class="tl-card-top">
+              <span class="tl-card-meta" data-sel-meta></span>
+              <button type="button" class="tl-x" data-unpick aria-label="Close">×</button>
+            </div>
+            <span class="tl-card-name" data-sel-name></span>
+            <p class="tl-card-short" data-sel-short></p>
+            <span class="tl-card-in" data-sel-in></span>
+            <div class="tl-card-foot">
+              <span class="tl-card-ver"><span data-sel-ring><VerificationRing verified size={9} /></span><span data-sel-ver></span></span>
+              <a href="#" class="tl-card-read" data-sel-href>Read the object →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="tl-play" data-play>▶ Wind the centuries</button>
+
+      <div class="tl-year">
+        <span class="tl-year-eye">The sky in</span>
+        <span class="tl-year-num" data-year>{v.yearText}</span>
+        <span class="tl-year-era"><span data-era>{v.era}</span> · <span data-risen>{v.risenText}</span></span>
+      </div>
+
+      <div class="tl-pass">
+        <span class="tl-pass-eye" data-pass-title>{v.passTitle}</span>
+        {[0, 1, 2, 3].map((k) => {
+          const p = v.passing[k];
+          return (
+            <a href={p ? `/collection/${p.slug}` : '#'} class="tl-pass-item" data-pass-slot hidden={!p}>
+              <span class="tl-pass-name">{p?.name}</span>
+              <span class="tl-pass-date">{p?.date}</span>
+            </a>
+          );
+        })}
+        <span class="tl-pass-more" data-pass-more>{v.passMore}</span>
+      </div>
+
+      <div class="tl-dial" data-dial>
+        <div class="tl-wheel" data-wheel style={`transform:rotate(${v.wheelRot})`}>
+          {ticks.map((t) => (
+            <div class="tl-arm" style={`transform:rotate(${t.a}) translateY(-1100px)`}>
+              <span class="tl-tick" style={`height:${t.h};background:${t.c}`}></span>
+              {t.label && <span class="tl-ticklabel">{t.label}</span>}
+            </div>
+          ))}
+          {marks.map((m) => (
+            <div class="tl-arm" style={`transform:rotate(${m.a}) translateY(-1052px)`}><span class="tl-mark" style={`background:${m.c}`}></span></div>
+          ))}
+          {eras.map((e) => (
+            <div class="tl-arm" style={`transform:rotate(${e.a}) translateY(-1020px)`}><span class="tl-eraname">{e.name}</span></div>
+          ))}
+        </div>
+        <div class="tl-pointer"><span></span></div>
+        <div class="tl-hint">Drag the dial · ← → to step a year</div>
+      </div>
+    </section>
+
+    <section class="tl-list">
+      <div class="tl-hero">
+        <div>
+          <div class="tl-eye">The timeline · {items.length} objects</div>
+          <h2 class="tl-title">Every object, in the order it was made.</h2>
+        </div>
+        <p class="tl-intro">Each case wakes when the dial passes its year. Open one to find its star in the sky, or follow a narrative and watch the cases it connects light up together.</p>
+      </div>
+      <div class="tl-routes">
+        <span class="tl-routes-label">Narratives through the sky</span>
+        {data.narratives.map((n) => (
+          <button type="button" class="tl-route" data-route={n.slug} aria-pressed="false">{n.name} <span class="tl-route-count">{n.items.length} objects</span></button>
+        ))}
+      </div>
+      <div class="tl-shelves">
+        {shelves.map((s) => (
+          <div class="tl-shelf">
+            <ShelfLabel name={s.name} note={s.note} />
+            <div class="tl-grid">
+              {s.its.map((it) => (
+                <ObjectCard variant="timeline" lit={v.lit[it.slug]} name={it.name} date={it.dateLabel} origin={it.originCountry}
+                  verified={it.verification === 'Verified'} island={it.thread === 'The Island'} image={it.primaryImage} alt={it.imageAltText} data-open={it.slug} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <MottoFooter variant="timeline" />
+  </div>
+  <script type="application/json" id="tl-data" set:html={JSON.stringify(data)} />
+</NightSky>
+
+<style>
+  .tl{position:relative;background:transparent;color:#EEE7D7;overflow-x:clip}
+  .tl-stage{position:relative;height:max(100vh,760px);overflow:hidden;background:radial-gradient(ellipse 75% 65% at 50% 38%,rgba(40,55,110,.4) 0%,rgba(17,28,60,.4) 48%,rgba(7,10,20,0) 100%);user-select:none}
+  .tl-meridian{position:absolute;left:50%;top:0;bottom:0;width:1px;margin-left:-0.5px;z-index:3;background:linear-gradient(to bottom,rgba(211,179,112,0),rgba(211,179,112,.5) 14%,rgba(211,179,112,.7) 100%);pointer-events:none}
+
+  .tl-sky{position:absolute;left:4%;right:4%;top:96px;bottom:210px;pointer-events:none}
+  .tl-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+  .tl-path{fill:none;stroke:rgba(232,206,150,.5);stroke-width:1;vector-effect:non-scaling-stroke;transition:opacity 1.2s}
+  .tl-star{position:absolute;width:0;height:0}
+  .tl-dot{position:absolute;left:0;top:0;border-radius:50%;transition:opacity .9s,transform .9s cubic-bezier(.16,1,.3,1),box-shadow .6s}
+  .tl-tag{position:absolute;left:12px;top:-7px;width:max-content;max-width:220px;font:400 14px/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-shadow:0 0 12px #070A14,0 0 4px #070A14;pointer-events:none}
+  .tl-tag[hidden]{display:none}
+  .tl-hit{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;box-shadow:var(--ring);transition:box-shadow .3s}
+  .tl-hit:hover{box-shadow:inset 0 0 0 1px rgba(211,179,112,.7)}
+
+  .tl-sel{position:absolute;z-index:8;width:0;height:0}
+  .tl-sel[hidden]{display:none}
+  .tl-card{position:absolute;left:0;top:0;pointer-events:auto;width:300px;box-sizing:border-box;padding:20px 22px 18px;background:rgba(11,17,36,.96);border:1px solid rgba(211,179,112,.45);box-shadow:0 24px 60px -20px #000;display:flex;flex-direction:column;gap:10px}
+  .tl-card-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+  .tl-card-meta{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#D3B370}
+  .tl-x{font:400 18px/1 'EB Garamond',Georgia,serif;color:#8D897F}
+  .tl-x:hover{color:#F3ECDC}
+  .tl-card-name{font:400 21px/1.15 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .tl-card-short{margin:0;font:400 16px/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .tl-card-in{font:italic 400 15px/1.35 'EB Garamond',Georgia,serif;color:#8D897F}
+  .tl-card-in[hidden]{display:none}
+  .tl-card-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;border-top:1px solid rgba(238,231,215,.1)}
+  .tl-card-ver{display:inline-flex;align-items:center;gap:8px;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#B8B2A5}
+  .tl-card-ver > span:first-child{display:contents}
+  .tl-card-read{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:5px}
+
+  .tl-play{position:absolute;left:50%;top:96px;z-index:5;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0B1124;border:1px solid rgba(211,179,112,.5);font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#F3ECDC}
+  .tl-play:hover{border-color:#D3B370}
+
+  .tl-year{position:absolute;left:clamp(20px,4.5vw,64px);bottom:44px;z-index:6;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+  .tl-year-eye{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370}
+  .tl-year-num{font:400 clamp(84px,9vw,136px)/.9 Gloock,Georgia,serif;color:#F3ECDC;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .tl-year-era{font:italic 400 19px/1.3 'EB Garamond',Georgia,serif;color:#B8B2A5}
+
+  .tl-pass{position:absolute;right:clamp(20px,4.5vw,64px);bottom:44px;z-index:6;width:min(320px,26vw);display:flex;flex-direction:column;gap:10px;text-align:right}
+  .tl-pass-eye{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370}
+  .tl-pass-item{display:flex;flex-direction:column;gap:3px;padding:8px 0;border-top:1px solid rgba(238,231,215,.12)}
+  .tl-pass-item[hidden]{display:none}
+  .tl-pass-name{font:400 17px/1.2 Gloock,Georgia,serif;color:#F3ECDC}
+  .tl-pass-date{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .tl-pass-more{font:italic 400 16px/1.3 'EB Garamond',Georgia,serif;color:#8D897F}
+
+  .tl-dial{position:absolute;left:0;right:0;bottom:0;height:210px;z-index:4;cursor:grab;touch-action:pan-y;-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) min(400px,34%),#000 min(520px,42%),#000 calc(100% - min(520px,42%)),rgba(0,0,0,0) calc(100% - min(400px,34%)),rgba(0,0,0,0) 100%);mask-image:linear-gradient(90deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) min(400px,34%),#000 min(520px,42%),#000 calc(100% - min(520px,42%)),rgba(0,0,0,0) calc(100% - min(400px,34%)),rgba(0,0,0,0) 100%)}
+  .tl-wheel{position:absolute;left:50%;top:60px;width:2200px;height:2200px;margin-left:-1100px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#0B1124 0%,#090D1A 96%,#0E1430 100%);box-shadow:0 -1px 0 rgba(211,179,112,.4),0 -30px 80px rgba(20,28,56,.5);transition:none}
+  .tl-arm{position:absolute;left:50%;top:50%;width:0;height:0}
+  .tl-tick{position:absolute;left:-0.5px;top:0;width:1px}
+  .tl-ticklabel{position:absolute;left:0;top:26px;transform:translateX(-50%);font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#8D897F}
+  .tl-mark{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;box-shadow:0 0 8px 2px rgba(255,240,205,.35)}
+  .tl-eraname{position:absolute;left:0;top:0;transform:translateX(-50%);font:italic 400 15px/1 'EB Garamond',Georgia,serif;color:#B8B2A5;white-space:nowrap}
+  .tl-pointer{position:absolute;left:50%;top:44px;width:0;height:0;pointer-events:none}
+  .tl-pointer span{position:absolute;left:-6px;top:0;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #D3B370}
+  .tl-hint{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F;white-space:nowrap;pointer-events:none}
+
+  .tl-list{max-width:1240px;margin:0 auto;box-sizing:border-box;padding:clamp(88px,9vw,130px) clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)}
+  .tl-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:24px 48px;align-items:end;margin-bottom:40px}
+  .tl-eye{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+  .tl-title{margin:18px 0 0;font:400 clamp(34px,4vw,56px)/1.06 Gloock,Georgia,serif;color:#F3ECDC}
+  .tl-intro{margin:0;justify-self:end;max-width:440px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .tl-routes{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 26px;padding:18px 0 22px;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);margin-bottom:56px}
+  .tl-routes-label{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F}
+  .tl-route{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap;font:italic 400 18px/1.5 'EB Garamond',Georgia,serif;color:#EEE7D7;border-bottom:1px solid rgba(211,179,112,.25);transition:color .4s,border-color .4s}
+  .tl-route:hover{color:#F2D493}
+  .tl-route[aria-pressed='true']{color:#F2D493;border-bottom-color:#D3B370}
+  .tl-route-count{font:500 9.5px/1 'IBM Plex Mono',monospace;font-style:normal;letter-spacing:.1em;color:#8D897F}
+  .tl-shelves{display:flex;flex-direction:column;gap:clamp(56px,6vw,84px)}
+  .tl-shelf{display:flex;flex-direction:column;gap:22px}
+  .tl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:clamp(18px,2.2vw,30px)}
+
+  @media (prefers-reduced-motion: reduce) {
+    .tl-dot,.tl-path,.tl-hit,.tl-route{transition:none}
+  }
+</style>
+
+<script>
+  import { view, clamp, Y0, Y1, DEG, R, START, type TLData } from '../components/timeline/model';
+
+  const root = document.querySelector<HTMLElement>('[data-timeline]');
+  const json = document.getElementById('tl-data');
+  if (root && json) {
+    const D: TLData = JSON.parse(json.textContent ?? '{}');
+    const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ppy = (R * DEG * Math.PI) / 180;
+    const q = <T extends Element = HTMLElement>(s: string) => root.querySelector(s) as T;
+    const stage = q('[data-stage]'), sky = q('[data-sky]'), wheel = q('[data-wheel]'), dial = q('[data-dial]');
+    const dots = [...root.querySelectorAll<HTMLElement>('[data-dot]')];
+    const tags = [...root.querySelectorAll<HTMLElement>('[data-tag]')];
+    const hits = [...root.querySelectorAll<HTMLButtonElement>('[data-pick]')];
+    const paths = [...root.querySelectorAll<SVGPathElement>('[data-path]')];
+    const slots = [...root.querySelectorAll<HTMLAnchorElement>('[data-pass-slot]')];
+    const routes = [...root.querySelectorAll<HTMLButtonElement>('[data-route]')];
+    const cards = [...root.querySelectorAll<HTMLElement>('[data-open]')];
+    const playBtn = q<HTMLButtonElement>('[data-play]');
+    const selBox = q('[data-sel]'), selCard = q('[data-card]');
+    const ringEl = q('[data-sel-ring] span');
+
+    let Y = START, playing = false, pick: string | null = null, route: string | null = null;
+    let formed = new Set(D.narratives.filter((p) => p.last <= Y).map((p) => p.slug));
+    let tw = 0, playRaf = 0, rq = 0;
+
+    // popY: keep the card between the header and the dial.
+    const popY = (fy: number) => {
+      const H = sky.offsetHeight || 450, sy = fy * H, ch = 350;
+      const top = Math.max(-16, Math.min(H + 150 - ch, sy - ch * 0.4));
+      return Math.round(top - sy);
+    };
+
+    const render = () => {
+      const v = view(D, Y, pick, route);
+      wheel.style.transform = 'rotate(' + v.wheelRot + ')';
+      sky.style.zIndex = String(v.skyZ);
+      q('[data-year]').textContent = v.yearText;
+      q('[data-era]').textContent = v.era;
+      q('[data-risen]').textContent = v.risenText;
+      q('[data-pass-title]').textContent = v.passTitle;
+      q('[data-pass-more]').textContent = v.passMore;
+      slots.forEach((a, k) => {
+        const p = v.passing[k];
+        a.hidden = !p;
+        if (p) { a.href = '/collection/' + p.slug; a.children[0].textContent = p.name; a.children[1].textContent = p.date; }
+      });
+      D.items.forEach((it, i) => {
+        const s = v.stars[i], dot = dots[i];
+        dot.style.opacity = String(s.op);
+        dot.style.transform = 'translate(-50%,-50%) scale(' + s.scale + ')';
+        dot.style.boxShadow = s.glow;
+        tags[i].hidden = !s.tag;
+        hits[i].style.pointerEvents = s.pe;
+        hits[i].style.setProperty('--ring', s.ring);
+      });
+      D.narratives.forEach((n, i) => {
+        paths[i].style.opacity = String(v.paths[i].op);
+        if (v.formed.has(n.slug) && !formed.has(n.slug) && !reduced) {
+          paths[i].animate([{ opacity: 0, strokeWidth: 3 }, { opacity: 1, strokeWidth: 2, offset: 0.4 }, { opacity: 0.9, strokeWidth: 1 }], { duration: 1600, easing: 'ease-out' });
+        }
+      });
+      formed = v.formed;
+      routes.forEach((b, i) => b.setAttribute('aria-pressed', v.routeOn[i] ? 'true' : 'false'));
+      cards.forEach((c) => c.style.setProperty('--lit', String(v.lit[c.dataset.open!])));
+
+      const it = v.sel;
+      selBox.hidden = !it;
+      if (it) {
+        selBox.style.left = (it.pos[0] * 100).toFixed(3) + '%';
+        selBox.style.top = (it.pos[1] * 100).toFixed(3) + '%';
+        selCard.style.transform = 'translate(' + (it.pos[0] > 0.62 ? 'calc(-100% - 22px)' : '22px') + ',' + popY(it.pos[1]) + 'px)';
+        q('[data-sel-meta]').textContent = it.date + ' · ' + it.origin;
+        const nm = q('[data-sel-name]'); nm.textContent = it.name; nm.style.color = it.island ? '#F2CF85' : '#F3ECDC';
+        q('[data-sel-short]').textContent = it.short;
+        const inEl = q('[data-sel-in]'); inEl.hidden = !v.selNames.length; inEl.textContent = 'In ' + v.selNames.join(' · ');
+        q('[data-sel-ver]').textContent = it.verification;
+        if (ringEl) ringEl.style.borderStyle = it.verified ? 'solid' : 'dashed';
+        q<HTMLAnchorElement>('[data-sel-href]').href = '/collection/' + it.slug;
+      }
+    };
+
+    const setY = (y: number) => { Y = y; render(); };
+    const stopPlay = () => {
+      if (playRaf) { cancelAnimationFrame(playRaf); playRaf = 0; }
+      if (playing) { playing = false; playBtn.textContent = '▶ Wind the centuries'; }
+    };
+    const glideTo = (target: number) => {
+      cancelAnimationFrame(tw); stopPlay();
+      target = clamp(target);
+      const from = Y, t0 = performance.now(), dur = reduced ? 1 : Math.min(1600, 500 + Math.abs(target - from) * 6);
+      const f = (now: number) => {
+        const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+        setY(from + (target - from) * e);
+        if (k < 1) tw = requestAnimationFrame(f);
+      };
+      tw = requestAnimationFrame(f);
+    };
+    const togglePlay = () => {
+      if (playing) { stopPlay(); return; }
+      cancelAnimationFrame(tw);
+      let y = Y >= Y1 - 1 ? Y0 : Y, last = performance.now();
+      playing = true; playBtn.textContent = '❚❚ Pause'; setY(y);
+      const f = (now: number) => {
+        const dt = Math.min(0.05, (now - last) / 1000); last = now;
+        const near = D.items.some((it) => Math.abs(it.year - y) <= 3);
+        y = Math.min(Y1, y + dt * (near ? 6 : 42));
+        setY(y);
+        if (y < Y1) playRaf = requestAnimationFrame(f);
+        else { playRaf = 0; playing = false; playBtn.textContent = '▶ Wind the centuries'; }
+      };
+      playRaf = requestAnimationFrame(f);
+    };
+    playBtn.addEventListener('click', togglePlay);
+
+    // Stars and the card.
+    hits.forEach((b) => b.addEventListener('click', () => { pick = pick === b.dataset.pick ? null : b.dataset.pick!; render(); }));
+    q('[data-unpick]').addEventListener('click', () => { pick = null; render(); });
+
+    // Keys: Esc closes the card; ← → step a year (Shift: ten) while the sky is in view.
+    addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && pick) { pick = null; render(); return; }
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      if (stage.getBoundingClientRect().bottom < 100) return;
+      e.preventDefault();
+      glideTo(Math.round(Y) + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1));
+    });
+
+    // The dial: drag with pointer capture, then momentum and a glide to a whole year.
+    let drag: { x: number; Y: number; lx: number; lt: number; v: number } | null = null, yy = Y;
+    dial.addEventListener('pointerdown', (e) => {
+      cancelAnimationFrame(tw); stopPlay(); yy = Y;
+      drag = { x: e.clientX, Y, lx: e.clientX, lt: performance.now(), v: 0 };
+      try { dial.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    dial.addEventListener('pointermove', (e) => {
+      const d = drag; if (!d) return;
+      const now = performance.now(); d.v = (e.clientX - d.lx) / Math.max(1, now - d.lt); d.lx = e.clientX; d.lt = now;
+      yy = clamp(d.Y - (e.clientX - d.x) / ppy);
+      if (!rq) rq = requestAnimationFrame(() => { rq = 0; setY(yy); });
+    });
+    const up = () => {
+      const d = drag; if (!d) return; drag = null;
+      cancelAnimationFrame(rq); rq = 0; setY(yy);
+      const t = Math.round(clamp(yy - (d.v * 260) / ppy));
+      setTimeout(() => glideTo(t), 0);
+    };
+    dial.addEventListener('pointerup', up);
+    dial.addEventListener('pointercancel', up);
+
+    // Routes and shelves.
+    routes.forEach((b) => b.addEventListener('click', () => { route = route === b.dataset.route ? null : b.dataset.route!; render(); }));
+    cards.forEach((c) => c.addEventListener('click', () => {
+      const slug = c.dataset.open!, it = D.items.find((x) => x.slug === slug)!;
+      window.scrollTo({ top: stage.offsetTop, behavior: reduced ? 'auto' : 'smooth' });
+      pick = slug; render();
+      if (it.year > Y) glideTo(it.year);
+    }));
+
+    render();
+  }
+</script>

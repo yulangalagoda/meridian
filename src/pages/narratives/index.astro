@@ -1,136 +1,159 @@
 ---
-import Base from '../../layouts/Base.astro';
-import Header from '../../components/Header.astro';
-import Footer from '../../components/Footer.astro';
+// Narratives, from the Narratives reference: a sky band with every star and
+// every constellation, and a card per narrative. Pointing at a card lights its
+// constellation in the band (the reference's hot state, ported in the script).
+import NightSky from '../../layouts/NightSky.astro';
+import SkyPage from '../../components/SkyPage.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import MottoFooter from '../../components/MottoFooter.astro';
+import { bandPositions, curve, xr } from '../../components/sky/geometry';
+import { inWords } from '../../components/words';
 import { getSiteData } from '../../lib/notion';
+import type { Item } from '../../lib/types';
+import { breadcrumbs, listPage } from '../../components/seo';
 
 const { items, narratives } = await getSiteData();
+const bare = (id: string) => id.replace(/-/g, '');
+const byId = new Map(items.map((it) => [bare(it.id), it]));
+const yearOf = (it: Item) => it.year ?? 0;
+const pos = bandPositions(items.map((it) => ({ slug: it.slug, year: yearOf(it) })));
 
-const published = narratives
-  .filter((n) => n.publishStatus === 'Published')
-  .sort((a, b) => a.displayOrder - b.displayOrder);
+const nar = narratives.map((n, k) => {
+  const its = (n.itemIds.map((id) => byId.get(id)).filter(Boolean) as Item[]).sort((a, b) => yearOf(a) - yearOf(b));
+  const big = its.map((it) => [pos[it.slug][0] * 1320, pos[it.slug][1] * 360] as [number, number]);
+  const xs = big.map((p) => p[0]), ys = big.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const sc = Math.min(156 / Math.max(1, x1 - x0), 64 / Math.max(1, y1 - y0)), ox = (168 - (x1 - x0) * sc) / 2, oy = (76 - (y1 - y0) * sc) / 2;
+  const small = big.map((p) => [ox + (p[0] - x0) * sc, oy + (p[1] - y0) * sc] as [number, number]);
+  const a = yearOf(its[0]), b = yearOf(its[its.length - 1]);
+  return {
+    slug: n.slug, name: n.name, premise: n.premise, items: its.map((it) => it.slug),
+    num: String(k + 1).padStart(2, '0'), d: curve(big, n.slug, 40), dm: curve(small, n.slug + 'm', 40),
+    meta: its.length + ' objects · ' + (a === b ? a : a + '–' + b),
+  };
+});
 
-const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV'];
-
-const dashless = (s: string) => s.replace(/-/g, '');
-const itemById = new Map(items.map((i) => [dashless(i.id), i]));
-
-function narrativeItems(n: (typeof narratives)[number]) {
-  return n.itemIds.map((id) => itemById.get(id)).filter((i) => i !== undefined);
-}
-
-function yearLabel(y: number): string {
-  return y < 0 ? `${Math.abs(y)} BCE` : String(y);
-}
-function yearSpan(linked: ReturnType<typeof narrativeItems>): string | null {
-  const ys = linked.map((i) => i!.year).filter((y): y is number => y !== null);
-  if (!ys.length) return null;
-  const lo = Math.min(...ys), hi = Math.max(...ys);
-  return lo === hi ? yearLabel(lo) : `${yearLabel(lo)}–${yearLabel(hi)}`;
-}
-
-const lead = published[0];
-const rest = published.slice(1);
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: 'Narratives — The Meridian',
-  url: 'https://meridian.yulan.me/narratives',
-  description: 'Stories told by combining objects: connected threads across the antiques and historical objects of The Meridian archive.',
-  isPartOf: { '@type': 'WebSite', name: 'The Meridian', url: 'https://meridian.yulan.me' },
-  mainEntity: {
-    '@type': 'ItemList',
-    numberOfItems: published.length,
-    itemListElement: published.map((n, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: n.name,
-      url: `https://meridian.yulan.me/narratives/${n.slug}`,
-    })),
-  },
-};
+const allLabel = 'All ' + inWords(narratives.length) + ' constellations, by year';
+const stars = items.map((it) => ({ slug: it.slug, left: (pos[it.slug][0] * 100).toFixed(2) + '%', top: (pos[it.slug][1] * 100).toFixed(2) + '%', color: it.thread === 'The Island' ? '#F2CF85' : '#F6F0E2' }));
+const axis = [1600, 1700, 1800, 1850, 1900, 1950].map((y) => ({ y: String(y), left: (3 + xr(y) * 94).toFixed(2) + '%' }));
+const band = { label: allLabel, nar: nar.map((x) => ({ slug: x.slug, name: x.name, items: x.items })), stars: stars.map((s) => s.slug) };
+const description = `${narratives.length} narratives drawn as constellations across the objects of The Meridian: stories of a year, a maker, a war, a way of seeing.`;
+const jsonLd = [
+  listPage('Narratives — The Meridian', '/narratives/', description, narratives.map((n) => ({ name: n.name, path: `/narratives/${n.slug}/` }))),
+  breadcrumbs([['The Meridian', '/'], ['Narratives', '/narratives/']]),
+];
 ---
 
-<Base
-  title="Narratives"
-  description="Stories told by combining objects. Each narrative reads the collection along a different thread — a year, a maker, a war, a way of seeing — connecting antiques and historical objects into one account."
-  jsonLd={jsonLd}
->
-  <Header />
+<NightSky title="Narratives · The Meridian" description={description} jsonLd={jsonLd}>
+  <SkyPage>
+    <SiteHeader current="narratives" />
 
-  <main>
-    <div class="container" style="padding-bottom: var(--section-y);">
-      <header class="page-header">
-        <p class="eyebrow eyebrow--accent">Stories across the shelf</p>
-        <h1 class="page-header__title">Narratives</h1>
-        <p class="page-header__desc">
-          A collection is usually read along its deliberate threads: by category, by maker, by theme.
-          These narratives read it differently — each one connects objects that were acquired separately,
-          for separate reasons, into a single story.
-        </p>
-      </header>
+    <main class="nx">
+      <div class="nx-hero">
+        <div>
+          <div class="nx-eyebrow">Narratives · {narratives.length} constellations</div>
+          <h1 class="nx-h1">Stories told across objects.</h1>
+        </div>
+        <p class="nx-intro">Each narrative joins objects the way a constellation joins stars. Point at one below to find it in the sky.</p>
+      </div>
 
-      {published.length > 0 ? (
-        <>
-          {lead && (() => {
-            const linked = narrativeItems(lead);
-            const plates = linked.filter((i) => i!.primaryImage).slice(0, 6);
-            const span = yearSpan(linked);
-            return (
-              <a class="narr-lead reveal" href={`/narratives/${lead.slug}`}>
-                <div class="narr-lead__body">
-                  <p class="narr-lead__kicker">The Lead · Narrative {ROMAN[0]}</p>
-                  <h2 class="narr-lead__title">{lead.name}</h2>
-                  {lead.premise && <p class="narr-lead__premise">{lead.premise}</p>}
-                  <p class="narr-lead__meta">
-                    {linked.length} {linked.length === 1 ? 'object' : 'objects'}{span ? ` · ${span}` : ''}
-                  </p>
-                  <span class="narr-cta">Read the narrative →</span>
-                </div>
-                {plates.length > 0 && (
-                  <div class="narr-lead__plates">
-                    {plates.map((i) => (
-                      <img src={i!.primaryImage} alt={i!.imageAltText || i!.name} loading="lazy" decoding="async" />
-                    ))}
-                  </div>
-                )}
-              </a>
-            );
-          })()}
+      <div class="nx-band" data-band>
+        <div class="nx-sky">
+          {nar.map((x) => (
+            <svg viewBox="0 0 1320 360" preserveAspectRatio="none" class="nx-svg" aria-hidden="true">
+              <path d={x.d} data-npath={x.slug} style="stroke:rgba(232,206,150,.32);stroke-width:1" />
+            </svg>
+          ))}
+          {stars.map((s) => (
+            <span class="nx-star" data-nstar={s.slug} style={`left:${s.left};top:${s.top};width:4px;height:4px;background:${s.color};box-shadow:0 0 5px 1px rgba(255,240,205,.3);opacity:1`}></span>
+          ))}
+        </div>
+        {axis.map((a) => <span class="nx-axis" style={`left:${a.left}`}>{a.y}</span>)}
+        <span class="nx-label" data-nlabel>{allLabel}</span>
+      </div>
 
-          {rest.length > 0 && (
-            <>
-              <div class="sec-head"><span>More Narratives</span></div>
-              <div class="narr-grid">
-                {rest.map((n, idx) => {
-                  const linked = narrativeItems(n);
-                  const thumbs = linked.filter((i) => i!.primaryImage).slice(0, 4);
-                  const span = yearSpan(linked);
-                  return (
-                    <a class="narr-card reveal" href={`/narratives/${n.slug}`}>
-                      <p class="narr-card__kicker">Narrative · {ROMAN[idx + 1] ?? idx + 2}</p>
-                      <h2 class="narr-card__name">{n.name}</h2>
-                      {n.premise && <p class="narr-card__premise">{n.premise}</p>}
-                      <div class="narr-card__objects">
-                        {thumbs.map((i) => (
-                          <img class="narr-card__thumb" src={i!.primaryImage} alt={i!.imageAltText || i!.name} loading="lazy" decoding="async" />
-                        ))}
-                        <span class="narr-card__count">{linked.length} {linked.length === 1 ? 'object' : 'objects'}{span ? ` · ${span}` : ''}</span>
-                      </div>
-                      <span class="narr-cta narr-card__cta">Read →</span>
-                    </a>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </>
-      ) : (
-        <p class="no-results">The first narratives are being written. Return soon.</p>
-      )}
-    </div>
-  </main>
+      <div class="nx-grid">
+        {nar.map((x) => (
+          <a href={`/narratives/${x.slug}`} class="nx-card" data-ncard={x.slug}>
+            <div class="nx-top">
+              <svg viewBox="0 0 168 76" class="nx-mini" aria-hidden="true"><path d={x.dm} /></svg>
+              <span class="nx-num">{x.num}</span>
+            </div>
+            <h2 class="nx-name">{x.name}</h2>
+            <p class="nx-premise">{x.premise}</p>
+            <div class="nx-foot">
+              <span class="nx-meta">{x.meta}</span>
+              <span class="nx-follow">Follow →</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </main>
 
-  <Footer itemCount={items.length} />
-</Base>
+    <MottoFooter />
+  </SkyPage>
+  <script type="application/json" id="nx-data" set:html={JSON.stringify(band)} />
+</NightSky>
+
+<style>
+  .nx{max-width:1320px;margin:0 auto;box-sizing:border-box;padding:clamp(56px,7vw,100px) clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)}
+  .nx-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:24px 48px;align-items:end;margin-bottom:44px}
+  .nx-eyebrow{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+  .nx-h1{margin:18px 0 0;font:400 clamp(40px,4.8vw,68px)/1.02 Gloock,Georgia,serif;color:#F3ECDC}
+  .nx-intro{margin:0;justify-self:end;max-width:440px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+
+  .nx-band{position:relative;height:clamp(260px,30vw,380px);margin-bottom:12px;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(20,28,56,.7),rgba(7,10,20,0))}
+  .nx-sky{position:absolute;left:3%;right:3%;top:12%;bottom:16%}
+  .nx-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+  .nx-svg path{fill:none;vector-effect:non-scaling-stroke;transition:stroke .5s}
+  .nx-star{position:absolute;transform:translate(-50%,-50%);border-radius:50%;transition:opacity .5s,box-shadow .5s}
+  @media (prefers-reduced-motion: reduce){ .nx-svg path,.nx-star{transition:none} }
+  .nx-axis{position:absolute;bottom:12px;transform:translateX(-50%);font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#8D897F}
+  .nx-label{position:absolute;top:14px;left:16px;font:italic 400 16px/1 'EB Garamond',Georgia,serif;color:#B8B2A5}
+
+  .nx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));column-gap:clamp(28px,4vw,56px)}
+  .nx-card{display:flex;flex-direction:column;gap:14px;padding:36px 0 44px;border-top:1px solid rgba(238,231,215,.12);color:#EEE7D7}
+  .nx-card:hover{border-top-color:rgba(211,179,112,.7);color:#EEE7D7}
+  .nx-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .nx-mini{width:168px;height:76px;overflow:visible}
+  .nx-mini path{fill:none;stroke:rgba(211,179,112,.65);stroke-width:1;stroke-linecap:round}
+  .nx-num{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#8D897F}
+  .nx-name{margin:0;font:400 26px/1.15 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .nx-premise{margin:0;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .nx-foot{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:4px}
+  .nx-meta{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .nx-follow{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:5px;white-space:nowrap}
+</style>
+
+<script>
+  // Port of the reference's hot state: pointing at (or focusing) a card lights
+  // its path and stars and names it in the band; leaving restores the sky.
+  const json = document.getElementById('nx-data');
+  if (json) {
+    const D: { label: string; nar: { slug: string; name: string; items: string[] }[]; stars: string[] } = JSON.parse(json.textContent ?? '{}');
+    const paths = new Map([...document.querySelectorAll<SVGPathElement>('[data-npath]')].map((p) => [p.dataset.npath!, p]));
+    const stars = new Map([...document.querySelectorAll<HTMLElement>('[data-nstar]')].map((s) => [s.dataset.nstar!, s]));
+    const label = document.querySelector<HTMLElement>('[data-nlabel]')!;
+    const set = (hot: string | null) => {
+      const H = hot ? D.nar.find((x) => x.slug === hot) ?? null : null;
+      const on = new Set(H ? H.items : []);
+      label.textContent = H ? H.name : D.label;
+      D.nar.forEach((x) => {
+        const p = paths.get(x.slug)!;
+        p.style.stroke = H ? (H === x ? 'rgba(242,212,147,.95)' : 'rgba(232,206,150,.07)') : 'rgba(232,206,150,.32)';
+        p.style.strokeWidth = H === x ? '1.6' : '1';
+      });
+      stars.forEach((s, slug) => {
+        const lit = H && on.has(slug);
+        s.style.width = s.style.height = lit ? '7px' : '4px';
+        s.style.opacity = H && !lit ? '0.3' : '1';
+        s.style.boxShadow = lit ? '0 0 12px 4px rgba(255,240,205,.75)' : '0 0 5px 1px rgba(255,240,205,.3)';
+      });
+    };
+    document.querySelectorAll<HTMLElement>('[data-ncard]').forEach((c) => {
+      const enter = () => set(c.dataset.ncard!), leave = () => set(null);
+      c.addEventListener('mouseenter', enter); c.addEventListener('focus', enter);
+      c.addEventListener('mouseleave', leave); c.addEventListener('blur', leave);
+    });
+  }
+</script>

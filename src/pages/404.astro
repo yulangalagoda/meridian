@@ -1,81 +1,16 @@
 ---
-import Base from '../layouts/Base.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+// Not found, in the Search page's dress: the box starts from the words of the
+// missing address, so a moved object or an old link finds its way, and when
+// nothing matches the Search reference's own line points to Seeking.
+import NightSky from '../layouts/NightSky.astro';
+import SkyPage from '../components/SkyPage.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SearchPanel from '../components/search/SearchPanel.astro';
 ---
 
-<Base title="Not found" description="This page does not exist.">
-  <Header />
-  <main>
-    <div class="error-page">
-      <p class="error-page__code">404</p>
-      <h1 class="error-page__title">Lost to the archive</h1>
-      <p class="error-page__text">
-        This page does not exist, or the object has been re-catalogued under a new address.
-      </p>
-
-      <div class="error-page__suggest" id="suggestions" hidden>
-        <p class="error-page__suggest-head">Perhaps you were looking for</p>
-        <ul id="suggestion-list"></ul>
-      </div>
-
-      <div class="error-page__actions">
-        <button class="narr-cta" type="button" data-open-search>Search the archive</button>
-        <a href="/collection" class="error-page__alt">Return to the collection →</a>
-      </div>
-    </div>
-  </main>
-  <Footer />
-</Base>
-
-<style>
-  .error-page__suggest { margin-top: var(--sp-6); border-top: 1px solid var(--rule-soft); border-bottom: 1px solid var(--rule-soft); padding: var(--sp-5) var(--sp-8); }
-  .error-page__suggest-head { font-family: var(--mono); font-size: 10px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--oxblood); margin-bottom: var(--sp-3); }
-  .error-page__suggest ul { list-style: none; display: flex; flex-direction: column; gap: var(--sp-2); }
-  .error-page__suggest a { font-family: var(--display); font-size: var(--text-md); color: var(--ink); }
-  .error-page__suggest a:hover { color: var(--oxblood); }
-  .error-page__actions { display: flex; align-items: center; gap: var(--sp-6); margin-top: var(--sp-6); flex-wrap: wrap; justify-content: center; }
-  .error-page__actions .narr-cta:hover { background: var(--oxblood); border-color: var(--oxblood); color: var(--paper); }
-  .error-page__alt { font-family: var(--mono); font-size: 10.5px; letter-spacing: var(--tr-caps); text-transform: uppercase; color: var(--ink-mute); }
-  .error-page__alt:hover { color: var(--oxblood); }
-</style>
-
-<script>
-  // Did-you-mean: match the requested path's tokens against the search index.
-  (async function () {
-    const box = document.getElementById('suggestions');
-    const list = document.getElementById('suggestion-list');
-    if (!box || !list) return;
-
-    const tokens = location.pathname
-      .toLowerCase()
-      .split(/[/_-]+/)
-      .filter((t) => t.length > 2 && !/^\d+$/.test(t) && !['collection', 'narratives', 'categories'].includes(t));
-    if (!tokens.length) return;
-
-    try {
-      const res = await fetch('/search-index.json');
-      const idx = await res.json();
-      const all = [...idx.objects, ...idx.narratives, ...idx.fields, ...idx.pages];
-
-      const scored = all
-        .map((e: any) => {
-          const hay = (e.t + ' ' + e.u + ' ' + e.k).toLowerCase();
-          let s = 0;
-          for (const tok of tokens) if (hay.includes(tok)) s++;
-          return { e, s };
-        })
-        .filter((x: any) => x.s > 0)
-        .sort((a: any, b: any) => b.s - a.s)
-        .slice(0, 3);
-
-      if (!scored.length) return;
-      list.innerHTML = scored
-        .map(({ e }: any) => `<li><a href="${e.u}">${e.t}</a></li>`)
-        .join('');
-      box.hidden = false;
-    } catch {
-      /* the actions row still offers search + collection */
-    }
-  })();
-</script>
+<NightSky title="Not found · The Meridian" noindex>
+  <SkyPage>
+    <SiteHeader />
+    <SearchPanel seed="path" />
+  </SkyPage>
+</NightSky>

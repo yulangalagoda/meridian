@@ -6,6 +6,7 @@ export interface Item {
   story: string;
   year: number | null;
   dateDetail: string;
+  dateLabel: string; // short date for cards, star cards and narrative rows, e.g. c.1590
   era: string;
   categoryId: string | null;
   categoryName: string | null;
@@ -21,11 +22,24 @@ export interface Item {
   narrativeIds: string[];
   primaryImage: string | null;
   galleryImages: string[];
+  galleryCaptions: string[]; // one per gallery image, in order (Notion: one per line)
   imageAltText: string;
   featured: boolean;
   displayOrder: number;
   publishStatus: string;
   itemId: number;
+  thread: string; // 'The Island' | 'Instruments of Progress' | ''
+  yearFrom: number | null; // start of the date range (timeline "passing through")
+  yearTo: number | null; // end of the date range
+  details: ItemDetail[]; // optional hotspots on the primary image
+}
+
+// One hand-placed point on the primary image. x and y are 0–1 fractions.
+export interface ItemDetail {
+  x: number;
+  y: number;
+  label: string;
+  text: string;
 }
 
 export interface Category {
@@ -47,6 +61,20 @@ export interface Narrative {
   displayOrder: number;
   publishStatus: string;
   itemIds: string[]; // related item page ids (dashless)
+}
+
+// A narrative page body split at its H3s. Consecutive H3s with nothing between
+// them share one section (e.g. England South / West / East).
+export interface NarrativeSection {
+  names: string[]; // exact item names from the H3s
+  placeHtml: string; // the 📍 callout under the H3, e.g. "July · Balham, south London"
+  html: string; // everything after the callout, up to the next H3 or divider
+}
+
+export interface NarrativeContent {
+  openingHtml: string; // blocks before the first H3
+  sections: NarrativeSection[];
+  closeHtml: string; // blocks after the divider that ends the last section
 }
 
 export interface SiteData {

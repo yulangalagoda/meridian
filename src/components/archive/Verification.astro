@@ -1,0 +1,71 @@
+---
+// Verification & Provenance: lede and body; the H3 is the mono label over the
+// panels; each bold-led paragraph is a panel, and a list under it becomes the
+// status rows (italic term → ring badge, solid for Verified); the quote closes.
+import Lede from './Lede.astro';
+import VerificationRing from '../VerificationRing.astro';
+import { blockSpans, plainText, renderSpans, splitBoldLead } from '../../lib/richtext';
+
+interface Props { blocks: any[] }
+const { blocks } = Astro.props;
+
+const html = (b: any) => renderSpans(blockSpans(b));
+const led = (b: any) => (b.type === 'paragraph' ? splitBoldLead(blockSpans(b)) : null);
+
+const lede = blocks[0];
+const hi = blocks.findIndex((b) => b.type === 'heading_3');
+const body = blocks.slice(1, hi < 0 ? undefined : hi).filter((b) => b.type === 'paragraph' && !led(b));
+const label = hi >= 0 ? plainText(blockSpans(blocks[hi])) : '';
+const panels = blocks.filter(led).map((b) => {
+  const items = (b.children ?? []).filter((c: any) => c.type === 'bulleted_list_item');
+  return {
+    ...led(b)!,
+    rows: items.map((c: any) => {
+      const spans = blockSpans(c);
+      const term = plainText(spans.filter((s: any, i: number) => s.annotations?.italic && spans.slice(0, i).every((p: any) => p.annotations?.italic))).trim();
+      return { term, verified: term === 'Verified', html: renderSpans(spans) };
+    }),
+  };
+});
+const quote = blocks.find((b) => b.type === 'quote');
+---
+
+<Lede html={html(lede)} after={32} pretty />
+{body.map((b, i) => <p class="vp-body" style={i === body.length - 1 ? 'margin:0 0 64px' : undefined} set:html={html(b)} />)}
+
+{label && <div class="vp-label">{label}</div>}
+<div class="vp-panels">
+  {panels.map((p) => (
+    <section class:list={['vp-panel', { 'vp-panel-rows': p.rows.length }]}>
+      <h2 class="vp-title">{p.lead}</h2>
+      <p class="vp-text" style={p.rows.length ? 'margin:0 0 8px' : undefined} set:html={p.restHtml} />
+      {p.rows.length > 0 && (
+        <div>
+          {p.rows.map((r) => (
+            <div class="vp-row">
+              <span class="vp-badge"><VerificationRing verified={r.verified} size={11} />{r.term}</span>
+              <p class="vp-rowtext" set:html={r.html} />
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  ))}
+</div>
+
+{quote && <p class="vp-close" set:html={html(quote)} />}
+
+<style>
+  .vp-body{margin:0 0 1.1em;font:400 21px/1.62 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .vp-label{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F;margin-bottom:22px}
+  .vp-panels{display:flex;flex-direction:column;gap:20px}
+  .vp-panel{padding:30px 28px 32px;background:rgba(11,17,36,.7);border:1px solid rgba(238,231,215,.1);display:flex;flex-direction:column;gap:14px}
+  .vp-panel-rows{padding:30px 28px 18px}
+  .vp-title{margin:0;font:400 clamp(26px,2.6vw,32px)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+  .vp-text{margin:0;font:400 19px/1.58 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .vp-panel-rows .vp-text{text-wrap:wrap}
+  .vp-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px 24px;padding:22px 0;border-top:1px solid rgba(238,231,215,.1)}
+  .vp-badge{display:inline-flex;align-items:center;gap:10px;align-self:start;padding-top:6px;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#D3B370}
+  .vp-rowtext{margin:0;font:400 19px/1.58 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .vp-close{margin:80px 0 0;padding-top:40px;border-top:1px solid rgba(211,179,112,.35);font:400 clamp(28px,3.2vw,40px)/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+</style>

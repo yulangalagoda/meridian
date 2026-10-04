@@ -37,3 +37,7 @@
 /collection/war-and-peace-tolstoy-macmillan-oup-1943 /collection/war-and-peace-1943 301
 /collection/works-of-shakespeare-chandos-classics-warne /collection/works-of-william-shakspeare-1879 301
 /collection/wounded-name-broster-1928 /collection/wounded-name-1929 301
+
+# Categories pages are gone in the Night Sky redesign — fields live on /collection
+/categories /collection 301
+/categories/* /collection 301

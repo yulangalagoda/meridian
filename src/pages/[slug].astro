@@ -1,58 +1,39 @@
 ---
-import Base from '../layouts/Base.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { getSiteData, fetchPolicyContent, POLICY_PAGES, type PolicySlug } from '../lib/notion';
+// The archive pages kept as Notion sub-pages. Each has its own treatment in the
+// references, built from the page's blocks.
+import ArchivePage from '../components/archive/ArchivePage.astro';
+import ArchiveHead from '../components/archive/ArchiveHead.astro';
+import CollectingPolicy from '../components/archive/CollectingPolicy.astro';
+import Verification from '../components/archive/Verification.astro';
+import Seeking from '../components/archive/Seeking.astro';
+import Access from '../components/archive/Access.astro';
+import AnnualReview from '../components/archive/AnnualReview.astro';
+import { POLICY_PAGES, fetchPageBlocks, type PolicySlug } from '../lib/notion';
 
-export async function getStaticPaths() {
-  return (Object.keys(POLICY_PAGES) as PolicySlug[]).map((slug) => ({
-    params: { slug },
-    props: { slug },
-  }));
+export function getStaticPaths() {
+  return (Object.keys(POLICY_PAGES) as PolicySlug[]).map((slug) => ({ params: { slug } }));
 }
 
-const { slug } = Astro.props;
+const slug = Astro.params.slug as PolicySlug;
 const page = POLICY_PAGES[slug];
-const { items } = await getSiteData();
-const bodyHtml = await fetchPolicyContent(slug);
+const blocks = await fetchPageBlocks(page.id);
 
-const pageUrl = `https://meridian.yulan.me/${slug}`;
-
-const jsonLd = [
-  {
-    '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    name: `${page.title} — The Meridian`,
-    url: pageUrl,
-    description: page.description,
-    isPartOf: { '@type': 'WebSite', name: 'The Meridian', url: 'https://meridian.yulan.me' },
-    author: { '@type': 'Person', name: 'Yulan Galagoda', url: 'https://yulan.me' },
-  },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'The Meridian', item: 'https://meridian.yulan.me' },
-      { '@type': 'ListItem', position: 2, name: page.title, item: pageUrl },
-    ],
-  },
-];
+// Eyebrow, title size and reading width per page, from the references.
+const LOOK: Record<PolicySlug, { eyebrow: string; long: boolean; width: 680 | 720 | 760 }> = {
+  'collecting-policy': { eyebrow: 'The Archive · Scope', long: false, width: 760 },
+  'verification-and-provenance': { eyebrow: 'The Archive · The standard', long: true, width: 720 },
+  'seeking': { eyebrow: 'The Archive · The want list', long: false, width: 720 },
+  'access-citation-image-use': { eyebrow: 'The Archive · Using the archive', long: true, width: 760 },
+  'annual-review': { eyebrow: 'The Archive · Each June', long: false, width: 720 },
+};
+const look = LOOK[slug];
 ---
 
-<Base title={page.title} description={page.description} jsonLd={jsonLd}>
-  <Header />
-
-  <main>
-    <div class="prose-page">
-      <header class="prose-page__header">
-        <p class="prose-page__kicker">{page.kicker}</p>
-        <h1 class="prose-page__title">{page.title}</h1>
-        <div class="prose-page__orn" aria-hidden="true">✦</div>
-      </header>
-
-      <article class="prose-body" set:html={bodyHtml} />
-    </div>
-  </main>
-
-  <Footer itemCount={items.length} />
-</Base>
+<ArchivePage current={slug} title={page.title} description={page.description} width={look.width}>
+  <ArchiveHead eyebrow={look.eyebrow} title={page.title} long={look.long} />
+  {slug === 'collecting-policy' && <CollectingPolicy blocks={blocks} />}
+  {slug === 'verification-and-provenance' && <Verification blocks={blocks} />}
+  {slug === 'seeking' && <Seeking blocks={blocks} />}
+  {slug === 'access-citation-image-use' && <Access blocks={blocks} />}
+  {slug === 'annual-review' && <AnnualReview blocks={blocks} />}
+</ArchivePage>

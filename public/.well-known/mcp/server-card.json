@@ -1,8 +1,8 @@
 {
   "serverInfo": {
     "name": "The Meridian",
-    "version": "1.0.0",
-    "description": "A private archive of antiques and historical objects spanning 1590 to the present, curated by Yulan Galagoda. Browse the collection by era, category, origin, condition, and tag.",
+    "version": "2.0.0",
+    "description": "A private archive of antiques and historical objects from 1590 onwards, kept by Yulan Galagoda, along two threads: Sri Lanka and Ceylon across every century, and the instruments by which people learned to measure, record, calculate and see. Browse the collection by field, era or A–Z, follow the timeline and the narratives, or search at /search/?q=. A plain-language map of the site is at /llms.txt.",
     "url": "https://meridian.yulan.me"
   },
   "transport": [],

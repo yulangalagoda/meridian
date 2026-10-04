@@ -1,275 +1,71 @@
 ---
-import Base from '../layouts/Base.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { getSiteData } from '../lib/notion';
+// About, from the Notion "About me" page: the first paragraph is the lede, an
+// all-italic paragraph is the gold aside, a quote becomes the pull quote.
+import ArchivePage from '../components/archive/ArchivePage.astro';
+import ArchiveHead from '../components/archive/ArchiveHead.astro';
+import { CONTACT_EMAIL } from '../components/archive/types';
+import { CURATOR, breadcrumbs, webPage } from '../components/seo';
+import { fetchPageBlocks, ABOUT_PAGE_ID } from '../lib/notion';
+import { blockSpans, renderSpans } from '../lib/richtext';
 
-const { aboutHtml, items, categories } = await getSiteData();
+const blocks = await fetchPageBlocks(ABOUT_PAGE_ID);
+
+// Runs of paragraphs become one prose block; each quote stands on its own.
+type Part = { kind: 'prose'; paras: { cls: string; html: string }[] } | { kind: 'quote'; html: string };
+const parts: Part[] = [];
+let first = true;
+for (const b of blocks) {
+  const spans = blockSpans(b);
+  if (b.type === 'quote') { parts.push({ kind: 'quote', html: renderSpans(spans) }); continue; }
+  if (b.type !== 'paragraph' || !spans.length) continue;
+  const italic = spans.every((s: any) => s.annotations?.italic);
+  const cls = first ? 'ab-lede' : italic ? 'ab-gold' : '';
+  first = false;
+  const last = parts[parts.length - 1];
+  // The gold aside is italic as a whole paragraph, as in the reference, not an inner <em>.
+  const plain = italic ? spans.map((s: any) => ({ ...s, annotations: { ...s.annotations, italic: false } })) : spans;
+  const para = { cls, html: renderSpans(plain) };
+  if (last?.kind === 'prose') last.paras.push(para);
+  else parts.push({ kind: 'prose', paras: [para] });
+}
+
+const description = 'About The Meridian and its curator, Yulan Galagoda: what the archive collects, why, and how to get in touch about research, viewing or objects.';
+const jsonLd = [
+  { ...webPage('About — The Meridian', '/about/', description, 'ProfilePage'), mainEntity: CURATOR },
+  breadcrumbs([['The Meridian', '/'], ['About', '/about/']]),
+];
 ---
 
-<Base
-  title="About"
-  description="About The Meridian — a private archive of antiques and historical objects kept by Yulan Galagoda: what it collects, why, and how to get in touch about research, viewing, or objects."
-  jsonLd={{
-    '@context': 'https://schema.org',
-    '@type': 'ProfilePage',
-    name: 'About The Meridian',
-    url: 'https://meridian.yulan.me/about',
-    mainEntity: {
-      '@type': 'Person',
-      name: 'Yulan Galagoda',
-      url: 'https://yulan.me',
-      email: 'mailto:hi@yulan.me',
-      jobTitle: 'Curator',
-      address: { '@type': 'PostalAddress', addressLocality: 'Plymouth', addressCountry: 'GB' },
-    },
-  }}
->
-  <Header />
+<ArchivePage current="about" title="About" description={description} width={680} jsonLd={jsonLd}>
+  <ArchiveHead eyebrow="About · Yulan Galagoda" title="About me" gap={44} />
+  {parts.map((part) =>
+    part.kind === 'prose' ? (
+      <div class="ab-prose">{part.paras.map((p) => <p class={p.cls || undefined} set:html={p.html} />)}</div>
+    ) : (
+      <blockquote class="ab-quote" set:html={part.html} />
+    )
+  )}
 
-  <main>
-    <div class="container">
-
-      <!-- ── Page header ────────────────────────────────────────────────────── -->
-      <header class="about-header">
-        <p class="eyebrow eyebrow--accent">About</p>
-        <h1 class="about-title">The Meridian</h1>
-        <p class="about-subtitle">
-          A personal archive of antiques and historical objects, kept by Yulan Galagoda.
-        </p>
-      </header>
-
-      <!-- ── Two-column body ───────────────────────────────────────────────── -->
-      <div class="about-grid">
-
-        <!-- Left: Notion body -->
-        <article class="about-body" set:html={aboutHtml} />
-
-        <!-- Right: Profile + contact -->
-        <aside class="about-sidebar">
-
-          <div class="sidebar-profile">
-            <div class="profile-badge" aria-hidden="true">YG</div>
-            <a href="https://yulan.me" class="profile-name" target="_blank" rel="noopener">Yulan Galagoda</a>
-          </div>
-
-          <div class="sidebar-section">
-            <p class="sidebar-label eyebrow eyebrow--muted">Contact</p>
-            <a href="mailto:hi@yulan.me" class="sidebar-email">
-              hi@yulan.me
-            </a>
-          </div>
-
-          <div class="sidebar-section">
-            <p class="sidebar-label eyebrow eyebrow--muted">Location</p>
-            <p class="sidebar-val">Plymouth, United Kingdom</p>
-          </div>
-
-          <div class="sidebar-section">
-            <p class="sidebar-label eyebrow eyebrow--muted">The archive</p>
-            <p class="sidebar-val sidebar-val--large">{items.length} objects</p>
-            <p class="sidebar-val">{categories.length} categories</p>
-            <a href="/collection" class="sidebar-link">
-              Browse the collection
-              <svg viewBox="0 0 16 10" width="11" height="7" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <path d="M1 5h14M10 1l5 4-5 4"/>
-              </svg>
-            </a>
-          </div>
-
-        </aside>
-      </div>
-
+  <div class="ab-contact">
+    <div class="ab-write">
+      <span class="ab-label">Write to YG</span>
+      <a href={`mailto:${CONTACT_EMAIL}?subject=The%20Meridian`} class="ab-mail">{CONTACT_EMAIL}</a>
     </div>
-  </main>
-
-  <Footer itemCount={items.length} />
-</Base>
+    <a href="/seeking" class="ab-seek">What the archive is seeking →</a>
+  </div>
+</ArchivePage>
 
 <style>
-  /* ── Header ───────────────────────────────────────────────────────────────── */
-  .about-header {
-    padding-top: clamp(3rem, 6vw, 5rem);
-    padding-bottom: clamp(2.5rem, 4vw, 3.5rem);
-    border-bottom: 1px solid var(--stone-3);
-    margin-bottom: clamp(3rem, 5vw, 4.5rem);
-    max-width: 720px;
-  }
+  .ab-prose{font:400 21px/1.62 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .ab-prose p{margin:0 0 1.1em}
+  .ab-prose p:last-child{margin:0}
+  .ab-prose .ab-lede{font-size:25px;line-height:1.5;color:#F3ECDC}
+  .ab-prose .ab-gold{font-style:italic;color:#F2CF85}
+  .ab-quote{margin:36px 0 0;padding:34px 0 34px 36px;border-left:1px solid rgba(211,179,112,.6);font:400 clamp(30px,3.4vw,42px)/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
 
-  .about-title {
-    font-family: var(--font-display);
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
-    font-weight: 400;
-    letter-spacing: -0.025em;
-    line-height: 1.05;
-    color: var(--ink);
-    margin-top: var(--sp-4);
-  }
-
-  .about-subtitle {
-    margin-top: var(--sp-5);
-    font-size: var(--text-base);
-    color: var(--ink-mute);
-    line-height: 1.7;
-    max-width: 52ch;
-  }
-
-  /* ── Two-column grid ──────────────────────────────────────────────────────── */
-  .about-grid {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 0;
-    padding-bottom: clamp(4rem, 8vw, 6rem);
-    align-items: start;
-  }
-
-  /* ── Left: body text ──────────────────────────────────────────────────────── */
-  .about-body {
-    padding-right: clamp(2rem, 4vw, 3.5rem);
-    border-right: 1px solid var(--stone-3);
-  }
-
-  /* Override global about-body styles in this context */
-  .about-body :global(p) {
-    max-width: 58ch;
-    text-align: justify;
-    hyphens: auto;
-  }
-
-  /* ── Right: sidebar ───────────────────────────────────────────────────────── */
-  .about-sidebar {
-    padding-left: clamp(2rem, 3.5vw, 3rem);
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  /* Profile block */
-  .sidebar-profile {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-4);
-    padding-bottom: var(--sp-6);
-    border-bottom: 1px solid var(--stone-3);
-  }
-
-  .profile-badge {
-    flex-shrink: 0;
-    width: 3rem;
-    height: 3rem;
-    background: var(--oxblood);
-    color: var(--stone);
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-  }
-
-  .profile-name {
-    font-family: var(--font-display);
-    font-size: var(--text-lg);
-    font-weight: 400;
-    letter-spacing: var(--tracking-tight);
-    color: var(--ink);
-    line-height: 1.2;
-    text-decoration: none;
-    transition: color var(--dur-base) var(--ease-io);
-  }
-
-  .profile-name:hover {
-    color: var(--oxblood);
-  }
-
-  /* Sidebar sections — label sits close to its own content,
-     with generous space above separating it from the previous block */
-  .sidebar-section {
-    padding-top: var(--sp-6);
-    padding-bottom: var(--sp-6);
-    border-bottom: 1px solid var(--stone-3);
-  }
-
-  .sidebar-section:last-child {
-    border-bottom: none;
-  }
-
-  .sidebar-label {
-    margin-bottom: var(--sp-2);
-  }
-
-  .sidebar-email {
-    font-size: var(--text-sm);
-    color: var(--oxblood);
-    text-decoration: none;
-    word-break: break-all;
-    line-height: 1.5;
-    transition: color var(--dur-base) var(--ease-io);
-  }
-
-  .sidebar-email:hover {
-    color: var(--oxblood-2);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-  }
-
-  .sidebar-val {
-    font-size: var(--text-sm);
-    color: var(--ink-mute);
-    line-height: 1.6;
-  }
-
-  .sidebar-val--large {
-    font-family: var(--font-display);
-    font-size: clamp(1.6rem, 2.5vw, 2.2rem);
-    font-weight: 400;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-    line-height: 1;
-    margin-bottom: var(--sp-1);
-  }
-
-  .sidebar-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--sp-2);
-    margin-top: var(--sp-4);
-    font-size: var(--text-xs);
-    font-weight: 500;
-    letter-spacing: var(--tracking-caps);
-    text-transform: uppercase;
-    color: var(--oxblood);
-    text-decoration: none;
-    transition: gap var(--dur-slow) var(--ease-out), color var(--dur-base) var(--ease-io);
-  }
-
-  .sidebar-link:hover {
-    color: var(--oxblood-2);
-    gap: calc(var(--sp-2) + 4px);
-  }
-
-  /* ── Responsive ──────────────────────────────────────────────────────────── */
-  @media (max-width: 800px) {
-    .about-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .about-body {
-      border-right: none;
-      border-bottom: 1px solid var(--stone-3);
-      padding-right: 0;
-      padding-bottom: clamp(2.5rem, 5vw, 4rem);
-      margin-bottom: clamp(2.5rem, 5vw, 4rem);
-    }
-
-    .about-sidebar {
-      padding-left: 0;
-    }
-
-    .about-header {
-      max-width: none;
-    }
-  }
+  .ab-contact{margin-top:72px;padding-top:28px;border-top:1px solid rgba(238,231,215,.12);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:20px}
+  .ab-write{display:flex;flex-direction:column;gap:12px}
+  .ab-label{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
+  .ab-mail{font:400 clamp(22px,2.4vw,30px)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+  .ab-seek{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:7px}
 </style>

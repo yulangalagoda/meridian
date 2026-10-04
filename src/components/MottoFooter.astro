@@ -1,0 +1,72 @@
+---
+// Every page ends on the motto. Copy is word for word from the root
+// "The Meridian" page in Notion. The references size it per page:
+//   archive  archive pages, collection, narratives
+//   island   as archive, without the bottom glow
+//   timeline larger motto, more air above the credit line
+//   object   larger motto, plus links to every archive page
+//   home     largest motto, the "no exception" line and the archive links
+import Star from './Star.astro';
+
+type Variant = 'archive' | 'island' | 'timeline' | 'object' | 'home';
+
+interface Props {
+  variant?: Variant;
+}
+
+const { variant = 'archive' } = Astro.props;
+
+const withLinks = variant === 'home' || variant === 'object';
+const reveal = withLinks ? { 'data-reveal': '1' } : {};
+
+const ARCHIVE_LINKS: [string, string][] = [
+  ['/collecting-policy', 'Collecting Policy'],
+  ['/verification-and-provenance', 'Verification & Provenance'],
+  ['/seeking', 'Seeking'],
+  ['/access-citation-image-use', 'Access, Citation & Image Use'],
+  ['/annual-review', 'Annual Review'],
+  ['/about', 'About'],
+];
+
+---
+
+<footer class:list={['ft', `ft-${variant}`]}>
+  <div class="ft-motto" {...reveal}>
+    <Star kind="motto" />
+    <p class="ft-pali">Vayadhammā saṅkhārā</p>
+    <p class="ft-decay">All conditioned things are subject to decay.</p>
+    {variant === 'home' && (
+      <p class="ft-note">The objects here are no exception; they are on their way there too, simply held for a while, and cared for along the road.</p>
+    )}
+  </div>
+  {withLinks && (
+    <nav class="ft-links" aria-label="The Archive">
+      {ARCHIVE_LINKS.map(([href, label]) => <a href={href}>{label}</a>)}
+    </nav>
+  )}
+  <div class="ft-credit">The Meridian · the collection of Yulan Galagoda · meridian.yulan.me</div>
+</footer>
+
+<style>
+  .ft{padding:clamp(80px,8vw,120px) clamp(20px,4.5vw,64px) 52px;text-align:center;background:radial-gradient(ellipse 60% 70% at 50% 100%,rgba(32,45,100,.4) 0%,rgba(7,10,20,0) 72%)}
+  .ft-island{background:none}
+  .ft-timeline,.ft-object{padding:clamp(90px,9vw,140px) clamp(20px,4.5vw,64px) 52px}
+  .ft-home{position:relative;padding:clamp(110px,11vw,170px) clamp(20px,4.5vw,64px) 56px}
+
+  .ft-motto{display:flex;flex-direction:column;align-items:center;gap:18px}
+  .ft-home .ft-motto{max-width:760px;margin:0 auto;gap:22px}
+
+  .ft-pali{margin:0;font:italic 400 clamp(32px,4vw,52px)/1.05 'EB Garamond',Georgia,serif;color:#F3ECDC}
+  .ft-timeline .ft-pali,.ft-object .ft-pali{font:italic 400 clamp(36px,4.4vw,60px)/1.05 'EB Garamond',Georgia,serif}
+  .ft-home .ft-pali{font:italic 400 clamp(42px,5.4vw,76px)/1.05 'EB Garamond',Georgia,serif}
+
+  .ft-decay{margin:0;font:500 10.5px/1.6 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370}
+  .ft-note{margin:6px 0 0;max-width:540px;font:400 19px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+
+  .ft-links{margin:72px auto 0;max-width:1100px;display:flex;flex-wrap:wrap;justify-content:center;gap:14px 36px;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F}
+  .ft-home .ft-links{margin:100px auto 0}
+
+  .ft-credit{margin-top:48px;font:italic 400 15px/1.5 'EB Garamond',Georgia,serif;color:#8D897F}
+  .ft-timeline .ft-credit{margin-top:56px}
+  .ft-object .ft-credit,.ft-home .ft-credit{margin-top:28px}
+</style>
