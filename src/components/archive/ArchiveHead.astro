@@ -1,0 +1,22 @@
+---
+// The gold mono eyebrow and the Gloock title that open every archive page.
+// Long titles (Verification & Provenance; Access, Citation & Image Use) use the
+// smaller balanced size; About sits 44px above its text, the others 36px.
+interface Props {
+  eyebrow: string;
+  title: string;
+  long?: boolean;
+  gap?: 36 | 44;
+}
+
+const { eyebrow, title, long = false, gap = 36 } = Astro.props;
+---
+
+<div class="ah-eye">{eyebrow}</div>
+<h1 class:list={['ah-title', { 'ah-long': long }]} style={`margin:20px 0 ${gap}px`}>{title}</h1>
+
+<style>
+  .ah-eye{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+  .ah-title{font:400 clamp(48px,6vw,84px)/1 Gloock,Georgia,serif;color:#F3ECDC;letter-spacing:-.01em}
+  .ah-long{font:400 clamp(44px,5.4vw,76px)/1.02 Gloock,Georgia,serif;text-wrap:balance}
+</style>

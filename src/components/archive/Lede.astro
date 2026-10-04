@@ -1,0 +1,16 @@
+---
+// The 25px opening paragraph of an archive page (Notion's first paragraph).
+interface Props {
+  html: string;
+  after: 32 | 48 | 56 | 72; // space below, per the reference
+  pretty?: boolean;
+}
+
+const { html, after, pretty = false } = Astro.props;
+---
+
+<p class="ld" style={`margin:0 0 ${after}px${pretty ? ';text-wrap:pretty' : ''}`} set:html={html} />
+
+<style>
+  .ld{font:400 25px/1.5 'EB Garamond',Georgia,serif;color:#F3ECDC}
+</style>

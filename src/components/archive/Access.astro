@@ -1,0 +1,60 @@
+---
+// Access, Citation & Image Use: lede; each bold-led paragraph is a label/text
+// row (the label without its full stop); a callout nested under a row is the
+// citation box, nested paragraphs follow it; the contact block closes.
+import Lede from './Lede.astro';
+import { CONTACT_EMAIL } from './types';
+import { blockSpans, renderSpans, splitBoldLead } from '../../lib/richtext';
+
+interface Props { blocks: any[] }
+const { blocks } = Astro.props;
+
+const html = (b: any) => renderSpans(blockSpans(b));
+const led = (b: any) => (b.type === 'paragraph' ? splitBoldLead(blockSpans(b)) : null);
+
+const lede = blocks[0];
+const rows = blocks.filter(led).map((b) => ({ ...led(b)!, children: (b.children ?? []) as any[] }));
+---
+
+<Lede html={html(lede)} after={48} />
+
+<div class="ac-rows">
+  {rows.map((r) => (
+    <div class="ac-row">
+      <h2 class="ac-label">{r.lead.replace(/\.$/, '')}</h2>
+      {r.children.length === 0 ? (
+        <div class="ac-text" set:html={r.restHtml} />
+      ) : (
+        <div class="ac-text">
+          <p class="ac-p" set:html={r.restHtml} />
+          {r.children.map((c, i) =>
+            c.type === 'callout' ? (
+              <div class="ac-cite" set:html={html(c)} />
+            ) : (
+              <p class="ac-p" style={i === r.children.length - 1 ? 'margin:0' : undefined} set:html={html(c)} />
+            )
+          )}
+        </div>
+      )}
+    </div>
+  ))}
+</div>
+
+<div class="ac-write">
+  <span class="ac-wlabel">Write to YG</span>
+  <a href={`mailto:${CONTACT_EMAIL}?subject=The%20Meridian%3A%20research%20inquiry`} class="ac-mail">{CONTACT_EMAIL}</a>
+</div>
+
+<style>
+  .ac-rows{display:flex;flex-direction:column;border-bottom:1px solid rgba(238,231,215,.12)}
+  .ac-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px 32px;padding:30px 0;border-top:1px solid rgba(238,231,215,.12)}
+  .ac-label{margin:0;font:400 24px/1.2 Gloock,Georgia,serif;color:#F3ECDC}
+  .ac-text{grid-column:span 2;min-width:0;font:400 20px/1.6 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .ac-p{margin:0 0 18px}
+  .ac-cite{margin:0 0 18px;padding:18px 20px;background:rgba(11,17,36,.8);border:1px solid rgba(211,179,112,.35);font:400 14px/1.6 'IBM Plex Mono',monospace;color:#F3ECDC;overflow-wrap:anywhere}
+  .ac-cite :global(em){font-family:'EB Garamond',Georgia,serif;font-size:19px}
+  .ac-cite :global(code){font:inherit;color:#F2D493}
+  .ac-write{margin-top:56px;display:flex;flex-direction:column;gap:12px}
+  .ac-wlabel{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
+  .ac-mail{font:400 clamp(22px,2.4vw,30px)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+</style>

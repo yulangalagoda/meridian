@@ -1,13 +1,64 @@
 ---
-import NightSky from '../layouts/NightSky.astro';
-import SkyPage from '../components/SkyPage.astro';
-import SiteHeader from '../components/SiteHeader.astro';
-import MottoFooter from '../components/MottoFooter.astro';
+// About, from the Notion "About me" page: the first paragraph is the lede, an
+// all-italic paragraph is the gold aside, a quote becomes the pull quote.
+import ArchivePage from '../components/archive/ArchivePage.astro';
+import ArchiveHead from '../components/archive/ArchiveHead.astro';
+import { CONTACT_EMAIL } from '../components/archive/types';
+import { fetchPageBlocks, ABOUT_PAGE_ID } from '../lib/notion';
+import { blockSpans, renderSpans } from '../lib/richtext';
+
+const blocks = await fetchPageBlocks(ABOUT_PAGE_ID);
+
+// Runs of paragraphs become one prose block; each quote stands on its own.
+type Part = { kind: 'prose'; paras: { cls: string; html: string }[] } | { kind: 'quote'; html: string };
+const parts: Part[] = [];
+let first = true;
+for (const b of blocks) {
+  const spans = blockSpans(b);
+  if (b.type === 'quote') { parts.push({ kind: 'quote', html: renderSpans(spans) }); continue; }
+  if (b.type !== 'paragraph' || !spans.length) continue;
+  const italic = spans.every((s: any) => s.annotations?.italic);
+  const cls = first ? 'ab-lede' : italic ? 'ab-gold' : '';
+  first = false;
+  const last = parts[parts.length - 1];
+  // The gold aside is italic as a whole paragraph, as in the reference, not an inner <em>.
+  const plain = italic ? spans.map((s: any) => ({ ...s, annotations: { ...s.annotations, italic: false } })) : spans;
+  const para = { cls, html: renderSpans(plain) };
+  if (last?.kind === 'prose') last.paras.push(para);
+  else parts.push({ kind: 'prose', paras: [para] });
+}
 ---
 
-<NightSky title="About · The Meridian">
-  <SkyPage depth="50%">
-    <SiteHeader current="about" />
-    <MottoFooter />
-  </SkyPage>
-</NightSky>
+<ArchivePage current="about" title="About" width={680}>
+  <ArchiveHead eyebrow="About · Yulan Galagoda" title="About me" gap={44} />
+  {parts.map((part) =>
+    part.kind === 'prose' ? (
+      <div class="ab-prose">{part.paras.map((p) => <p class={p.cls || undefined} set:html={p.html} />)}</div>
+    ) : (
+      <blockquote class="ab-quote" set:html={part.html} />
+    )
+  )}
+
+  <div class="ab-contact">
+    <div class="ab-write">
+      <span class="ab-label">Write to YG</span>
+      <a href={`mailto:${CONTACT_EMAIL}?subject=The%20Meridian`} class="ab-mail">{CONTACT_EMAIL}</a>
+    </div>
+    <a href="/seeking" class="ab-seek">What the archive is seeking →</a>
+  </div>
+</ArchivePage>
+
+<style>
+  .ab-prose{font:400 21px/1.62 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .ab-prose p{margin:0 0 1.1em}
+  .ab-prose p:last-child{margin:0}
+  .ab-prose .ab-lede{font-size:25px;line-height:1.5;color:#F3ECDC}
+  .ab-prose .ab-gold{font-style:italic;color:#F2CF85}
+  .ab-quote{margin:36px 0 0;padding:34px 0 34px 36px;border-left:1px solid rgba(211,179,112,.6);font:400 clamp(30px,3.4vw,42px)/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+
+  .ab-contact{margin-top:72px;padding-top:28px;border-top:1px solid rgba(238,231,215,.12);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:20px}
+  .ab-write{display:flex;flex-direction:column;gap:12px}
+  .ab-label{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
+  .ab-mail{font:400 clamp(22px,2.4vw,30px)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+  .ab-seek{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:7px}
+</style>

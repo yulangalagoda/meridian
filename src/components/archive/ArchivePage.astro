@@ -1,0 +1,36 @@
+---
+// An archive page: header, the rail beside a reading column, the motto footer.
+import NightSky from '../../layouts/NightSky.astro';
+import SkyPage from '../SkyPage.astro';
+import SiteHeader from '../SiteHeader.astro';
+import MottoFooter from '../MottoFooter.astro';
+import ArchiveRail from './ArchiveRail.astro';
+import type { ArchiveSlug } from './types';
+
+interface Props {
+  current: ArchiveSlug;
+  title: string;
+  description?: string;
+  width: 680 | 720 | 760; // the reading column's max-width in the reference
+}
+
+const { current, title, description, width } = Astro.props;
+---
+
+<NightSky title={`${title} · The Meridian`} description={description}>
+  <SkyPage depth="50%">
+    <SiteHeader current={current === 'about' ? 'about' : undefined} />
+    <main class="ap">
+      <ArchiveRail current={current} />
+      <article class="ap-col" style={`max-width:${width}px`}>
+        <slot />
+      </article>
+    </main>
+    <MottoFooter />
+  </SkyPage>
+</NightSky>
+
+<style>
+  .ap{max-width:1180px;margin:0 auto;box-sizing:border-box;padding:clamp(64px,8vw,120px) clamp(20px,4.5vw,64px) clamp(80px,9vw,140px);display:flex;flex-wrap:wrap;align-items:flex-start;gap:48px clamp(40px,6vw,96px)}
+  .ap-col{flex:1 1 480px;min-width:0}
+</style>

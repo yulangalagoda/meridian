@@ -1,22 +1,39 @@
 ---
-// The archive pages kept as Notion sub-pages: collecting policy, verification,
-// seeking, access & citation, annual review.
-import NightSky from '../layouts/NightSky.astro';
-import SkyPage from '../components/SkyPage.astro';
-import SiteHeader from '../components/SiteHeader.astro';
-import MottoFooter from '../components/MottoFooter.astro';
-import { POLICY_PAGES, type PolicySlug } from '../lib/notion';
+// The archive pages kept as Notion sub-pages. Each has its own treatment in the
+// references, built from the page's blocks.
+import ArchivePage from '../components/archive/ArchivePage.astro';
+import ArchiveHead from '../components/archive/ArchiveHead.astro';
+import CollectingPolicy from '../components/archive/CollectingPolicy.astro';
+import Verification from '../components/archive/Verification.astro';
+import Seeking from '../components/archive/Seeking.astro';
+import Access from '../components/archive/Access.astro';
+import AnnualReview from '../components/archive/AnnualReview.astro';
+import { POLICY_PAGES, fetchPageBlocks, type PolicySlug } from '../lib/notion';
 
 export function getStaticPaths() {
   return (Object.keys(POLICY_PAGES) as PolicySlug[]).map((slug) => ({ params: { slug } }));
 }
 
-const page = POLICY_PAGES[Astro.params.slug as PolicySlug];
+const slug = Astro.params.slug as PolicySlug;
+const page = POLICY_PAGES[slug];
+const blocks = await fetchPageBlocks(page.id);
+
+// Eyebrow, title size and reading width per page, from the references.
+const LOOK: Record<PolicySlug, { eyebrow: string; long: boolean; width: 680 | 720 | 760 }> = {
+  'collecting-policy': { eyebrow: 'The Archive · Scope', long: false, width: 760 },
+  'verification-and-provenance': { eyebrow: 'The Archive · The standard', long: true, width: 720 },
+  'seeking': { eyebrow: 'The Archive · The want list', long: false, width: 720 },
+  'access-citation-image-use': { eyebrow: 'The Archive · Using the archive', long: true, width: 760 },
+  'annual-review': { eyebrow: 'The Archive · Each June', long: false, width: 720 },
+};
+const look = LOOK[slug];
 ---
 
-<NightSky title={`${page.title} · The Meridian`} description={page.description}>
-  <SkyPage depth="50%">
-    <SiteHeader />
-    <MottoFooter />
-  </SkyPage>
-</NightSky>
+<ArchivePage current={slug} title={page.title} description={page.description} width={look.width}>
+  <ArchiveHead eyebrow={look.eyebrow} title={page.title} long={look.long} />
+  {slug === 'collecting-policy' && <CollectingPolicy blocks={blocks} />}
+  {slug === 'verification-and-provenance' && <Verification blocks={blocks} />}
+  {slug === 'seeking' && <Seeking blocks={blocks} />}
+  {slug === 'access-citation-image-use' && <Access blocks={blocks} />}
+  {slug === 'annual-review' && <AnnualReview blocks={blocks} />}
+</ArchivePage>

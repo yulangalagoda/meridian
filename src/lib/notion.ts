@@ -1,6 +1,6 @@
 import { Client } from '@notionhq/client';
 import { ensureImagesDir, downloadPrimary, downloadGallery, downloadCategoryImage } from './images';
-import { fetchAllBlocks, renderBlocks, renderSpans, plainText } from './richtext';
+import { fetchAllBlocks, fetchBlockTree, renderBlocks, renderSpans, plainText } from './richtext';
 import type { Item, ItemDetail, Category, Narrative, NarrativeContent, NarrativeSection, SiteData } from './types';
 
 const DATA_SOURCES = {
@@ -9,7 +9,7 @@ const DATA_SOURCES = {
   narratives: 'fb3b85da-d3a8-4c39-a85b-a70648d55b92',
 } as const;
 
-const ABOUT_PAGE_ID = '36356d83-11d2-804e-b7a8-c2494f19a19c';
+export const ABOUT_PAGE_ID = '36356d83-11d2-804e-b7a8-c2494f19a19c';
 
 // Public policy / archive pages maintained as Notion sub-pages
 export const POLICY_PAGES = {
@@ -315,6 +315,18 @@ export async function fetchPolicyContent(slug: PolicySlug): Promise<string> {
   const html = renderBlocks(blocks);
   _policyCache.set(slug, html);
   return html;
+}
+
+// Fetches a page's blocks with nested children, for the archive pages whose
+// layouts are built from individual blocks (cached per page).
+const _blockTreeCache = new Map<string, any[]>();
+
+export async function fetchPageBlocks(pageId: string): Promise<any[]> {
+  const cached = _blockTreeCache.get(pageId);
+  if (cached) return cached;
+  const blocks = await fetchBlockTree(notionClient(), pageId);
+  _blockTreeCache.set(pageId, blocks);
+  return blocks;
 }
 
 // Fetches the full block content for a single item page.

@@ -1,0 +1,38 @@
+---
+// "The Archive" rail on every archive page; the current page gets the glowing dot.
+import Star from '../Star.astro';
+import type { ArchiveSlug } from './types';
+
+interface Props {
+  current: ArchiveSlug;
+}
+
+const { current } = Astro.props;
+
+const PAGES: [ArchiveSlug, string][] = [
+  ['about', 'About'],
+  ['collecting-policy', 'Collecting Policy'],
+  ['verification-and-provenance', 'Verification & Provenance'],
+  ['seeking', 'Seeking'],
+  ['access-citation-image-use', 'Access, Citation & Image Use'],
+  ['annual-review', 'Annual Review'],
+];
+---
+
+<nav class="rl" aria-label="The Archive">
+  <span class="rl-head">The Archive</span>
+  {PAGES.map(([slug, label]) =>
+    slug === current ? (
+      <a href={`/${slug}`} class="rl-on" aria-current="page"><Star kind="dot" />{label}</a>
+    ) : (
+      <a href={`/${slug}`} class="rl-off">{label}</a>
+    )
+  )}
+</nav>
+
+<style>
+  .rl{flex:0 0 220px;display:flex;flex-direction:column;gap:14px;position:sticky;top:32px;font:500 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#8D897F}
+  .rl-head{color:#D3B370;letter-spacing:.22em;padding-bottom:6px}
+  .rl-on{display:flex;align-items:center;gap:10px;color:#F3ECDC}
+  .rl-off{padding-left:15px}
+</style>
