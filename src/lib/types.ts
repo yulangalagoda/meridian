@@ -6,6 +6,7 @@ export interface Item {
   story: string;
   year: number | null;
   dateDetail: string;
+  dateLabel: string; // short date for cards, star cards and narrative rows, e.g. c.1590
   era: string;
   categoryId: string | null;
   categoryName: string | null;

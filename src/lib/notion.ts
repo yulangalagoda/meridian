@@ -255,6 +255,7 @@ export async function fetchSiteData(): Promise<SiteData> {
         story: getText(props, 'Story'),
         year: yearRaw !== 0 ? yearRaw : null,
         dateDetail: getText(props, 'Date Detail'),
+        dateLabel: getText(props, 'Date Label'),
         era: getSelect(props, 'Era'),
         categoryId: cat?.id ?? null,
         categoryName: cat?.name ?? null,
