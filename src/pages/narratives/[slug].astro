@@ -108,7 +108,7 @@ const segs0 = stars.slice(1).map((_, j) => seg(P0[j], P0[j + 1]));
 const data = { raw, stars: stars.map((s) => ({ sec: s.sec, first: s.first })), S, F, final: finalStation, wait: Boolean(year) };
 ---
 
-<NightSky title={`${narrative.name} · The Meridian`} description={narrative.premise} legible>
+<NightSky title={`${narrative.name} · The Meridian`} description={narrative.premise} image={stars.find((s) => s.it.primaryImage)?.it.primaryImage} type="article" legible>
   <div class="nr" data-narrative>
     <SiteHeader current="narratives" overlay z={20} passThrough />
 
@@ -259,6 +259,10 @@ const data = { raw, stars: stars.map((s) => ({ sec: s.sec, first: s.first })), S
   .nr-story :global(figure img){display:block;width:100%;height:auto;border:1px solid rgba(238,231,215,.12)}
   .nr-story :global(figcaption){margin-top:12px;font:italic 400 15px/1.5 'EB Garamond',Georgia,serif;color:#8D897F}
 
+  @media (prefers-reduced-motion: reduce){
+    .nr-seg,.nr-seg3,.nr-ap,.nr-dot,.nr-lab,.nr-bar span{transition:none}
+  }
+
   .nr-more{margin-top:72px;padding-top:28px;border-top:1px solid rgba(238,231,215,.12);display:flex;flex-direction:column;gap:14px}
   .nr-more-label{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F}
   .nr-more-link{font:400 22px/1.3 Gloock,Georgia,serif;color:#F3ECDC}
@@ -372,6 +376,6 @@ const data = { raw, stars: stars.map((s) => ({ sec: s.sec, first: s.first })), S
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
       for (const s of field) { ctx.globalAlpha = s.a * (0.55 + 0.45 * Math.sin((t / 1000) * s.s + s.p)); ctx.fillStyle = s.r > 1 ? '#FFF4DC' : '#D9E1F4'; ctx.beginPath(); ctx.arc(s.x * w, s.y * h, s.r, 0, 6.283); ctx.fill(); }
     };
-    if (!reduced) requestAnimationFrame(draw); else draw(0);
+    if (!reduced) requestAnimationFrame(draw); else { draw(0); new ResizeObserver(() => draw(0)).observe(cv); }
   }
 </script>

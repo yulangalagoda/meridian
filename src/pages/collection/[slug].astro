@@ -52,7 +52,7 @@ const mail = (subject: string) => `mailto:${CONTACT_EMAIL}?subject=${encodeURICo
 const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCaptions[i] ?? item.name }));
 ---
 
-<NightSky title={`${item.name} · The Meridian`} description={item.shortDescription} legible>
+<NightSky title={`${item.name} · The Meridian`} description={item.shortDescription} image={item.primaryImage} type="article" legible>
   <div class="ob" data-object>
     <SiteHeader current="collection" overlay z={20} />
 
@@ -68,7 +68,7 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
           <>
             <div data-in="2" class="ob-plate" data-plate>
               <div class="ob-zoom" data-zoom>
-                <img src={item.primaryImage} alt={item.imageAltText} decoding="async" />
+                <img src={item.primaryImage} alt={item.imageAltText || item.name} decoding="async" />
               </div>
               <div class="ob-leave" data-leave hidden></div>
               <div class="ob-corner ob-tl"></div>

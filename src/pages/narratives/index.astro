@@ -38,7 +38,7 @@ const axis = [1600, 1700, 1800, 1850, 1900, 1950].map((y) => ({ y: String(y), le
 const band = { label: allLabel, nar: nar.map((x) => ({ slug: x.slug, name: x.name, items: x.items })), stars: stars.map((s) => s.slug) };
 ---
 
-<NightSky title="Narratives · The Meridian">
+<NightSky title="Narratives · The Meridian" description="Stories told across objects. Each narrative joins objects the way a constellation joins stars.">
   <SkyPage>
     <SiteHeader current="narratives" />
 
@@ -101,6 +101,7 @@ const band = { label: allLabel, nar: nar.map((x) => ({ slug: x.slug, name: x.nam
   .nx-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
   .nx-svg path{fill:none;vector-effect:non-scaling-stroke;transition:stroke .5s}
   .nx-star{position:absolute;transform:translate(-50%,-50%);border-radius:50%;transition:opacity .5s,box-shadow .5s}
+  @media (prefers-reduced-motion: reduce){ .nx-svg path,.nx-star{transition:none} }
   .nx-axis{position:absolute;bottom:12px;transform:translateX(-50%);font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#8D897F}
   .nx-label{position:absolute;top:14px;left:16px;font:italic 400 16px/1 'EB Garamond',Georgia,serif;color:#B8B2A5}
 

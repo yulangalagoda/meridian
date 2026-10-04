@@ -25,6 +25,8 @@ const wants = seeking
   .filter((spans) => spans[0]?.annotations?.bold && spans[0].annotations.color === 'yellow')
   .map((spans) => splitBoldLead(spans)!.lead);
 
+// The hero text as plain text, for the page description.
+const intro = thread?.restHtml.replace(/<[^>]+>/g, '').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').trim() || undefined;
 const its = items.filter((it) => it.thread === 'The Island').sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.displayOrder - b.displayOrder);
 const entries = its.map((it, i) => {
   const g = i ? (it.year ?? 0) - (its[i - 1].year ?? 0) : 0;
@@ -37,7 +39,7 @@ const entries = its.map((it, i) => {
 const span = its.length ? its[0].year + '–' + its[its.length - 1].year : '';
 ---
 
-<NightSky title="The Island · The Meridian" description="Sri Lanka across every century: the objects of The Island thread in The Meridian.">
+<NightSky title="The Island · The Meridian" description={intro}>
   <SkyPage glow="#1A1C2E">
     <SiteHeader current="island" />
 
@@ -63,7 +65,7 @@ const span = its.length ? its[0].year + '–' + its[its.length - 1].year : '';
               <span class="is-era">{it.era}</span>
             </div>
             <div class="is-body">
-              <div class="is-image">{it.primaryImage && <img src={it.primaryImage} alt={it.imageAltText} loading="lazy" decoding="async" />}</div>
+              <div class="is-image">{it.primaryImage && <img src={it.primaryImage} alt={it.imageAltText || it.name} loading="lazy" decoding="async" />}</div>
               <div class="is-text">
                 <span class="is-meta">{it.dateLabel} · {it.originCountry}</span>
                 <h2 class="is-name">{it.name}</h2>

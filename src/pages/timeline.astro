@@ -56,7 +56,7 @@ const starStyle = (it: TLItem, s: (typeof v.stars)[number]) =>
   `width:${it.featured ? 7 : it.verified ? 4.5 : 4}px;height:${it.featured ? 7 : it.verified ? 4.5 : 4}px;transform:translate(-50%,-50%) scale(${s.scale});background:${it.island ? '#F2CF85' : '#F6F0E2'};box-shadow:${s.glow};opacity:${s.op}`;
 ---
 
-<NightSky title="Timeline · The Meridian" description="Every object in The Meridian as a star, placed by its year: wind the dial through four centuries." legible>
+<NightSky title="Timeline · The Meridian" description="Every object, in the order it was made. Each case wakes when the dial passes its year. Open one to find its star in the sky, or follow a narrative and watch the cases it connects light up together." legible>
   <div class="tl" data-timeline>
     <section class="tl-stage" data-stage>
       <SiteHeader current="timeline" overlay z={20} />

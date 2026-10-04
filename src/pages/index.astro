@@ -184,7 +184,7 @@ const words = id.epigraph.split(' ');
           <div class="hm-legend-label">Constellations · choose one</div>
           <div class="hm-legend">
             {nar.map((n) => (
-              <button type="button" class="hm-leg" data-leg={n.slug} style={n.slug === start.slug ? 'color:#F2D493;border-bottom-color:rgba(211,179,112,.8)' : ''}>{n.name}</button>
+              <button type="button" class="hm-leg" data-leg={n.slug} aria-pressed={n.slug === start.slug ? 'true' : 'false'} style={n.slug === start.slug ? 'color:#F2D493;border-bottom-color:rgba(211,179,112,.8)' : ''}>{n.name}</button>
             ))}
           </div>
         </div>
@@ -405,7 +405,7 @@ const words = id.epigraph.split(' ');
       A(q('head'), [{ opacity: 0 }, { opacity: 1 }], 8000, 1400);
       A(q('cue'), [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], 8500, 1200);
       if (reduced) cer.forEach((a) => a.finish());
-      if (!spin) { const s = q('ticks-spin'); if (s) spin = s.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 300000, iterations: Infinity }); }
+      if (!spin && !reduced) { const s = q('ticks-spin'); if (s) spin = s.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 300000, iterations: Infinity }); }
     };
     requestAnimationFrame(ceremony);
     const skip = () => cer.forEach((a) => { if (a.playState === 'running') a.playbackRate = 7; });
@@ -419,11 +419,11 @@ const words = id.epigraph.split(' ');
     const field = Array.from({ length: 460 }, () => ({ x: Math.random(), y: Math.random() * 0.95, r: Math.random() * Math.random() * 1.35 + 0.25, a: Math.random() * 0.65 + 0.2, s: Math.random() * 1.8 + 0.4, p: Math.random() * 6.28, d: Math.random() * 0.8 + 0.2 }));
     const size = () => { const r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; };
     size();
-    new ResizeObserver(size).observe(cv);
+    new ResizeObserver(() => { size(); if (reduced) draw(0); }).observe(cv);
     window.addEventListener('pointermove', (e) => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
     new IntersectionObserver(([e]) => { heroHidden = !e.isIntersecting; }).observe(cv);
     const draw = (t: number) => {
-      requestAnimationFrame(draw);
+      if (!reduced) requestAnimationFrame(draw);
       if (heroHidden) return;
       tx += (mx - tx) * 0.04; ty += (my - ty) * 0.04;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
@@ -441,7 +441,7 @@ const words = id.epigraph.split(' ');
       io.unobserve(e.target);
       e.target.animate([{ opacity: 0, transform: 'translateY(28px)' }, { opacity: 1, transform: 'none' }], { duration: 1300, easing: E, fill: 'both' });
     }), { threshold: 0.15 });
-    root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => { if (el.getBoundingClientRect().top > innerHeight) { el.style.opacity = '0'; io.observe(el); } });
+    if (!reduced) root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => { if (el.getBoundingClientRect().top > innerHeight) { el.style.opacity = '0'; io.observe(el); } });
 
     // The sky: one constellation at a time, cycling every 5.2 s unless chosen,
     // pointed at, or the pointer is over the chart.
@@ -474,6 +474,7 @@ const words = id.epigraph.split(' ');
         const b = legs.get(n.slug)!;
         b.style.color = n.slug === active ? '#F2D493' : '#B8B2A5';
         b.style.borderBottomColor = n.slug === active ? 'rgba(211,179,112,.8)' : 'rgba(211,179,112,0)';
+        b.setAttribute('aria-pressed', n.slug === active ? 'true' : 'false');
       });
       labEl.textContent = actN.name;
       labEl.style.left = Math.min(84, Math.max(16, actN.lx)).toFixed(2) + '%';
@@ -500,11 +501,11 @@ const words = id.epigraph.split(' ');
 
     const drawActive = () => {
       const p = paths.get(active);
-      if (p) {
+      if (p && !reduced) {
         const L = Math.ceil(p.getTotalLength());
         p.animate([{ strokeDasharray: L + ' ' + L, strokeDashoffset: L }, { strokeDasharray: L + ' ' + L, strokeDashoffset: 0 }], { duration: 1900, easing: 'cubic-bezier(.6,0,.2,1)' });
       }
-      caption.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 800, easing: E });
+      if (!reduced) caption.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 800, easing: E });
       barA && barA.cancel();
       barA = bar.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 5200, easing: 'linear', fill: 'both' });
     };

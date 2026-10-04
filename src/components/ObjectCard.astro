@@ -29,7 +29,7 @@ const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: 
 <Tag class:list={['cd', `cd-${variant}`]} {...tagAttrs} {...rest}>
   <span class="cd-case">
     <span class="cd-well">
-      {image && <img src={image} alt={alt} loading="lazy" decoding="async" />}
+      {image && <img src={image} alt={alt || name} loading="lazy" decoding="async" />}
     </span>
     {variant === 'timeline' && <span class="cd-bar"></span>}
   </span>

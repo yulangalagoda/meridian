@@ -1,4 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#EDEAE5"/>
-  <text x="16" y="22" font-family="Georgia, serif" font-size="18" font-weight="400" fill="#6B2C39" text-anchor="middle">M</text>
+  <defs>
+    <radialGradient id="glow"><stop offset="0" stop-color="#F6E7C4" stop-opacity=".75"/><stop offset="1" stop-color="#F6E7C4" stop-opacity="0"/></radialGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D3B370" stop-opacity="0"/><stop offset=".25" stop-color="#D3B370" stop-opacity=".7"/><stop offset="1" stop-color="#D3B370" stop-opacity=".2"/></linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#070A14"/>
+  <rect x="15.4" y="2" width="1.2" height="28" fill="url(#line)"/>
+  <circle cx="16" cy="13" r="8" fill="url(#glow)"/>
+  <circle cx="16" cy="13" r="2.8" fill="#FFF8E8"/>
 </svg>

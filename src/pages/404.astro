@@ -1,5 +1,16 @@
 ---
+// Not found, in the Search page's dress: the box starts from the words of the
+// missing address, so a moved object or an old link finds its way, and when
+// nothing matches the Search reference's own line points to Seeking.
 import NightSky from '../layouts/NightSky.astro';
+import SkyPage from '../components/SkyPage.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SearchPanel from '../components/search/SearchPanel.astro';
 ---
 
-<NightSky title="Not found · The Meridian" />
+<NightSky title="Not found · The Meridian" noindex>
+  <SkyPage>
+    <SiteHeader />
+    <SearchPanel seed="path" />
+  </SkyPage>
+</NightSky>
