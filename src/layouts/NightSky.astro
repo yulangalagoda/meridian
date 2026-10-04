@@ -1,7 +1,8 @@
 ---
 // The bare Night Sky document: fonts and body reset only, copied from the
 // <helmet> of the reference designs. Type: Gloock (display), EB Garamond (body),
-// IBM Plex Mono (labels). Background #070A14.
+// IBM Plex Mono (labels). Background #070A14. ⌘K / Ctrl-K on any page opens
+// /search (the search page itself uses it to select its box).
 interface Props {
   title: string;
   description?: string;
@@ -18,7 +19,7 @@ const { title, description, legible = false } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
-    <script is:inline>document.documentElement.classList.add('js')</script>
+    <script is:inline>document.documentElement.classList.add('js');addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key&&e.key.toLowerCase()==='k'&&!/^\/search\/?$/.test(location.pathname)){e.preventDefault();location.href='/search'}})</script>
     {description && <meta name="description" content={description} />}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
