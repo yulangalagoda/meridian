@@ -1,0 +1,68 @@
+---
+// Shared header: Collection / Narratives / Timeline, the centred THE • MERIDIAN
+// logo, The Island / About / Search ⌘K. The current section is gold.
+// The references draw it two ways: in normal flow (archive pages, collection,
+// narratives, island, search), or laid over a full-bleed hero (home, timeline,
+// object, narrative), where it is absolute and its navs don't wrap.
+import Star from './Star.astro';
+
+export type Section = 'collection' | 'narratives' | 'timeline' | 'island' | 'about' | 'search';
+
+interface Props {
+  current?: Section;
+  overlay?: boolean;
+  z?: number; // overlay stacking: 6 on home, 20 elsewhere
+  passThrough?: boolean; // narrative: only the links take the pointer
+  [attr: `data-${string}`]: string;
+}
+
+const { current, overlay = false, z = 20, passThrough = false, ...rest } = Astro.props;
+
+const LEFT: [Section, string, string][] = [
+  ['collection', '/collection', 'Collection'],
+  ['narratives', '/narratives', 'Narratives'],
+  ['timeline', '/timeline', 'Timeline'],
+];
+const RIGHT: [Section, string, string][] = [
+  ['island', '/the-island', 'The Island'],
+  ['about', '/about', 'About'],
+  ['search', '/search', 'Search ⌘K'],
+];
+---
+
+<header
+  class:list={['hd', overlay ? 'hd-over' : 'hd-flow', { 'hd-pass': passThrough }]}
+  style={overlay ? `z-index:${z}` : undefined}
+  {...rest}
+>
+  <nav class="hd-nav" aria-label="Primary">
+    {LEFT.map(([key, href, label]) => (
+      <a href={href} class:list={{ 'hd-on': current === key }} aria-current={current === key ? 'page' : undefined}>{label}</a>
+    ))}
+  </nav>
+  <a href="/" class="hd-logo" aria-label="The Meridian, home">
+    <span class="hd-the">THE</span>
+    <Star kind="dot" style="justify-self:center" />
+    <span>MERIDIAN</span>
+  </a>
+  <nav class="hd-nav hd-end" aria-label="Secondary">
+    {RIGHT.map(([key, href, label]) => (
+      <a href={href} class:list={{ 'hd-on': current === key }} aria-current={current === key ? 'page' : undefined}>{label}</a>
+    ))}
+  </nav>
+</header>
+
+<style>
+  .hd{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:28px clamp(20px,4.5vw,64px)}
+  .hd-flow{gap:16px}
+  .hd-over{position:absolute;top:0;left:0;right:0}
+  .hd-pass{pointer-events:none}
+  .hd-pass > *{pointer-events:auto}
+  .hd-nav{display:flex;gap:clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5}
+  .hd-flow .hd-nav{flex-wrap:wrap;gap:12px clamp(16px,2.4vw,34px)}
+  .hd-end{justify-self:end}
+  .hd-flow .hd-end{justify-content:flex-end}
+  .hd-on{color:#D3B370}
+  .hd-logo{display:grid;grid-template-columns:120px 30px 120px;align-items:center;font:400 15px/1 Gloock,Georgia,serif;letter-spacing:.42em;color:#F3ECDC}
+  .hd-the{text-align:right;margin-right:-.42em}
+</style>

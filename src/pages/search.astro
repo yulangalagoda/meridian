@@ -1,5 +1,11 @@
 ---
 import NightSky from '../layouts/NightSky.astro';
+import SkyPage from '../components/SkyPage.astro';
+import SiteHeader from '../components/SiteHeader.astro';
 ---
 
-<NightSky title="Search · The Meridian" />
+<NightSky title="Search · The Meridian">
+  <SkyPage>
+    <SiteHeader current="search" />
+  </SkyPage>
+</NightSky>

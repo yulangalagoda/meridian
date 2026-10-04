@@ -1,5 +1,13 @@
 ---
 import NightSky from '../../layouts/NightSky.astro';
+import SkyPage from '../../components/SkyPage.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import MottoFooter from '../../components/MottoFooter.astro';
 ---
 
-<NightSky title="Narratives · The Meridian" />
+<NightSky title="Narratives · The Meridian">
+  <SkyPage>
+    <SiteHeader current="narratives" />
+    <MottoFooter />
+  </SkyPage>
+</NightSky>

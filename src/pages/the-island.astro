@@ -1,5 +1,13 @@
 ---
 import NightSky from '../layouts/NightSky.astro';
+import SkyPage from '../components/SkyPage.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import MottoFooter from '../components/MottoFooter.astro';
 ---
 
-<NightSky title="The Island · The Meridian" />
+<NightSky title="The Island · The Meridian">
+  <SkyPage glow="#1A1C2E">
+    <SiteHeader current="island" />
+    <MottoFooter variant="island" />
+  </SkyPage>
+</NightSky>

@@ -1,0 +1,22 @@
+---
+// A glowing star, as drawn in the references.
+//   dot    5px — the logo dot and the archive rail's current-page dot
+//   motto  6px — above "Vayadhammā saṅkhārā" in every footer
+//   island 7px gold — over The Island hero
+type Kind = 'dot' | 'motto' | 'island';
+
+interface Props {
+  kind?: Kind;
+  style?: string; // extra placement, e.g. justify-self:center
+}
+
+const { kind = 'dot', style = '' } = Astro.props;
+
+const LOOK: Record<Kind, string> = {
+  dot: 'width:5px;height:5px;border-radius:50%;background:#F6E7C4;box-shadow:0 0 8px 2px rgba(246,231,196,.6)',
+  motto: 'width:6px;height:6px;border-radius:50%;background:#FFF8E8;box-shadow:0 0 10px 3px rgba(255,248,232,.55)',
+  island: 'width:7px;height:7px;border-radius:50%;background:#F2CF85;box-shadow:0 0 14px 5px rgba(242,207,133,.5)',
+};
+---
+
+<span aria-hidden="true" style={(style ? style + ';' : '') + LOOK[kind]}></span>

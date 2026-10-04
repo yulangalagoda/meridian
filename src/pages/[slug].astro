@@ -2,6 +2,9 @@
 // The archive pages kept as Notion sub-pages: collecting policy, verification,
 // seeking, access & citation, annual review.
 import NightSky from '../layouts/NightSky.astro';
+import SkyPage from '../components/SkyPage.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import MottoFooter from '../components/MottoFooter.astro';
 import { POLICY_PAGES, type PolicySlug } from '../lib/notion';
 
 export function getStaticPaths() {
@@ -11,4 +14,9 @@ export function getStaticPaths() {
 const page = POLICY_PAGES[Astro.params.slug as PolicySlug];
 ---
 
-<NightSky title={`${page.title} · The Meridian`} description={page.description} />
+<NightSky title={`${page.title} · The Meridian`} description={page.description}>
+  <SkyPage depth="50%">
+    <SiteHeader />
+    <MottoFooter />
+  </SkyPage>
+</NightSky>

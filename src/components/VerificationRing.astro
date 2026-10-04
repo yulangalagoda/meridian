@@ -1,0 +1,23 @@
+---
+// The verification mark: a gold ring, solid for Verified, dashed otherwise
+// (Research Ongoing; on Seeking, an object the archive doesn't yet hold).
+// Sizes used in the references: 8 (collection card), 9 (star card, island list),
+// 11 (archive pages, home), 14 (home and object seals, which carry a centre dot).
+interface Props {
+  verified: boolean;
+  size?: 8 | 9 | 11 | 14;
+  seal?: boolean; // 6px centre dot (home feature, object record)
+  noShrink?: boolean; // flex:none, when the ring sits in a flex row
+}
+
+const { verified, size = 11, seal = false, noShrink = false } = Astro.props;
+
+const ring =
+  (noShrink ? 'flex:none;' : '') +
+  `width:${size}px;height:${size}px;box-sizing:border-box;border-radius:50%;border:1px ${verified ? 'solid' : 'dashed'} #D3B370` +
+  (seal ? ';display:grid;place-items:center' : '');
+---
+
+<span aria-hidden="true" style={ring}>
+  {seal && <span style={`width:6px;height:6px;border-radius:50%;background:#D3B370${verified ? '' : ';opacity:0'}`}></span>}
+</span>

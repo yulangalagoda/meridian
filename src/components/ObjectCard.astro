@@ -1,0 +1,65 @@
+---
+// The 4:5 case used on the Collection and Timeline shelves.
+//   collection  a link; the case border turns gold on hover; a verification
+//               ring leads the date · origin line
+//   timeline    a button driven by --lit (0–1): border, top bar, glow and image
+//               brightness all follow it over 0.8s; no ring
+// Names of objects in The Island thread are gold.
+import VerificationRing from './VerificationRing.astro';
+
+interface Props {
+  variant: 'collection' | 'timeline';
+  name: string;
+  date: string;
+  origin: string;
+  verified: boolean;
+  island: boolean;
+  image: string | null;
+  alt: string;
+  href?: string; // collection
+  lit?: number; // timeline
+  [attr: `data-${string}`]: string;
+}
+
+const { variant, name, date, origin, verified, island, image, alt, href, lit = 0.06, ...rest } = Astro.props;
+const Tag = variant === 'collection' ? 'a' : 'button';
+const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: `--lit:${lit}` };
+---
+
+<Tag class:list={['cd', `cd-${variant}`]} {...tagAttrs} {...rest}>
+  <span class="cd-case">
+    <span class="cd-well">
+      {image && <img src={image} alt={alt} loading="lazy" decoding="async" />}
+    </span>
+    {variant === 'timeline' && <span class="cd-bar"></span>}
+  </span>
+  <span class="cd-text">
+    <span class="cd-meta">
+      {variant === 'collection' && <VerificationRing verified={verified} size={8} noShrink />}
+      {date} · {origin}
+    </span>
+    <span class="cd-name" style={island ? 'color:#F2CF85' : undefined}>{name}</span>
+  </span>
+</Tag>
+
+<style>
+  .cd{display:flex;flex-direction:column;gap:14px;color:#EEE7D7}
+  .cd:hover{color:#EEE7D7}
+  .cd-timeline{text-align:left}
+
+  .cd-case{position:relative;display:block;width:100%;aspect-ratio:4/5;box-sizing:border-box;padding:clamp(12px,1.6vw,22px)}
+  .cd-collection .cd-case{border:1px solid rgba(238,231,215,.12);background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(242,212,147,.1),rgba(242,212,147,0) 72%),#0B1124;transition:border-color .4s}
+  .cd-collection .cd-case:hover{border-color:rgba(211,179,112,.6)}
+  .cd-timeline .cd-case{border:1px solid rgba(238,231,215,calc(.08 + var(--lit) * .3));background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(242,212,147,calc(var(--lit) * .16)),rgba(242,212,147,0) 72%),#0B1124;box-shadow:0 30px 60px -24px rgba(0,0,0,calc(.3 + var(--lit) * .4));transition:border-color .8s,box-shadow .8s,background .8s}
+
+  .cd-well{position:relative;display:block;width:100%;height:100%;color:#B8B2A5}
+  .cd-timeline .cd-well{filter:brightness(calc(.4 + var(--lit) * .6));transition:filter .8s}
+  .cd-well img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+  .cd-bar{position:absolute;left:50%;top:-1px;width:40%;height:2px;margin-left:-20%;background:rgba(242,212,147,calc(var(--lit) * .85));transition:background .8s}
+
+  .cd-text{display:flex;flex-direction:column;gap:7px}
+  .cd-meta{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .cd-collection .cd-meta{display:flex;align-items:center;gap:8px}
+  .cd-name{font:400 19px/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+</style>

@@ -1,0 +1,19 @@
+---
+// The page wrapper used by every in-flow page: full height, with the night-2
+// glow spreading down from the top. Archive pages use a 50% ellipse, the
+// index pages 40%; The Island warms the glow to #1A1C2E.
+interface Props {
+  depth?: '40%' | '50%';
+  glow?: '#141C38' | '#1A1C2E';
+}
+
+const { depth = '40%', glow = '#141C38' } = Astro.props;
+---
+
+<div class="sky" style={`background:radial-gradient(ellipse 70% ${depth} at 50% 0%,${glow} 0%,#0B1124 45%,#070A14 100%)`}>
+  <slot />
+</div>
+
+<style>
+  .sky{min-height:100vh;color:#EEE7D7}
+</style>
