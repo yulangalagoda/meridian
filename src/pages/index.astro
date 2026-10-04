@@ -5,9 +5,8 @@
 // the narrative cards, the two threads and the footer.
 //
 // The epigraph and the two thread descriptions are read from the root "The
-// Meridian" page in Notion. The featured object is one of the items ticked
-// Featured, in Display Order; one culminates each day (the client picks by the
-// visitor's date, the build renders the build day's pick).
+// Meridian" page in Notion. The featured object is the reference's: the
+// Taprobana map, or the first item ticked Featured if it is ever unpublished.
 import NightSky from '../layouts/NightSky.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import MottoFooter from '../components/MottoFooter.astro';
@@ -26,16 +25,13 @@ const island = (it: Item) => it.thread === 'The Island';
 const verified = (it: Item) => it.verification === 'Verified';
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-// The featured object for a given day.
-const featured = items.filter((it) => it.featured);
-const dayOf = (d: Date) => Math.floor((d.getTime() - d.getTimezoneOffset() * 60000) / 86400000);
-const feats = featured.map((it) => ({
-  slug: it.slug, name: it.name, date: it.dateLabel, origin: it.originCountry, maker: it.maker, short: it.shortDescription,
-  verification: it.verification, verified: verified(it), image: it.primaryImage ?? '', alt: it.imageAltText || it.name,
-}));
-const now = new Date();
-const feat = feats[dayOf(now) % Math.max(1, feats.length)];
-const today = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+// The featured object.
+const f = items.find((it) => it.slug === 'descrittione-isola-taprobana-1590') ?? items.find((it) => it.featured);
+const feat = f && {
+  slug: f.slug, name: f.name, date: f.dateLabel, origin: f.originCountry, maker: f.maker, short: f.shortDescription,
+  verification: f.verification, verified: verified(f), image: f.primaryImage ?? '', alt: f.imageAltText || f.name,
+};
+const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
 // The sky: the Timeline's star layout, its constellation curves, and a mini
 // glyph per narrative for the cards.
@@ -74,7 +70,7 @@ const stars = items.map((it) => {
 const lab = { left: Math.min(84, Math.max(16, start.lx)).toFixed(2) + '%', top: Math.max(4, start.ly - 4).toFixed(2) + '%' };
 
 const data = {
-  feats, start: start.slug,
+  start: start.slug,
   items: items.map((it) => ({
     slug: it.slug, name: it.name, short: it.shortDescription, featured: it.featured, verified: verified(it), pos: pos[it.slug],
     meta: it.dateLabel + ' · ' + it.era + ' · ' + it.originCountry,
@@ -105,9 +101,9 @@ const words = id.epigraph.split(' ');
         <div class="hm-feature">
           <div class="hm-flank-l" data-c="flank-l">
             <div class="hm-culm">Culminating today · <span data-today>{today}</span></div>
-            <h1 class="hm-name" data-f="name">{feat?.name}</h1>
-            <div class="hm-date"><span data-f="date">{feat?.date}</span> · <span data-f="origin">{feat?.origin}</span></div>
-            <div class="hm-maker" data-f="maker">{feat?.maker}</div>
+            <h1 class="hm-name">{feat?.name}</h1>
+            <div class="hm-date"><span>{feat?.date}</span> · <span>{feat?.origin}</span></div>
+            <div class="hm-maker">{feat?.maker}</div>
           </div>
 
           <div class="hm-aperture" data-c="aperture">
@@ -117,18 +113,18 @@ const words = id.epigraph.split(' ');
               <div class="hm-ticks-ring"></div>
             </div>
             <div class="hm-lens" data-c="lens">
-              <img data-f="img" src={feat?.image || undefined} alt={feat?.alt} hidden={!feat?.image} decoding="async" />
+              <img src={feat?.image || undefined} alt={feat?.alt} hidden={!feat?.image} decoding="async" />
             </div>
           </div>
 
           <div class="hm-flank-r" data-c="flank-r">
-            <p class="hm-short" data-f="short">{feat?.short}</p>
+            <p class="hm-short">{feat?.short}</p>
             <div class="hm-acts">
               <span class="hm-seal">
-                <span class="hm-seal-ring" data-f="seal" style={`border-style:${feat?.verified ? 'solid' : 'dashed'}`}><span style={`opacity:${feat?.verified ? 1 : 0}`}></span></span>
-                <span data-f="ver">{feat?.verification}</span>
+                <span class="hm-seal-ring" style={`border-style:${feat?.verified ? 'solid' : 'dashed'}`}><span style={`opacity:${feat?.verified ? 1 : 0}`}></span></span>
+                <span>{feat?.verification}</span>
               </span>
-              <a href={`/collection/${feat?.slug}`} class="hm-enter" data-f="href">Enter the object →</a>
+              <a href={`/collection/${feat?.slug}`} class="hm-enter">Enter the object →</a>
             </div>
           </div>
         </div>
@@ -371,34 +367,21 @@ const words = id.epigraph.split(' ');
 <script>
   // Port of the reference's componentDidMount, ceremony, startSky,
   // setupReveals, twinkle, drawActive, tick and renderVals.
-  type Feat = { slug: string; name: string; date: string; origin: string; maker: string; short: string; verification: string; verified: boolean; image: string; alt: string };
   type HItem = { slug: string; name: string; short: string; featured: boolean; verified: boolean; pos: [number, number]; meta: string; verification: string; n: number };
   type HNar = { slug: string; name: string; premise: string; items: string[]; lx: number; ly: number; span: string; count: number };
 
   const root = document.querySelector<HTMLElement>('[data-home]');
   const json = document.getElementById('hm-data');
   if (root && json) {
-    const D: { feats: Feat[]; start: string; items: HItem[]; nar: HNar[] } = JSON.parse(json.textContent ?? '{}');
+    const D: { start: string; items: HItem[]; nar: HNar[] } = JSON.parse(json.textContent ?? '{}');
     const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     const hero = root.querySelector<HTMLElement>('[data-hero]')!;
     const q = (s: string) => root.querySelector<HTMLElement>('[data-c="' + s + '"]');
     const E = 'cubic-bezier(.16,1,.3,1)';
 
-    // Today's culminating object and date.
-    const now = new Date();
+    // Today's date, from the visitor's clock.
     const today = root.querySelector('[data-today]');
-    if (today) today.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-    if (D.feats.length) {
-      const f = D.feats[Math.floor((now.getTime() - now.getTimezoneOffset() * 60000) / 86400000) % D.feats.length];
-      const set = (k: string, v: string) => { const el = root.querySelector('[data-f="' + k + '"]'); if (el) el.textContent = v; };
-      set('name', f.name); set('date', f.date); set('origin', f.origin); set('maker', f.maker); set('short', f.short); set('ver', f.verification);
-      const seal = root.querySelector<HTMLElement>('[data-f="seal"]')!;
-      seal.style.borderStyle = f.verified ? 'solid' : 'dashed';
-      (seal.firstElementChild as HTMLElement).style.opacity = f.verified ? '1' : '0';
-      root.querySelector<HTMLAnchorElement>('[data-f="href"]')!.href = '/collection/' + f.slug;
-      const img = root.querySelector<HTMLImageElement>('[data-f="img"]')!;
-      if (f.image) { if (img.getAttribute('src') !== f.image) img.src = f.image; img.alt = f.alt; img.hidden = false; } else img.hidden = true;
-    }
+    if (today) today.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
     // The ceremony.
     let cer: Animation[] = [], spin: Animation | null = null;
