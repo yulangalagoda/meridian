@@ -1,13 +1,163 @@
 ---
+// The collection, from the Collection reference: "Arrange by" Field / Era / A–Z
+// and "Show" All / The Island / Research ongoing. The Field arrangement is
+// rendered with every card; the script moves those same cards between the
+// arrangements' shelves and filters them, with the reference's sort and notes.
 import NightSky from '../../layouts/NightSky.astro';
 import SkyPage from '../../components/SkyPage.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import MottoFooter from '../../components/MottoFooter.astro';
+import ShelfLabel from '../../components/ShelfLabel.astro';
+import ObjectCard from '../../components/ObjectCard.astro';
+import { getSiteData } from '../../lib/notion';
+import { ERA_OPTIONS, type Item } from '../../lib/types';
+
+const { items, categories } = await getSiteData();
+
+const island = (it: Item) => it.thread === 'The Island';
+const verified = (it: Item) => it.verification === 'Verified';
+const byYear = items.slice().sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.displayOrder - b.displayOrder);
+const bare = (n: string) => n.replace(/^(The|A) /, '');
+const byName = items.slice().sort((a, b) => bare(a.name).localeCompare(bare(b.name)));
+
+// The shelf note, as the reference writes it: "44 objects · 1826–1979".
+const span = (its: Item[]) => {
+  const a = its[0].year, b = its[its.length - 1].year;
+  return its.length + (its.length === 1 ? ' object · ' : ' objects · ') + (a === b ? a : a + '–' + b);
+};
+
+type Shelf = { name: string; desc: string; items: Item[]; note: string };
+const fieldShelves: Shelf[] = categories
+  .map((c) => { const its = byYear.filter((it) => it.categoryId === c.id); return { name: c.name, desc: c.description, items: its, note: its.length ? span(its) : '' }; })
+  .filter((s) => s.items.length);
+const eraShelves: Shelf[] = ERA_OPTIONS
+  .map((e) => { const its = byYear.filter((it) => it.era === e); return { name: e, desc: '', items: its, note: its.length ? span(its) : '' }; })
+  .filter((s) => s.items.length);
+const azShelves: Shelf[] = [{ name: 'A–Z', desc: '', items: byName, note: byName.length + ' objects' }];
+
+const ARRANGE: [string, string, Shelf[]][] = [['field', 'Field', fieldShelves], ['era', 'Era', eraShelves], ['az', 'A–Z', azShelves]];
+const SHOW: [string, string, number][] = [
+  ['all', 'All', items.length],
+  ['island', 'The Island', items.filter(island).length],
+  ['research', 'Research ongoing', items.filter((it) => !verified(it)).length],
+];
+const unshelved = items.filter((it) => !fieldShelves.some((s) => s.items.includes(it)));
+const card = (it: Item) => ({
+  variant: 'collection' as const, href: `/collection/${it.slug}`, name: it.name, date: it.dateLabel, origin: it.originCountry,
+  verified: verified(it), island: island(it), image: it.primaryImage, alt: it.imageAltText,
+  'data-slug': it.slug, 'data-year': String(it.year ?? ''), 'data-island': island(it) ? '1' : '0', 'data-research': verified(it) ? '0' : '1',
+});
 ---
 
-<NightSky title="Collection · The Meridian">
+<NightSky title="Collection · The Meridian" description="Every object in the archive of The Meridian, arranged by field, era or name.">
   <SkyPage>
     <SiteHeader current="collection" />
+    <main class="cl">
+      <div class="cl-hero">
+        <div>
+          <div class="cl-eye">The collection · {items.length} objects</div>
+          <h1 class="cl-title">Every object in the archive.</h1>
+        </div>
+        <p class="cl-intro">Gold names belong to The Island. A dashed ring means research is ongoing; a solid one, verified.</p>
+      </div>
+
+      <div class="cl-bar">
+        <div class="cl-group">
+          <span class="cl-label">Arrange by</span>
+          {ARRANGE.map(([key, name], i) => (
+            <button type="button" class:list={['cl-opt', { 'cl-on': i === 0 }]} data-arrange={key} aria-pressed={i === 0 ? 'true' : 'false'}>{name}</button>
+          ))}
+        </div>
+        <div class="cl-group">
+          <span class="cl-label">Show</span>
+          {SHOW.map(([key, name, count], i) => (
+            <button type="button" class:list={['cl-opt', 'cl-show', { 'cl-on': i === 0 }]} data-show={key} aria-pressed={i === 0 ? 'true' : 'false'}>{name} <span class="cl-count">{count}</span></button>
+          ))}
+        </div>
+      </div>
+
+      {ARRANGE.map(([key, , shelves], i) => (
+        <div class="cl-shelves" data-arrangement={key} hidden={i !== 0}>
+          {shelves.map((s) => (
+            <section class="cl-shelf" data-slugs={s.items.map((it) => it.slug).join(' ')} data-kind={key}>
+              <ShelfLabel name={s.name} note={s.note} />
+              {s.desc && <p class="cl-desc">{s.desc}</p>}
+              <div class="cl-grid">{i === 0 && s.items.map((it) => <ObjectCard {...card(it)} />)}</div>
+            </section>
+          ))}
+        </div>
+      ))}
+      {unshelved.length > 0 && <div hidden data-pool>{unshelved.map((it) => <ObjectCard {...card(it)} />)}</div>}
+    </main>
     <MottoFooter />
   </SkyPage>
 </NightSky>
+
+<style>
+  .cl{max-width:1320px;margin:0 auto;box-sizing:border-box;padding:clamp(56px,7vw,100px) clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)}
+  .cl-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:24px 48px;align-items:end;margin-bottom:40px}
+  .cl-eye{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+  .cl-title{margin:18px 0 0;font:400 clamp(40px,4.8vw,68px)/1.02 Gloock,Georgia,serif;color:#F3ECDC}
+  .cl-intro{margin:0;justify-self:end;max-width:440px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+
+  .cl-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 32px;padding:16px 0;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);margin-bottom:56px}
+  .cl-group{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px}
+  .cl-label{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F}
+  .cl-opt{font:italic 400 18px/1.5 'EB Garamond',Georgia,serif;color:#EEE7D7;border-bottom:1px solid rgba(211,179,112,.25)}
+  .cl-opt:hover{color:#F2D493}
+  .cl-show{display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap}
+  .cl-on{color:#F2D493;border-bottom-color:#D3B370}
+  .cl-count{font:500 9.5px/1 'IBM Plex Mono',monospace;font-style:normal;letter-spacing:.1em;color:#8D897F}
+
+  .cl-shelves{display:flex;flex-direction:column;gap:clamp(56px,6vw,84px)}
+  .cl-shelves[hidden],.cl-shelf[hidden]{display:none}
+  .cl-shelf{display:flex;flex-direction:column;gap:22px}
+  .cl-desc{margin:-6px 0 4px;max-width:620px;font:italic 400 17px/1.5 'EB Garamond',Georgia,serif;color:#B8B2A5}
+  .cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:clamp(18px,2.2vw,30px)}
+  .cl-grid > :global([hidden]){display:none !important}
+</style>
+
+<script>
+  // Port of the Collection reference's renderVals(): arrange by field / era /
+  // A–Z, show all / island / research, with the same notes.
+  const root = document.querySelector('.cl');
+  if (root) {
+    const cards = new Map<string, HTMLElement>();
+    root.querySelectorAll<HTMLElement>('[data-slug]').forEach((c) => cards.set(c.dataset.slug!, c));
+    let by = 'field';
+    let show = 'all';
+    const keep = (c: HTMLElement) => show === 'all' || (show === 'island' ? c.dataset.island === '1' : c.dataset.research === '1');
+
+    const render = () => {
+      root.querySelectorAll<HTMLElement>('[data-arrangement]').forEach((a) => { a.hidden = a.dataset.arrangement !== by; });
+      const active = root.querySelector<HTMLElement>(`[data-arrangement="${by}"]`)!;
+      active.querySelectorAll<HTMLElement>('.cl-shelf').forEach((shelf) => {
+        const grid = shelf.querySelector<HTMLElement>('.cl-grid')!;
+        const its = (shelf.dataset.slugs ?? '').split(' ').map((s) => cards.get(s)).filter(Boolean) as HTMLElement[];
+        its.forEach((c) => { grid.appendChild(c); c.hidden = !keep(c); });
+        const vis = its.filter((c) => !c.hidden);
+        shelf.hidden = vis.length === 0;
+        const note = shelf.querySelector<HTMLElement>('.sl-note');
+        if (note && vis.length) {
+          if (shelf.dataset.kind === 'az') note.textContent = vis.length + ' objects';
+          else {
+            const a = vis[0].dataset.year, b = vis[vis.length - 1].dataset.year;
+            note.textContent = vis.length + (vis.length === 1 ? ' object · ' : ' objects · ') + (a === b ? a : a + '–' + b);
+          }
+        }
+      });
+    };
+
+    const pick = (attr: 'arrange' | 'show', value: string) => {
+      root.querySelectorAll<HTMLElement>(`[data-${attr}]`).forEach((b) => {
+        const on = b.dataset[attr] === value;
+        b.classList.toggle('cl-on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    };
+    root.querySelectorAll<HTMLElement>('[data-arrange]').forEach((b) =>
+      b.addEventListener('click', () => { by = b.dataset.arrange!; pick('arrange', by); render(); }));
+    root.querySelectorAll<HTMLElement>('[data-show]').forEach((b) =>
+      b.addEventListener('click', () => { show = b.dataset.show!; pick('show', show); render(); }));
+  }
+</script>

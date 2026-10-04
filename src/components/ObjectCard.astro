@@ -36,7 +36,9 @@ const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: 
   <span class="cd-text">
     <span class="cd-meta">
       {variant === 'collection' && <VerificationRing verified={verified} size={8} noShrink />}
-      {date} · {origin}
+      {/* Separate spans, as in the reference: in the collection's flex row the date
+          and the origin each wrap on their own. */}
+      <span>{date}</span> · <span>{origin}</span>
     </span>
     <span class="cd-name" style={island ? 'color:#F2CF85' : undefined}>{name}</span>
   </span>

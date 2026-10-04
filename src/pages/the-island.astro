@@ -1,13 +1,136 @@
 ---
+// The Island thread, from The Island reference. The hero text is the thread's
+// description on the Collecting Policy page; the objects are those whose Thread
+// is "The Island", in year order, with dashed links scaled to the years between;
+// "Still below the horizon" lists the Seeking wants whose bold title is coloured
+// yellow in Notion (the colour of The Island option; the site ignores colour).
 import NightSky from '../layouts/NightSky.astro';
 import SkyPage from '../components/SkyPage.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import MottoFooter from '../components/MottoFooter.astro';
+import Star from '../components/Star.astro';
+import VerificationRing from '../components/VerificationRing.astro';
+import { getSiteData, fetchPageBlocks, POLICY_PAGES } from '../lib/notion';
+import { blockSpans, splitBoldLead } from '../lib/richtext';
+
+const { items } = await getSiteData();
+const [policy, seeking] = await Promise.all([
+  fetchPageBlocks(POLICY_PAGES['collecting-policy'].id),
+  fetchPageBlocks(POLICY_PAGES['seeking'].id),
+]);
+
+const thread = policy.map((b) => splitBoldLead(blockSpans(b))).find((l) => l?.lead.startsWith('The Island'));
+const wants = seeking
+  .map((b) => blockSpans(b))
+  .filter((spans) => spans[0]?.annotations?.bold && spans[0].annotations.color === 'yellow')
+  .map((spans) => splitBoldLead(spans)!.lead);
+
+const its = items.filter((it) => it.thread === 'The Island').sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.displayOrder - b.displayOrder);
+const entries = its.map((it, i) => {
+  const g = i ? (it.year ?? 0) - (its[i - 1].year ?? 0) : 0;
+  return {
+    it,
+    gap: i ? (g ? g + ' years later' : 'The same decade') : '',
+    gapH: Math.round(28 + Math.min(g, 300) * 0.4) + 'px',
+  };
+});
+const span = its.length ? its[0].year + '–' + its[its.length - 1].year : '';
 ---
 
-<NightSky title="The Island · The Meridian">
+<NightSky title="The Island · The Meridian" description="Sri Lanka across every century: the objects of The Island thread in The Meridian.">
   <SkyPage glow="#1A1C2E">
     <SiteHeader current="island" />
+
+    <section class="is-hero">
+      <Star kind="island" />
+      <div class="is-eye">Thread one · {its.length} objects · {span}</div>
+      <h1 class="is-title">The Island</h1>
+      {thread && <p class="is-intro" set:html={thread.restHtml} />}
+    </section>
+
+    <section class="is-line">
+      {entries.map(({ it, gap, gapH }) => (
+        <div class="is-entry">
+          {gap && (
+            <div class="is-gap">
+              <span class="is-dash" style={`height:${gapH}`}></span>
+              <span class="is-gaptext">{gap}</span>
+            </div>
+          )}
+          <article class="is-row">
+            <div class="is-when">
+              <span class="is-year">{it.year}</span>
+              <span class="is-era">{it.era}</span>
+            </div>
+            <div class="is-body">
+              <div class="is-image">{it.primaryImage && <img src={it.primaryImage} alt={it.imageAltText} loading="lazy" decoding="async" />}</div>
+              <div class="is-text">
+                <span class="is-meta">{it.dateLabel} · {it.originCountry}</span>
+                <h2 class="is-name">{it.name}</h2>
+                <p class="is-short">{it.shortDescription}</p>
+                <div class="is-foot">
+                  <span class="is-ver"><VerificationRing verified={it.verification === 'Verified'} size={9} />{it.verification}</span>
+                  <a href={`/collection/${it.slug}`} class="is-read">Read the object →</a>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      ))}
+    </section>
+
+    <section class="is-below">
+      <div class="is-below-in">
+        <div class="is-ask">
+          <div class="is-eye">Still below the horizon</div>
+          <h2 class="is-asktitle">What the island thread is seeking.</h2>
+          <a href="/seeking" class="is-all">The full want list →</a>
+        </div>
+        <div class="is-wants">
+          {wants.map((w) => (
+            <div class="is-want"><VerificationRing verified={false} size={11} noShrink /><span class="is-wanttitle">{w}</span></div>
+          ))}
+        </div>
+      </div>
+    </section>
+
     <MottoFooter variant="island" />
   </SkyPage>
 </NightSky>
+
+<style>
+  .is-hero{max-width:980px;margin:0 auto;box-sizing:border-box;padding:clamp(72px,9vw,140px) clamp(20px,4.5vw,64px) clamp(56px,6vw,88px);text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px}
+  .is-eye{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+  .is-title{margin:0;font:400 clamp(64px,9vw,128px)/.95 Gloock,Georgia,serif;color:#F2CF85;letter-spacing:-.01em}
+  .is-intro{margin:8px 0 0;max-width:640px;font:400 clamp(20px,1.9vw,24px)/1.55 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+
+  .is-line{max-width:1080px;margin:0 auto;box-sizing:border-box;padding:0 clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)}
+  .is-entry{display:flex;flex-direction:column}
+  .is-gap{display:flex;align-items:center;gap:18px;padding:0 0 0 calc(clamp(96px,14vw,170px) - 1px)}
+  .is-dash{width:1px;background:repeating-linear-gradient(to bottom,rgba(211,179,112,.6) 0 3px,rgba(211,179,112,0) 3px 9px)}
+  .is-gaptext{font:italic 400 16px/1 'EB Garamond',Georgia,serif;color:#8D897F}
+  .is-row{display:grid;grid-template-columns:clamp(96px,14vw,170px) minmax(0,1fr);gap:0 clamp(24px,4vw,56px);padding:28px 0;border-top:1px solid rgba(238,231,215,.1)}
+  .is-when{display:flex;flex-direction:column;align-items:flex-end;gap:10px;padding-right:clamp(16px,2vw,28px);border-right:1px solid rgba(211,179,112,.5)}
+  .is-year{font:400 clamp(30px,3.6vw,48px)/1 Gloock,Georgia,serif;color:#F2D493;font-variant-numeric:tabular-nums}
+  .is-era{font:italic 400 15px/1.2 'EB Garamond',Georgia,serif;color:#8D897F;text-align:right}
+  .is-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:24px clamp(24px,3vw,44px);align-items:start}
+  .is-image{position:relative;aspect-ratio:4/3;background:#0B1124;color:#8D897F;box-shadow:0 0 0 1px rgba(238,231,215,.12),0 30px 60px -24px #000}
+  .is-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .is-text{display:flex;flex-direction:column;gap:12px}
+  .is-meta{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .is-name{margin:0;font:400 clamp(24px,2.4vw,30px)/1.15 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .is-short{margin:0;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .is-foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-top:6px}
+  .is-ver{display:inline-flex;align-items:center;gap:8px;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#B8B2A5}
+  .is-read{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:5px}
+
+  .is-below{border-top:1px solid rgba(238,231,215,.1);background:radial-gradient(ellipse 50% 80% at 50% 100%,#111834,#070A14 75%)}
+  .is-below-in{max-width:1080px;margin:0 auto;box-sizing:border-box;padding:clamp(72px,8vw,120px) clamp(20px,4.5vw,64px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:40px clamp(40px,6vw,96px)}
+  .is-ask{display:flex;flex-direction:column;gap:18px}
+  .is-asktitle{margin:0;font:400 clamp(32px,3.6vw,48px)/1.05 Gloock,Georgia,serif;color:#F3ECDC}
+  .is-all{align-self:flex-start;margin-top:8px;font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:7px}
+  .is-wants{display:flex;flex-direction:column}
+  .is-want{display:flex;align-items:baseline;gap:16px;padding:18px 0;border-top:1px solid rgba(238,231,215,.12)}
+  .is-want:last-child{border-bottom:1px solid rgba(238,231,215,.12)}
+  .is-wanttitle{font:400 21px/1.3 Gloock,Georgia,serif;color:#F3ECDC}
+</style>
