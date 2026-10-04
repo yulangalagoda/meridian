@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&amp;family=EB+Garamond:ital,wght@0,400;0,500;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<script src="./meridian-data.js"></script>
+<script src="./image-slot.js"></script>
+<style>
+html,body{margin:0;background:#070A14}
+body{color:#EEE7D7;font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit;text-decoration:none}
+a:hover{color:#D3B370}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+::selection{background:#D3B370;color:#070A14}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="position:relative;background:#070A14;color:#EEE7D7;overflow-x:clip">
+
+  <section ref="{{ stageRef }}" data-screen-label="01 The sky over time" style="position:relative;height:max(100vh,760px);overflow:hidden;background:radial-gradient(ellipse 75% 65% at 50% 38%,#141C38 0%,#0B1124 48%,#070A14 100%);user-select:none">
+    <header style="position:absolute;top:0;left:0;right:0;z-index:20;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:28px clamp(20px,4.5vw,64px)">
+      <nav style="display:flex;gap:clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5">
+        <a href="Collection.dc.html">Collection</a>
+        <a href="Narratives.dc.html">Narratives</a>
+        <a href="Timeline - The Sky Over Time.dc.html" style="color:#D3B370">Timeline</a>
+      </nav>
+      <a href="Home - Night Sky.dc.html" style="display:grid;grid-template-columns:120px 30px 120px;align-items:center;font:400 15px/1 Gloock,Georgia,serif;letter-spacing:.42em;color:#F3ECDC">
+        <span style="text-align:right;margin-right:-.42em">THE</span>
+        <span style="justify-self:center;width:5px;height:5px;border-radius:50%;background:#F6E7C4;box-shadow:0 0 8px 2px rgba(246,231,196,.6)"></span>
+        <span>MERIDIAN</span>
+      </a>
+      <nav style="justify-self:end;display:flex;gap:clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5">
+        <a href="The Island.dc.html">The Island</a>
+        <a href="Archive - About.dc.html">About</a>
+        <a href="Search.dc.html">Search ⌘K</a>
+      </nav>
+    </header>
+
+    <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;margin-left:-0.5px;z-index:3;background:linear-gradient(to bottom,rgba(211,179,112,0),rgba(211,179,112,.5) 14%,rgba(211,179,112,.7) 100%);pointer-events:none"></div>
+
+    <div ref="{{ skyRef }}" style="position:absolute;left:4%;right:4%;top:96px;bottom:210px;z-index:{{ skyZ }};pointer-events:none">
+      <sc-for list="{{ paths }}" as="p" hint-placeholder-count="0">
+        <svg viewBox="0 0 1320 600" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none">
+          <path data-path="{{ p.slug }}" d="{{ p.d }}" style="fill:none;stroke:rgba(232,206,150,.5);stroke-width:1;vector-effect:non-scaling-stroke;opacity:{{ p.op }};transition:opacity 1.2s"></path>
+        </svg>
+      </sc-for>
+      <sc-for list="{{ stars }}" as="s" hint-placeholder-count="0">
+        <div style="position:absolute;left:{{ s.left }};top:{{ s.top }};width:0;height:0">
+          <span style="position:absolute;left:0;top:0;width:{{ s.size }};height:{{ s.size }};transform:translate(-50%,-50%) scale({{ s.scale }});border-radius:50%;background:{{ s.color }};box-shadow:{{ s.glow }};opacity:{{ s.op }};transition:opacity .9s,transform .9s cubic-bezier(.16,1,.3,1),box-shadow .6s"></span>
+          <sc-if value="{{ s.tag }}" hint-placeholder-val="{{ false }}">
+            <span style="position:absolute;left:12px;top:-7px;width:max-content;max-width:220px;font:400 14px/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-shadow:0 0 12px #070A14,0 0 4px #070A14;pointer-events:none">{{ s.name }}</span>
+          </sc-if>
+          <button onClick="{{ s.pick }}" aria-label="{{ s.name }}" title="{{ s.name }}" style="position:absolute;left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;pointer-events:{{ s.pe }};box-shadow:{{ s.ring }};transition:box-shadow .3s" style-hover="box-shadow:inset 0 0 0 1px rgba(211,179,112,.7)"></button>
+        </div>
+      </sc-for>
+      <sc-if value="{{ sel }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute;left:{{ sel.left }};top:{{ sel.top }};z-index:8;width:0;height:0">
+          <div style="position:absolute;left:0;top:0;transform:{{ sel.tf }};pointer-events:auto;width:300px;box-sizing:border-box;padding:20px 22px 18px;background:rgba(11,17,36,.96);border:1px solid rgba(211,179,112,.45);box-shadow:0 24px 60px -20px #000;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+              <span style="font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#D3B370">{{ sel.date }} · {{ sel.origin }}</span>
+              <button onClick="{{ unpick }}" aria-label="Close" style="font:400 18px/1 'EB Garamond',Georgia,serif;color:#8D897F" style-hover="color:#F3ECDC">×</button>
+            </div>
+            <span style="font:400 21px/1.15 Gloock,Georgia,serif;color:{{ sel.nc }};text-wrap:balance">{{ sel.name }}</span>
+            <p style="margin:0;font:400 16px/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty">{{ sel.short }}</p>
+            <sc-if value="{{ sel.hasN }}" hint-placeholder-val="{{ false }}">
+              <span style="font:italic 400 15px/1.35 'EB Garamond',Georgia,serif;color:#8D897F">In {{ sel.nlist }}</span>
+            </sc-if>
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;border-top:1px solid rgba(238,231,215,.1)">
+              <span style="display:inline-flex;align-items:center;gap:8px;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#B8B2A5"><span style="width:9px;height:9px;box-sizing:border-box;border-radius:50%;border:1px {{ sel.line }} #D3B370"></span>{{ sel.ver }}</span>
+              <a href="{{ sel.href }}" style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:5px">Read the object →</a>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <button onClick="{{ play }}" style="position:absolute;left:50%;top:96px;z-index:5;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:10px 16px;background:#0B1124;border:1px solid rgba(211,179,112,.5);font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#F3ECDC" style-hover="border-color:#D3B370">{{ playLabel }}</button>
+
+    <div style="position:absolute;left:clamp(20px,4.5vw,64px);bottom:44px;z-index:6;display:flex;flex-direction:column;gap:8px;pointer-events:none">
+      <span style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370">The sky in</span>
+      <span style="font:400 clamp(84px,9vw,136px)/.9 Gloock,Georgia,serif;color:#F3ECDC;font-variant-numeric:tabular-nums;letter-spacing:-.01em">{{ yearText }}</span>
+      <span style="font:italic 400 19px/1.3 'EB Garamond',Georgia,serif;color:#B8B2A5">{{ era }} · {{ risenText }}</span>
+    </div>
+
+    <div style="position:absolute;right:clamp(20px,4.5vw,64px);bottom:44px;z-index:6;width:min(320px,26vw);display:flex;flex-direction:column;gap:10px;text-align:right">
+      <span style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370">{{ passTitle }}</span>
+      <sc-for list="{{ passing }}" as="p" hint-placeholder-count="0">
+        <a href="#" style="display:flex;flex-direction:column;gap:3px;padding:8px 0;border-top:1px solid rgba(238,231,215,.12)">
+          <span style="font:400 17px/1.2 Gloock,Georgia,serif;color:#F3ECDC">{{ p.name }}</span>
+          <span style="font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F">{{ p.date }}</span>
+        </a>
+      </sc-for>
+      <span style="font:italic 400 16px/1.3 'EB Garamond',Georgia,serif;color:#8D897F">{{ passMore }}</span>
+    </div>
+
+    <div onPointerDown="{{ down }}" onPointerMove="{{ move }}" onPointerUp="{{ up }}" onPointerCancel="{{ up }}" style="position:absolute;left:0;right:0;bottom:0;height:210px;z-index:4;cursor:grab;touch-action:pan-y;mask-image:linear-gradient(90deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) min(400px,34%),#000 min(520px,42%),#000 calc(100% - min(520px,42%)),rgba(0,0,0,0) calc(100% - min(400px,34%)),rgba(0,0,0,0) 100%)">
+      <div style="position:absolute;left:50%;top:60px;width:2200px;height:2200px;margin-left:-1100px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#0B1124 0%,#090D1A 96%,#0E1430 100%);box-shadow:0 -1px 0 rgba(211,179,112,.4),0 -30px 80px rgba(20,28,56,.5);transform:rotate({{ wheelRot }});transition:{{ wheelEase }}">
+        <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="0">
+          <div style="position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate({{ t.a }}) translateY(-1100px)">
+            <span style="position:absolute;left:-0.5px;top:0;width:1px;height:{{ t.h }};background:{{ t.c }}"></span>
+            <sc-if value="{{ t.label }}" hint-placeholder-val="{{ false }}">
+              <span style="position:absolute;left:0;top:26px;transform:translateX(-50%);font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#8D897F">{{ t.text }}</span>
+            </sc-if>
+          </div>
+        </sc-for>
+        <sc-for list="{{ marks }}" as="m" hint-placeholder-count="0">
+          <div style="position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate({{ m.a }}) translateY(-1052px)">
+            <span style="position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:{{ m.c }};box-shadow:0 0 8px 2px rgba(255,240,205,.35)"></span>
+          </div>
+        </sc-for>
+        <sc-for list="{{ eras }}" as="e" hint-placeholder-count="0">
+          <div style="position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate({{ e.a }}) translateY(-1020px)">
+            <span style="position:absolute;left:0;top:0;transform:translateX(-50%);font:italic 400 15px/1 'EB Garamond',Georgia,serif;color:#B8B2A5;white-space:nowrap">{{ e.name }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="position:absolute;left:50%;top:44px;width:0;height:0;pointer-events:none">
+        <span style="position:absolute;left:-6px;top:0;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid #D3B370"></span>
+      </div>
+      <div style="position:absolute;left:50%;bottom:18px;transform:translateX(-50%);font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F;white-space:nowrap;pointer-events:none">Drag the dial · ← → to step a year</div>
+    </div>
+  </section>
+
+  <section data-screen-label="02 Every object in order" style="max-width:1240px;margin:0 auto;box-sizing:border-box;padding:clamp(88px,9vw,130px) clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:24px 48px;align-items:end;margin-bottom:40px">
+      <div>
+        <div style="font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370">The timeline · {{ total }} objects</div>
+        <h2 style="margin:18px 0 0;font:400 clamp(34px,4vw,56px)/1.06 Gloock,Georgia,serif;color:#F3ECDC">Every object, in the order it was made.</h2>
+      </div>
+      <p style="margin:0;justify-self:end;max-width:440px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty">Each case wakes when the dial passes its year. Open one to find its star in the sky, or follow a narrative and watch the cases it connects light up together.</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 26px;padding:18px 0 22px;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);margin-bottom:56px">
+      <span style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F">Narratives through the sky</span>
+      <sc-for list="{{ routes }}" as="r" hint-placeholder-count="6">
+        <button onClick="{{ r.toggle }}" style="display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap;font:italic 400 18px/1.5 'EB Garamond',Georgia,serif;color:{{ r.color }};border-bottom:1px solid {{ r.line }};transition:color .4s,border-color .4s" style-hover="color:#F2D493">{{ r.name }} <span style="font:500 9.5px/1 'IBM Plex Mono',monospace;font-style:normal;letter-spacing:.1em;color:#8D897F">{{ r.count }}</span></button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:clamp(56px,6vw,84px)">
+      <sc-for list="{{ shelves }}" as="sh" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;align-items:center;gap:16px">
+            <span style="padding:7px 14px;background:linear-gradient(135deg,#A8834D,#E6CC92 45%,#A07B45);color:#141008;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;white-space:nowrap">{{ sh.name }}</span>
+            <span style="flex:1;height:1px;background:rgba(211,179,112,.22)"></span>
+            <span style="font:italic 400 16px/1 'EB Garamond',Georgia,serif;color:#8D897F;white-space:nowrap">{{ sh.note }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:clamp(18px,2.2vw,30px)">
+            <sc-for list="{{ sh.cases }}" as="c" hint-placeholder-count="4">
+              <button onClick="{{ c.open }}" style="display:flex;flex-direction:column;gap:14px;text-align:left;color:#EEE7D7;--lit:{{ c.lit }}">
+                <span style="position:relative;display:block;width:100%;aspect-ratio:4/5;box-sizing:border-box;padding:clamp(12px,1.6vw,22px);border:1px solid rgba(238,231,215,calc(.08 + var(--lit) * .3));background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(242,212,147,calc(var(--lit) * .16)),rgba(242,212,147,0) 72%),#0B1124;box-shadow:0 30px 60px -24px rgba(0,0,0,calc(.3 + var(--lit) * .4));transition:border-color .8s,box-shadow .8s,background .8s">
+                  <span style="position:relative;display:block;width:100%;height:100%;color:#B8B2A5;filter:brightness(calc(.4 + var(--lit) * .6));transition:filter .8s">
+                    <image-slot id="item-{{ c.slug }}" shape="rect" placeholder="{{ c.name }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+                  </span>
+                  <span style="position:absolute;left:50%;top:-1px;width:40%;height:2px;margin-left:-20%;background:rgba(242,212,147,calc(var(--lit) * .85));transition:background .8s"></span>
+                </span>
+                <span style="display:flex;flex-direction:column;gap:7px">
+                  <span style="font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F">{{ c.date }} · {{ c.origin }}</span>
+                  <span style="font:400 19px/1.2 Gloock,Georgia,serif;color:{{ c.nc }};text-wrap:balance">{{ c.name }}</span>
+                </span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <footer data-screen-label="03 Footer" style="padding:clamp(90px,9vw,140px) clamp(20px,4.5vw,64px) 52px;text-align:center;background:radial-gradient(ellipse 60% 70% at 50% 100%,#111834 0%,#070A14 72%)">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+      <span style="width:6px;height:6px;border-radius:50%;background:#FFF8E8;box-shadow:0 0 10px 3px rgba(255,248,232,.55)"></span>
+      <p style="margin:0;font:italic 400 clamp(36px,4.4vw,60px)/1.05 'EB Garamond',Georgia,serif;color:#F3ECDC">Vayadhammā saṅkhārā</p>
+      <p style="margin:0;font:500 10.5px/1.6 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370">All conditioned things are subject to decay.</p>
+    </div>
+    <div style="margin-top:56px;font:italic 400 15px/1.5 'EB Garamond',Georgia,serif;color:#8D897F">The Meridian · the collection of Yulan Galagoda · meridian.yulan.me</div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startYear&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1927,&quot;min&quot;:1590,&quot;max&quot;:1979,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Dial&quot;},&quot;labels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Sky&quot;}}">
+class Component extends DCLogic {
+  state = { data: null, Y: 1927, playing: false, pick: null, route: null };
+  pickIt = it => this.setState(s => ({ pick: s.pick === it.slug ? null : it.slug }));
+  unpick = () => this.setState({ pick: null });
+  rootRef = React.createRef();
+  stageRef = React.createRef();
+  skyRef = React.createRef();
+  Y0 = 1590; Y1 = 1979; DEG = 0.8; R = 1100;
+
+  componentDidMount() {
+    this.reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    this.ppy = this.R * this.DEG * Math.PI / 180;
+    this.setState({ Y: this.clamp(this.props.startYear ?? 1927) });
+    const wait = () => { if (window.MERIDIAN_DATA) { this.prep(window.MERIDIAN_DATA); this.setState({ data: window.MERIDIAN_DATA }); } else this.waitT = setTimeout(wait, 40); };
+    wait();
+    this.onKey = e => {
+      if (e.key === 'Escape' && this.state.pick) { this.unpick(); return; }
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const st = this.stageRef.current; if (!st || st.getBoundingClientRect().bottom < 100) return;
+      e.preventDefault(); const d = (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1);
+      this.glideTo(Math.round(this.state.Y) + d);
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+
+  componentWillUnmount() { clearTimeout(this.waitT); cancelAnimationFrame(this.tw); cancelAnimationFrame(this._rq); window.removeEventListener('keydown', this.onKey); }
+
+  componentDidUpdate() {
+    const sy = this.props.startYear ?? 1927;
+    if (this._sy === undefined) this._sy = sy; else if (sy !== this._sy) { this._sy = sy; this.glideTo(sy); }
+    if (!this.formed || !this.state.data) return;
+    const root = this.rootRef.current; if (!root) return;
+    const now = this.formedNow || new Set();
+    now.forEach(s => { if (!this.formed.has(s)) { const p = root.querySelector('[data-path="' + s + '"]'); if (p) p.animate([{ opacity: 0, strokeWidth: 3 }, { opacity: 1, strokeWidth: 2, offset: 0.4 }, { opacity: 0.9, strokeWidth: 1 }], { duration: 1600, easing: 'ease-out' }); } });
+    this.formed = new Set(now);
+  }
+
+  clamp(y) { return Math.max(this.Y0, Math.min(this.Y1, y)); }
+
+  popY(fy) {
+    const el = this.skyRef.current, H = el ? el.offsetHeight : 450, sy = fy * H, ch = 350;
+    const top = Math.max(-16, Math.min(H + 150 - ch, sy - ch * 0.4));
+    return Math.round(top - sy);
+  }
+
+  prep(D) {
+    const X = [[1580, 0], [1820, 0.12], [1860, 0.27], [1900, 0.46], [1940, 0.73], [1985, 1]];
+    const xr = y => { for (let i = 1; i < X.length; i++) if (y <= X[i][0]) { const a = X[i - 1], b = X[i]; return a[1] + (b[1] - a[1]) * (y - a[0]) / (b[0] - a[0]); } return 1; };
+    const h = s => { let x = 2166136261; for (let i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967296; };
+    const groups = {}; D.items.forEach(it => (groups[it.year] = groups[it.year] || []).push(it));
+    const pos = {};
+    Object.keys(groups).forEach(y => { const g = groups[y], cx = 0.035 + xr(+y) * 0.93, cy = 0.14 + h(g[0].slug + 'y') * 0.66; g.forEach((it, i) => { if (g.length === 1) { pos[it.slug] = [cx, cy]; return; } const ang = i * 2.39996 + 0.6, rad = 0.03 * Math.sqrt(i + 0.5); pos[it.slug] = [cx + Math.cos(ang) * rad * 0.45, cy + Math.sin(ang) * rad]; }); });
+    const range = it => {
+      const m = /(\d{4})\s*[–-]\s*(\d{2,4})(s?)/.exec(it.date);
+      if (m) { const a = +m[1]; let b = m[2].length === 2 ? Math.floor(a / 100) * 100 + +m[2] : +m[2]; if (m[3]) b += 9; return [Math.min(a, b, it.year), Math.max(a, b, it.year)]; }
+      const d = /(\d{4})s/.exec(it.date); if (d) return [Math.min(+d[1], it.year), Math.max(+d[1] + 9, it.year)];
+      return [it.year, it.year];
+    };
+    this.pos = pos; this.rng = {}; D.items.forEach(it => { this.rng[it.slug] = range(it); });
+    this.paths = D.narratives.map(n => {
+      const pts = n.items.map(s => D.bySlug[s]).filter(Boolean).sort((a, b) => a.year - b.year).map(it => [pos[it.slug][0] * 1320, pos[it.slug][1] * 600]);
+      let d = ''; pts.forEach((p, i) => { if (!i) { d = 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); return; } const q = pts[i - 1], mx = (q[0] + p[0]) / 2, my = (q[1] + p[1]) / 2, dx = p[0] - q[0], dy = p[1] - q[1], L = Math.hypot(dx, dy) || 1, o = (h(n.slug + i) - 0.5) * Math.min(64, L * 0.3); d += ' Q' + (mx - dy / L * o).toFixed(1) + ' ' + (my + dx / L * o).toFixed(1) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); });
+      return { slug: n.slug, d, last: Math.max(...n.items.map(s => D.bySlug[s].year)) };
+    });
+    this.ticks = [];
+    for (let y = this.Y0; y <= 1980; y++) this.ticks.push({ a: ((y - this.Y0) * this.DEG).toFixed(2) + 'deg', h: y % 50 === 0 ? '24px' : y % 10 === 0 ? '14px' : '6px', c: y % 10 === 0 ? 'rgba(211,179,112,.8)' : 'rgba(238,231,215,.22)', label: y % 10 === 0, text: String(y) });
+    this.marks = D.items.map(it => ({ a: ((it.year - this.Y0) * this.DEG).toFixed(2) + 'deg', c: it.island ? '#F2CF85' : '#F6F0E2' }));
+    this.ERAS = [['Renaissance', 1590, 1602], ['Stuart', 1603, 1713], ['Georgian', 1714, 1836], ['Victorian', 1837, 1900], ['Edwardian', 1901, 1917], ['Interwar', 1918, 1938], ['Mid-Century', 1939, 1969], ['Late 20th C.', 1970, 1979]];
+    this.eras = this.ERAS.map(e => ({ name: e[0], a: (((Math.max(e[1], this.Y0) + Math.min(e[2], this.Y1)) / 2 - this.Y0) * this.DEG).toFixed(2) + 'deg' }));
+    this.sorted = D.items.slice().sort((a, b) => a.year - b.year || a.order - b.order);
+    this.formed = new Set(this.paths.filter(p => p.last <= this.state.Y).map(p => p.slug));
+  }
+
+  glideTo(target) {
+    cancelAnimationFrame(this.tw); this.stopPlay();
+    target = this.clamp(target);
+    const from = this.state.Y, t0 = performance.now(), dur = this.reduced ? 1 : Math.min(1600, 500 + Math.abs(target - from) * 6);
+    const f = now => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); this.setState({ Y: from + (target - from) * e }); if (k < 1) this.tw = requestAnimationFrame(f); };
+    this.tw = requestAnimationFrame(f);
+  }
+
+  stopPlay() { if (this.playRaf) { cancelAnimationFrame(this.playRaf); this.playRaf = 0; } if (this.state.playing) this.setState({ playing: false }); }
+
+  togglePlay() {
+    if (this.state.playing) { this.stopPlay(); return; }
+    cancelAnimationFrame(this.tw);
+    let Y = this.state.Y >= this.Y1 - 1 ? this.Y0 : this.state.Y, last = performance.now();
+    this.setState({ playing: true, Y });
+    const D = this.state.data;
+    const f = now => {
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      const near = D && D.items.some(it => Math.abs(it.year - Y) <= 3);
+      Y = Math.min(this.Y1, Y + dt * (near ? 6 : 42));
+      this.setState({ Y });
+      if (Y < this.Y1) this.playRaf = requestAnimationFrame(f); else { this.playRaf = 0; this.setState({ playing: false }); }
+    };
+    this.playRaf = requestAnimationFrame(f);
+  }
+
+  down = e => { cancelAnimationFrame(this.tw); this.stopPlay(); this._yy = this.state.Y; this.drag = { x: e.clientX, Y: this.state.Y, lx: e.clientX, lt: performance.now(), v: 0 }; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {} };
+  move = e => {
+    const d = this.drag; if (!d) return;
+    const now = performance.now(); d.v = (e.clientX - d.lx) / Math.max(1, now - d.lt); d.lx = e.clientX; d.lt = now;
+    this._yy = this.clamp(d.Y - (e.clientX - d.x) / this.ppy);
+    if (!this._rq) this._rq = requestAnimationFrame(() => { this._rq = 0; this.setState({ Y: this._yy }); });
+  };
+  up = () => { const d = this.drag; if (!d) return; this.drag = null; cancelAnimationFrame(this._rq); this._rq = 0; this.setState({ Y: this._yy }); const t = Math.round(this.clamp(this._yy - d.v * 260 / this.ppy)); setTimeout(() => this.glideTo(t), 0); };
+
+  renderVals() {
+    const D = this.state.data, Y = this.state.Y, Yr = Math.round(Y);
+    const era = (this.ERAS || []).find(e => Yr >= e[1] && Yr <= e[2]);
+    const base = { rootRef: this.rootRef, stageRef: this.stageRef, skyRef: this.skyRef, skyZ: this.state.pick ? 25 : 2, down: this.down, move: this.move, up: this.up, play: () => this.togglePlay(),
+      playLabel: this.state.playing ? '❚❚ Pause' : '▶ Wind the centuries', yearText: String(Yr), era: era ? era[0] : '',
+      wheelRot: (-(Y - this.Y0) * this.DEG).toFixed(3) + 'deg', wheelEase: 'none', total: D ? D.items.length : '' };
+    if (!D || !this.pos) return Object.assign(base, { stars: [], paths: [], sel: null, unpick: this.unpick, routes: [], shelves: [], ticks: [], marks: [], eras: [], passing: [], rows: [], risenText: '', passTitle: '', passMore: '' });
+    const pass = this.sorted.filter(it => this.rng[it.slug][0] <= Yr && Yr <= this.rng[it.slug][1]);
+    const passSet = new Set(pass.map(i => i.slug)), labels = this.props.labels ?? true;
+    const tagSet = new Set(pass.slice(0, 4).map(i => i.slug));
+    const pk = this.state.pick ? D.bySlug[this.state.pick] : null;
+    const rn = this.state.route ? D.narratives.find(n => n.slug === this.state.route) : null, rt = rn ? new Set(rn.items) : null;
+    const risen = D.items.filter(it => it.year <= Y).length;
+    const stars = D.items.map(it => {
+      const p = this.pos[it.slug], up = it.year <= Y, on = passSet.has(it.slug);
+      return { left: (p[0] * 100).toFixed(3) + '%', top: (p[1] * 100).toFixed(3) + '%', size: (it.featured ? 7 : it.verified ? 4.5 : 4) + 'px',
+        color: it.island ? '#F2CF85' : '#F6F0E2', op: up || on ? 1 : 0, scale: on ? 1.8 : up ? 1 : 0.3,
+        glow: on ? '0 0 14px 5px rgba(255,240,205,.8),0 0 34px 12px rgba(211,179,112,.35)' : '0 0 6px 1.5px rgba(255,240,205,.32)',
+        tag: labels && tagSet.has(it.slug) && !pk, name: it.name, pe: up || on ? 'auto' : 'none', pick: () => this.pickIt(it),
+        ring: pk && pk.slug === it.slug ? 'inset 0 0 0 1px #D3B370' : rt && rt.has(it.slug) ? 'inset 0 0 0 1px rgba(211,179,112,.55)' : 'inset 0 0 0 1px rgba(211,179,112,0)' };
+    });
+    this.formedNow = new Set(this.paths.filter(p => p.last <= Y).map(p => p.slug));
+    const focusN = pk ? new Set(pk.narratives) : this.state.route ? new Set([this.state.route]) : null;
+    const paths = this.paths.map(p => ({ slug: p.slug, d: p.d, op: this.formedNow.has(p.slug) ? (focusN ? (focusN.has(p.slug) ? 1 : 0.2) : 0.9) : (this.state.route === p.slug ? 0.5 : 0) }));
+    let sel = null;
+    if (pk && (pk.year <= Y || passSet.has(pk.slug))) {
+      const p = this.pos[pk.slug], nm = pk.narratives.map(s => D.narratives.find(n => n.slug === s).name);
+      sel = { left: (p[0] * 100).toFixed(3) + '%', top: (p[1] * 100).toFixed(3) + '%', name: pk.name, date: pk.date, origin: pk.origin, short: pk.short,
+        nc: pk.island ? '#F2CF85' : '#F3ECDC', hasN: nm.length > 0, nlist: nm.join(' · '), ver: pk.verification, line: pk.verified ? 'solid' : 'dashed',
+        href: pk.slug === 'descrittione-isola-taprobana-1590' ? 'Object - Taprobana.dc.html' : '#' + pk.slug,
+        tf: 'translate(' + (p[0] > 0.62 ? 'calc(-100% - 22px)' : '22px') + ',' + this.popY(p[1]) + 'px)' };
+    }
+    const n = pass.length;
+    return Object.assign(base, {
+      stars, paths, sel, unpick: this.unpick, ticks: this.ticks, marks: this.marks, eras: this.eras, total: D.items.length,
+      risenText: risen + ' of ' + D.items.length + ' objects have risen',
+      passTitle: n ? 'Passing through ' + Yr : 'Nothing passes through ' + Yr,
+      passing: pass.slice(0, 4).map(it => ({ name: it.name, date: it.date })),
+      passMore: n > 4 ? 'and ' + (n - 4) + ' more' : n === 0 ? 'Wind on to the next star.' : '',
+      routes: D.narratives.map(n => ({ name: n.name, count: n.items.length + ' objects', color: this.state.route === n.slug ? '#F2D493' : '#EEE7D7', line: this.state.route === n.slug ? '#D3B370' : 'rgba(211,179,112,.25)',
+        toggle: () => this.setState(s => ({ route: s.route === n.slug ? null : n.slug })) })),
+      shelves: this.ERAS.map(e => {
+        const its = this.sorted.filter(it => it.era === e[0]); if (!its.length) return null;
+        const a = its[0].year, b = its[its.length - 1].year;
+        return { name: e[0], note: its.length + (its.length === 1 ? ' object · ' : ' objects · ') + (a === b ? a : a + '–' + b),
+          cases: its.map(it => ({ slug: it.slug, name: it.name, date: it.date, origin: it.origin, nc: it.island ? '#F2CF85' : '#F3ECDC',
+            lit: rt ? (rt.has(it.slug) ? 1 : 0.06) : passSet.has(it.slug) ? 1 : it.year <= Y ? 0.32 : 0.12,
+            open: () => { const st = this.stageRef.current; if (st) window.scrollTo({ top: st.offsetTop, behavior: this.reduced ? 'auto' : 'smooth' }); this.setState({ pick: it.slug }); if (it.year > Y) this.glideTo(it.year); } })) };
+      }).filter(Boolean)
+    });
+  }
+}
+</script>
+</body>
+</html>

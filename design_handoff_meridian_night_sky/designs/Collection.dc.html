@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&amp;family=EB+Garamond:ital,wght@0,400;0,500;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<script src="./meridian-data.js"></script>
+<script src="./image-slot.js"></script>
+<style>
+html,body{margin:0;background:#070A14}
+body{color:#EEE7D7;font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+a:hover{color:#D3B370}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+::selection{background:#D3B370;color:#070A14}
+</style>
+</helmet>
+<div style="min-height:100vh;background:radial-gradient(ellipse 70% 40% at 50% 0%,#141C38 0%,#0B1124 45%,#070A14 100%);color:#EEE7D7">
+  <header style="display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:28px clamp(20px,4.5vw,64px)">
+    <nav style="display:flex;flex-wrap:wrap;gap:12px clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5">
+      <a href="Collection.dc.html" style="color:#D3B370">Collection</a>
+      <a href="Narratives.dc.html">Narratives</a>
+      <a href="Timeline - The Sky Over Time.dc.html">Timeline</a>
+    </nav>
+    <a href="Home - Night Sky.dc.html" style="display:grid;grid-template-columns:120px 30px 120px;align-items:center;font:400 15px/1 Gloock,Georgia,serif;letter-spacing:.42em;color:#F3ECDC">
+      <span style="text-align:right;margin-right:-.42em">THE</span>
+      <span style="justify-self:center;width:5px;height:5px;border-radius:50%;background:#F6E7C4;box-shadow:0 0 8px 2px rgba(246,231,196,.6)"></span>
+      <span>MERIDIAN</span>
+    </a>
+    <nav style="justify-self:end;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:12px clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5">
+      <a href="The Island.dc.html">The Island</a>
+      <a href="Archive - About.dc.html">About</a>
+      <a href="Search.dc.html">Search ⌘K</a>
+    </nav>
+  </header>
+
+  <main data-screen-label="01 Collection" style="max-width:1320px;margin:0 auto;box-sizing:border-box;padding:clamp(56px,7vw,100px) clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:24px 48px;align-items:end;margin-bottom:40px">
+      <div>
+        <div style="font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370">The collection · {{ total }} objects</div>
+        <h1 style="margin:18px 0 0;font:400 clamp(40px,4.8vw,68px)/1.02 Gloock,Georgia,serif;color:#F3ECDC">Every object in the archive.</h1>
+      </div>
+      <p style="margin:0;justify-self:end;max-width:440px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty">Gold names belong to The Island. A dashed ring means research is ongoing; a solid one, verified.</p>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 32px;padding:16px 0;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);margin-bottom:56px">
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px">
+        <span style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F">Arrange by</span>
+        <sc-for list="{{ arranges }}" as="o" hint-placeholder-count="2">
+          <button onClick="{{ o.pick }}" style="font:italic 400 18px/1.5 'EB Garamond',Georgia,serif;color:{{ o.color }};border-bottom:1px solid {{ o.line }}" style-hover="color:#F2D493">{{ o.name }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px">
+        <span style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F">Show</span>
+        <sc-for list="{{ shows }}" as="o" hint-placeholder-count="3">
+          <button onClick="{{ o.pick }}" style="display:inline-flex;align-items:baseline;gap:6px;white-space:nowrap;font:italic 400 18px/1.5 'EB Garamond',Georgia,serif;color:{{ o.color }};border-bottom:1px solid {{ o.line }}" style-hover="color:#F2D493">{{ o.name }} <span style="font:500 9.5px/1 'IBM Plex Mono',monospace;font-style:normal;letter-spacing:.1em;color:#8D897F">{{ o.count }}</span></button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:clamp(56px,6vw,84px)">
+      <sc-for list="{{ shelves }}" as="sh" hint-placeholder-count="3">
+        <section style="display:flex;flex-direction:column;gap:22px">
+          <div style="display:flex;align-items:center;gap:16px">
+            <span style="padding:7px 14px;background:linear-gradient(135deg,#A8834D,#E6CC92 45%,#A07B45);color:#141008;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;white-space:nowrap">{{ sh.name }}</span>
+            <span style="flex:1;height:1px;background:rgba(211,179,112,.22)"></span>
+            <span style="font:italic 400 16px/1 'EB Garamond',Georgia,serif;color:#8D897F;white-space:nowrap">{{ sh.note }}</span>
+          </div>
+          <sc-if value="{{ sh.desc }}" hint-placeholder-val="{{ false }}">
+            <p style="margin:-6px 0 4px;max-width:620px;font:italic 400 17px/1.5 'EB Garamond',Georgia,serif;color:#B8B2A5">{{ sh.desc }}</p>
+          </sc-if>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:clamp(18px,2.2vw,30px)">
+            <sc-for list="{{ sh.cases }}" as="c" hint-placeholder-count="4">
+              <a href="{{ c.href }}" style="display:flex;flex-direction:column;gap:14px;color:#EEE7D7" style-hover="color:#EEE7D7">
+                <span style="position:relative;display:block;width:100%;aspect-ratio:4/5;box-sizing:border-box;padding:clamp(12px,1.6vw,22px);border:1px solid rgba(238,231,215,.12);background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(242,212,147,.1),rgba(242,212,147,0) 72%),#0B1124;transition:border-color .4s" style-hover="border-color:rgba(211,179,112,.6)">
+                  <span style="position:relative;display:block;width:100%;height:100%;color:#B8B2A5">
+                    <image-slot id="item-{{ c.slug }}" shape="rect" placeholder="{{ c.name }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+                  </span>
+                </span>
+                <span style="display:flex;flex-direction:column;gap:7px">
+                  <span style="display:flex;align-items:center;gap:8px;font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F"><span style="flex:none;width:8px;height:8px;box-sizing:border-box;border-radius:50%;border:1px {{ c.line }} #D3B370"></span>{{ c.date }} · {{ c.origin }}</span>
+                  <span style="font:400 19px/1.2 Gloock,Georgia,serif;color:{{ c.nc }};text-wrap:balance">{{ c.name }}</span>
+                </span>
+              </a>
+            </sc-for>
+          </div>
+        </section>
+      </sc-for>
+    </div>
+  </main>
+
+  <footer data-screen-label="02 Footer" style="padding:clamp(80px,8vw,120px) clamp(20px,4.5vw,64px) 52px;text-align:center;background:radial-gradient(ellipse 60% 70% at 50% 100%,#111834 0%,#070A14 72%)">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+      <span style="width:6px;height:6px;border-radius:50%;background:#FFF8E8;box-shadow:0 0 10px 3px rgba(255,248,232,.55)"></span>
+      <p style="margin:0;font:italic 400 clamp(32px,4vw,52px)/1.05 'EB Garamond',Georgia,serif;color:#F3ECDC">Vayadhammā saṅkhārā</p>
+      <p style="margin:0;font:500 10.5px/1.6 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370">All conditioned things are subject to decay.</p>
+    </div>
+    <div style="margin-top:48px;font:italic 400 15px/1.5 'EB Garamond',Georgia,serif;color:#8D897F">The Meridian · the collection of Yulan Galagoda · meridian.yulan.me</div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;arrangeBy&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Field&quot;,&quot;Era&quot;,&quot;A–Z&quot;],&quot;default&quot;:&quot;Field&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { D: null, by: null, show: 'all' };
+  CATS = [['Books & Literature', 'Antique volumes, first editions, manuscripts, and the written word.'], ['Scientific Instruments', 'Tools of measurement, observation, and calculation from the age of discovery.'], ['Navigation & Cartography', 'Maps, charts, and the instruments by which the world was charted.'], ['Optics & Photography', 'Lenses, cameras, and the apparatus of seeing.'], ['Writing & Correspondence', 'Pens, inkwells, paper, and the artefacts of letters.']];
+  ERAS = ['Renaissance', 'Georgian', 'Victorian', 'Edwardian', 'Interwar', 'Mid-Century', 'Late 20th C.'];
+  componentDidMount() { const w = () => window.MERIDIAN_DATA ? this.setState({ D: window.MERIDIAN_DATA }) : (this.t = setTimeout(w, 40)); w(); }
+  componentWillUnmount() { clearTimeout(this.t); }
+  card(it) { return { slug: it.slug, name: it.name, date: it.date, origin: it.origin, nc: it.island ? '#F2CF85' : '#F3ECDC', line: it.verified ? 'solid' : 'dashed', href: it.slug === 'descrittione-isola-taprobana-1590' ? 'Object - Taprobana.dc.html' : '#' + it.slug }; }
+  renderVals() {
+    const D = this.state.D, by = this.state.by || this.props.arrangeBy || 'Field', show = this.state.show;
+    const opt = (cur, v, set, extra) => Object.assign({ name: v, color: cur === v ? '#F2D493' : '#EEE7D7', line: cur === v ? '#D3B370' : 'rgba(211,179,112,.25)', pick: () => this.setState(set) }, extra || {});
+    const base = { total: D ? D.items.length : '', arranges: ['Field', 'Era', 'A–Z'].map(v => opt(by, v, { by: v })) };
+    if (!D) return Object.assign(base, { shows: [], shelves: [] });
+    const f = { all: () => true, island: it => it.island, research: it => !it.verified };
+    const items = D.items.filter(f[show]).sort((a, b) => a.year - b.year || a.order - b.order);
+    const span = its => { const a = its[0].year, b = its[its.length - 1].year; return its.length + (its.length === 1 ? ' object · ' : ' objects · ') + (a === b ? a : a + '–' + b); };
+    let shelves;
+    if (by === 'Field') shelves = this.CATS.map(c => { const its = items.filter(it => it.category === c[0]); return its.length ? { name: c[0], desc: c[1], note: span(its), cases: its.map(it => this.card(it)) } : null; });
+    else if (by === 'Era') shelves = this.ERAS.map(e => { const its = items.filter(it => it.era === e); return its.length ? { name: e, desc: '', note: span(its), cases: its.map(it => this.card(it)) } : null; });
+    else { const its = items.slice().sort((a, b) => a.name.replace(/^(The|A) /, '').localeCompare(b.name.replace(/^(The|A) /, ''))); shelves = its.length ? [{ name: 'A–Z', desc: '', note: its.length + ' objects', cases: its.map(it => this.card(it)) }] : []; }
+    const showOpts = [['all', 'All'], ['island', 'The Island'], ['research', 'Research ongoing']].map(s => ({ name: s[1], count: String(D.items.filter(f[s[0]]).length), color: show === s[0] ? '#F2D493' : '#EEE7D7', line: show === s[0] ? '#D3B370' : 'rgba(211,179,112,.25)', pick: () => this.setState({ show: s[0] }) }));
+    return Object.assign(base, { shows: showOpts, shelves: shelves.filter(Boolean) });
+  }
+}
+</script>
+</body>
+</html>

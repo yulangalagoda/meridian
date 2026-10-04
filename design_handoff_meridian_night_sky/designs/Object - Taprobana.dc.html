@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&amp;family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<script src="./meridian-data.js"></script>
+<script src="./image-slot.js"></script>
+<style>
+html,body{margin:0;background:#070A14}
+body{color:#EEE7D7;font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:inherit;text-decoration:none}
+a:hover{color:#D3B370}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+::selection{background:#D3B370;color:#070A14}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" style="position:relative;background:#070A14;color:#EEE7D7;overflow-x:clip">
+
+  <header style="position:absolute;top:0;left:0;right:0;z-index:20;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:28px clamp(20px,4.5vw,64px)">
+    <nav style="display:flex;gap:clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5">
+      <a href="Collection.dc.html" style="color:#D3B370">Collection</a>
+      <a href="Narratives.dc.html">Narratives</a>
+      <a href="Timeline - The Sky Over Time.dc.html">Timeline</a>
+    </nav>
+    <a href="Home - Night Sky.dc.html" style="display:grid;grid-template-columns:120px 30px 120px;align-items:center;font:400 15px/1 Gloock,Georgia,serif;letter-spacing:.42em;color:#F3ECDC">
+      <span style="text-align:right;margin-right:-.42em">THE</span>
+      <span style="justify-self:center;width:5px;height:5px;border-radius:50%;background:#F6E7C4;box-shadow:0 0 8px 2px rgba(246,231,196,.6)"></span>
+      <span>MERIDIAN</span>
+    </a>
+    <nav style="justify-self:end;display:flex;gap:clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5">
+      <a href="The Island.dc.html">The Island</a>
+      <a href="Archive - About.dc.html">About</a>
+      <a href="Search.dc.html">Search ⌘K</a>
+    </nav>
+  </header>
+
+  <section data-screen-label="01 Object" style="position:relative;padding:128px clamp(20px,4.5vw,64px) 96px;background:radial-gradient(ellipse 70% 60% at 50% 30%,#141C38 0%,#0B1124 45%,#070A14 100%);overflow:hidden">
+    <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;margin-left:-0.5px;background:linear-gradient(to bottom,rgba(211,179,112,0),rgba(211,179,112,.45) 12%,rgba(211,179,112,.2) 88%,rgba(211,179,112,0))"></div>
+    <div style="position:relative;max-width:1180px;margin:0 auto;display:flex;flex-direction:column;align-items:center">
+      <div data-in="1" style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;background:#0E1428;padding:6px 12px">
+        <a href="Collection.dc.html">Collection</a><span>/</span><a href="#">Navigation &amp; Cartography</a><span>/</span><span style="color:#F2CF85">The Island</span>
+      </div>
+
+      <div data-in="2" ref="{{ plateRef }}" onPointerMove="{{ inspectMove }}" style="position:relative;margin-top:36px;width:min(980px,100%);aspect-ratio:29.5/20.5;background:#0B1124;box-shadow:0 0 0 1px rgba(211,179,112,.28),0 40px 120px rgba(0,0,0,.6);overflow:hidden;color:#B8B2A5">
+        <div data-c="zoom" style="position:absolute;inset:0;transition:transform .5s cubic-bezier(.16,1,.3,1);transform-origin:50% 50%">
+          <image-slot id="obj-taprobana-primary" shape="rect" placeholder="Photograph · the map, framed (primary image)" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+        </div>
+        <sc-if value="{{ inspecting }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ toggleInspect }}" style="position:absolute;inset:0;cursor:zoom-out;z-index:2"></div>
+        </sc-if>
+        <div style="position:absolute;left:14px;top:14px;width:22px;height:22px;border-left:1px solid rgba(211,179,112,.6);border-top:1px solid rgba(211,179,112,.6);pointer-events:none;z-index:3"></div>
+        <div style="position:absolute;right:14px;bottom:14px;width:22px;height:22px;border-right:1px solid rgba(211,179,112,.6);border-bottom:1px solid rgba(211,179,112,.6);pointer-events:none;z-index:3"></div>
+      </div>
+
+      <div data-in="3" style="width:min(980px,100%);display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:16px;font:500 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#8D897F">
+        <span>Map image approx. 20.5 × 29.5 cm</span>
+        <button onClick="{{ toggleInspect }}" style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border:1px solid rgba(211,179,112,.5);padding:9px 14px;background:#0B1124" style-hover="border-color:#D3B370">{{ inspectLabel }}</button>
+      </div>
+
+      <div data-in="3" style="width:min(980px,100%);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:18px">
+        <div style="position:relative;aspect-ratio:3/2;background:#0B1124;color:#8D897F;box-shadow:0 0 0 1px rgba(238,231,215,.1)"><image-slot id="obj-taprobana-verso" shape="rect" placeholder="Verso · Porcacchi's essay" style="position:absolute;inset:0;width:100%;height:100%"></image-slot></div>
+        <div style="position:relative;aspect-ratio:3/2;background:#0B1124;color:#8D897F;box-shadow:0 0 0 1px rgba(238,231,215,.1)"><image-slot id="obj-taprobana-cartouche" shape="rect" placeholder="Detail · title cartouche" style="position:absolute;inset:0;width:100%;height:100%"></image-slot></div>
+        <div style="position:relative;aspect-ratio:3/2;background:#0B1124;color:#8D897F;box-shadow:0 0 0 1px rgba(238,231,215,.1)"><image-slot id="obj-taprobana-ship" shape="rect" placeholder="Detail · the sailing ship" style="position:absolute;inset:0;width:100%;height:100%"></image-slot></div>
+      </div>
+
+      <div data-in="4" style="margin-top:72px;max-width:900px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;background:radial-gradient(closest-side,#0C1226 70%,rgba(12,18,38,0));padding:10px 30px">
+        <div style="font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370">MERID-8 · Renaissance · Italy</div>
+        <h1 style="margin:0;font:400 clamp(42px,5.6vw,80px)/1.02 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance">Descrittione dell'Isola Taprobana</h1>
+        <div style="font:500 11px/1.7 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F">c.1590; late 16th-century Venice impression</div>
+        <div style="font:italic 400 18px/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5">Tomaso Porcacchi (author); Girolamo Porro (engraver); Venice, Italy</div>
+        <span style="display:inline-flex;align-items:center;gap:12px;margin-top:6px;padding:10px 16px;border:1px solid rgba(211,179,112,.45);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#D3B370">
+          <span style="width:14px;height:14px;box-sizing:border-box;border-radius:50%;border:1px solid #D3B370;display:grid;place-items:center"><span style="width:6px;height:6px;border-radius:50%;background:#D3B370"></span></span>
+          Verified
+        </span>
+        <p style="margin:18px 0 0;max-width:740px;font:italic 400 clamp(20px,1.9vw,25px)/1.5 'EB Garamond',Georgia,serif;color:#E2DBCB;text-wrap:pretty">The Greeks heard of a copper-red island at the world's edge and never quite found it again. By Porcacchi's day the question (Ceylon or Sumatra?) was an open cartographic war, and this leaf preserves the confusion intact: a map catalogued as Ceylon whose verso essay names the sultanates of Sumatra. It is Europe caught mid-thought, working out the shape of the world, and the oldest object in this archive.</p>
+      </div>
+    </div>
+  </section>
+
+  <section data-screen-label="02 Record and story" style="position:relative;max-width:1240px;margin:0 auto;padding:clamp(72px,8vw,120px) clamp(20px,4.5vw,64px);box-sizing:border-box;display:grid;grid-template-columns:minmax(240px,310px) 1px minmax(0,700px);justify-content:center;column-gap:clamp(32px,5vw,80px)">
+    <aside style="position:sticky;top:32px;align-self:start;display:flex;flex-direction:column">
+      <div style="font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370;padding-bottom:16px">The record</div>
+      <div style="display:flex;flex-direction:column;gap:5px;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)"><span style="font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F">Date</span><span style="font:400 16.5px/1.4 'EB Garamond',Georgia,serif;color:#E2DBCB">c.1590; late 16th-century Venice impression</span></div>
+      <div style="display:flex;flex-direction:column;gap:5px;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)"><span style="font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F">Materials</span><span style="font:400 16.5px/1.4 'EB Garamond',Georgia,serif;color:#E2DBCB">Copperplate engraving on laid paper, conservation framed with Artglass AR 99 UV-protective glass</span></div>
+      <div style="display:flex;flex-direction:column;gap:5px;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)"><span style="font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F">Dimensions</span><span style="font:400 16.5px/1.4 'EB Garamond',Georgia,serif;color:#E2DBCB">Map image approx. 20.5 × 29.5 cm</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)">
+        <span style="display:flex;flex-direction:column;gap:5px"><span style="font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F">Condition</span><span style="font:400 16.5px/1.4 'EB Garamond',Georgia,serif;color:#E2DBCB">Excellent</span></span>
+        <span style="display:flex;flex-direction:column;gap:5px"><span style="font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F">Origin</span><span style="font:400 16.5px/1.4 'EB Garamond',Georgia,serif;color:#E2DBCB">Italy</span></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)">
+        <span style="font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F">Provenance</span>
+        <span style="font:400 16.5px/1.45 'EB Garamond',Georgia,serif;color:#E2DBCB">Acquired March 2026. Signed Certificate of Authenticity confirming a genuine 16th-century impression retained with the item. Gathering Q signature marks consistent with the 1590 edition. Conservation framed by Framing Centre &amp; Artmill Gallery, Plymouth.</span>
+        <span style="display:inline-flex;align-items:center;gap:8px;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#D3B370"><span style="width:7px;height:7px;border-radius:50%;background:#D3B370"></span>Verified</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding:18px 0 0;border-top:1px solid rgba(238,231,215,.1)">
+        <button onClick="{{ copyCite }}" style="text-align:left;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border:1px solid rgba(211,179,112,.45);padding:12px 14px" style-hover="border-color:#D3B370">{{ citeLabel }}</button>
+        <a href="mailto:yulangalagoda1@gmail.com?subject=The%20Meridian%3A%20Descrittione%20dell'Isola%20Taprobana" style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border:1px solid rgba(211,179,112,.45);padding:12px 14px" style-hover="border-color:#D3B370">Write to the collector</a>
+        <a href="mailto:yulangalagoda1@gmail.com?subject=Provenance%20tip%3A%20Descrittione%20dell'Isola%20Taprobana" style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border:1px solid rgba(211,179,112,.45);padding:12px 14px" style-hover="border-color:#D3B370">I know something about this</a>
+      </div>
+    </aside>
+
+    <div ref="{{ lineRef }}" style="position:relative;background:rgba(211,179,112,.16)">
+      <div data-c="fill" style="position:absolute;left:0;top:0;width:1px;height:100%;background:#D3B370;transform-origin:0 0;transform:scaleY(0)"></div>
+      <div data-c="pstar" style="position:absolute;left:-4px;top:-4px;width:9px;height:9px;border-radius:50%;background:#FFF8E8;box-shadow:0 0 10px 3px rgba(255,248,232,.6),0 0 30px 8px rgba(211,179,112,.3)"></div>
+    </div>
+
+    <article style="font:400 20.5px/1.72 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty">
+      <div data-reveal="1">
+        <div style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F">01</div>
+        <h2 style="margin:12px 0 22px;font:400 32px/1.15 Gloock,Georgia,serif;color:#F3ECDC">Opening</h2>
+        <p style="margin:0 0 1.1em"><span style="float:left;font:400 86px/.8 Gloock,Georgia,serif;color:#D3B370;margin:10px 14px 0 0">F</span>or nearly two thousand years, Europe argued about an island it could not find. The Greeks called it Taprobana: a landmass somewhere in the Indian Ocean so vast that some ancients declared it a second world, peopled by races who could not see the North Star. Pliny populated it with one-footed men; medieval travel writers added mountains of gold guarded by man-eating ants. This sheet of laid paper, engraved on copper in Venice around 1590, captures the exact moment that ancient rumour collided with the age of navigation. And, deliciously, it still gets the answer tangled.</p>
+      </div>
+      <div data-reveal="1" style="margin-top:56px">
+        <div style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F">02</div>
+        <h2 style="margin:12px 0 22px;font:400 32px/1.15 Gloock,Georgia,serif;color:#F3ECDC">The Object</h2>
+        <p style="margin:0 0 1.1em">This is an original copperplate-engraved leaf from <a href="https://archive.org/details/lisolepiufamosed00porc" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)"><em>L'isole più famose del mondo</em></a> ("The Most Famous Islands of the World") by the Tuscan humanist <a href="https://en.wikipedia.org/wiki/Tommaso_Porcacchi" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Tommaso Porcacchi</a>, printed in Venice in the late sixteenth century. The map image measures roughly 20.5 × 29.5 cm, titled in its cartouche <strong style="font-weight:600;color:#F3ECDC">DESCRITTIONE DELL'ISOLA DI TAPROBANA</strong>, with a sailing ship riding the engraved sea, the signature decoration of the Venetian <em>isolario</em> (island-book) tradition. Held to the light, the laid paper shows the chain lines of the sixteenth-century paper mould. The verso carries Porcacchi's complete Italian essay on the island in period italic type; the signature marks visible on the leaf place it in gathering Q of the volume, consistent with the 1590 edition.</p>
+        <p style="margin:0 0 1.1em">The sheet is conservation-framed under <a href="https://www.groglass.com/framers-program" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Artglass AR 99</a> UV-filtering glass meeting the <a href="https://www.iso.org/standard/60813.html" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">ISO 18902</a> archival standard, in a fully reversible mount; the leaf can be removed and the verso read without harm.</p>
+      </div>
+      <div data-reveal="1" style="margin-top:56px">
+        <div style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F">03</div>
+        <h2 style="margin:12px 0 22px;font:400 32px/1.15 Gloock,Georgia,serif;color:#F3ECDC">The Maker</h2>
+        <p style="margin:0 0 1.1em"><a href="https://en.wikipedia.org/wiki/Tommaso_Porcacchi" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Porcacchi</a> (c.1530–1585) was a working scholar of the great age of Venetian publishing: an editor, translator, and geographer who produced, in <em>L'isole più famose del mondo</em> (first edition <a href="https://www.raremaps.com/gallery/detail/37908/taprobana-porcacchi" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">1572</a>), one of the earliest island atlases to use <strong style="font-weight:600;color:#F3ECDC">copperplate engraving rather than woodcut</strong>, a leap in precision and elegance. The book was a long-running success, reissued and expanded for over a century. His engraver, <a href="https://en.wikipedia.org/wiki/Girolamo_Porro" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Girolamo Porro</a> of Padua, was among the finest Italian copper engravers of his generation, also responsible for illustrating Tasso's <a href="https://en.wikipedia.org/wiki/Jerusalem_Delivered" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)"><em>Gerusalemme Liberata</em></a>. Their collaboration, scholar's text and engraver's burin, is what each leaf of the <em>Isole</em> physically embodies.</p>
+      </div>
+      <div data-reveal="1" style="margin-top:56px">
+        <div style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F">04</div>
+        <h2 style="margin:12px 0 22px;font:400 32px/1.15 Gloock,Georgia,serif;color:#F3ECDC">The World It Came From</h2>
+        <p style="margin:0 0 1.1em">The name Taprobana descends from <strong style="font-weight:600;color:#F3ECDC">Tambapanni</strong>, "copper-red earth," the name the <a href="https://en.wikipedia.org/wiki/Mahavamsa" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Mahavamsa</a> chronicle says Prince Vijaya gave his landing place on Lanka when his followers' hands were stained by the red soil. Greek geographers received the word from afar and never quite recovered: <a href="https://en.wikipedia.org/wiki/Eratosthenes" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Eratosthenes</a> and <a href="https://en.wikipedia.org/wiki/Strabo" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Strabo</a> debated its size, <a href="https://en.wikipedia.org/wiki/Pliny_the_Elder" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Pliny the Elder</a> recorded an embassy from its king to the Emperor <a href="https://en.wikipedia.org/wiki/Claudius" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Claudius</a>, and also its one-footed Sciapodes, shading themselves with their single giant sole.</p>
+        <p style="margin:0 0 1.1em">By the sixteenth century the question had sharpened into a genuine cartographic controversy: was Taprobana <strong style="font-weight:600;color:#F3ECDC">Ceylon or Sumatra</strong>? Travellers like Varthema declared for Sumatra; <a href="https://blogs.loc.gov/maps/2020/01/taprobana-sumatra-or-ceylon/" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Gastaldi mapped Sumatra as Taprobana in 1556</a>; Münster managed to publish maps supporting both answers. Modern historians, following the Sinhalese chronicles, <a href="https://blogs.loc.gov/maps/2020/01/taprobana-sumatra-or-ceylon/" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">identify Taprobana with Sri Lanka</a>, but in Porcacchi's Venice the matter was wide open, and <a href="https://www.vintage-maps.com/en/antique-maps/asia/india/porcacchi-india-ceylon-sri-lanka-sumatra-1572::12370" style="color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)">Porcacchi himself reportedly apologised to his readers for being unable to settle it</a>.</p>
+        <p style="margin:0 0 1.1em">The confusion is preserved, beautifully, on this very sheet. The map is conventionally catalogued as depicting Ceylon — modern Sri Lanka. Yet the verso essay, citing Solinus, Eratosthenes, and Pliny in proper humanist fashion, goes on to name the island's kingdoms as Pedir, Pacem, Achem, Campar, and Menancabo, which are recognisably the Sumatran sultanates of Pedir, Pasai, Aceh, Kampar, and Minangkabau. One leaf, two islands, eighteen centuries of compounded geography: it is hard to imagine a more vivid physical record of Europe mid-way through working out the shape of the world.</p>
+      </div>
+      <div data-reveal="1" style="margin:64px 0;padding:34px 0;border-top:1px solid rgba(211,179,112,.35);border-bottom:1px solid rgba(211,179,112,.35);text-align:center">
+        <p style="margin:0;font:400 clamp(26px,2.6vw,34px)/1.3 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance">One leaf, two islands, eighteen centuries of compounded geography.</p>
+      </div>
+      <div data-reveal="1">
+        <div style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F">05</div>
+        <h2 style="margin:12px 0 22px;font:400 32px/1.15 Gloock,Georgia,serif;color:#F3ECDC">This Copy</h2>
+        <p style="margin:0 0 1.1em">The impression is sharp, clean, and well-inked, with no visible foxing or staining to the map image, an excellent state for a working book-leaf over four centuries old. A signed Certificate of Authenticity confirming it as a genuine sixteenth-century impression is retained with the item. The conservation framing (Artglass AR 99, 99% UV filtration, anti-reflective, archival mount by Framing Centre and Artmill Gallery, Plymouth) is built to museum display standards and is fully reversible, so the Italian text on the back remains accessible.</p>
+      </div>
+      <div data-reveal="1" style="margin-top:56px">
+        <div style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F">06</div>
+        <h2 style="margin:12px 0 22px;font:400 32px/1.15 Gloock,Georgia,serif;color:#F3ECDC">Why It Matters</h2>
+        <p style="margin:0 0 1.1em">This is the oldest object in the collection, and it earns the place several times over. It is an authentic product of the golden age of Venetian publishing, from one of the first copper-engraved island atlases ever printed. It is a primary document of one of cartography's great identity puzzles: an island argued over from Alexander's admirals to the Enlightenment. And for a collection curated from Sri Lankan roots, it is something more personal: a picture of the moment Europe was still dreaming the island into shape, copper-red earth rendered in copper-plate ink, the myth and the map not yet pulled apart.</p>
+      </div>
+      <details data-reveal="1" style="margin-top:56px;border-top:1px solid rgba(238,231,215,.12);padding-top:18px">
+        <summary style="cursor:pointer;list-style:none;font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#B8B2A5">References · 16 sources ↓</summary>
+        <ol style="margin:20px 0 0;padding-left:22px;font:400 16px/1.7 'EB Garamond',Georgia,serif;color:#B8B2A5">
+          <li><a href="https://en.wikipedia.org/wiki/Tommaso_Porcacchi">Tommaso Porcacchi, Wikipedia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Girolamo_Porro">Girolamo Porro, Wikipedia</a></li>
+          <li><a href="https://archive.org/details/lisolepiufamosed00porc">L'isole più famose del mondo (full scan), Internet Archive</a></li>
+          <li><a href="https://www.raremaps.com/gallery/detail/37908/taprobana-porcacchi">Taprobana (Porcacchi), Barry Lawrence Ruderman Antique Maps</a></li>
+          <li><a href="https://www.vintage-maps.com/en/antique-maps/asia/india/porcacchi-india-ceylon-sri-lanka-sumatra-1572::12370">Porcacchi Taprobana 1572, Vintage-Maps</a></li>
+          <li><a href="https://blogs.loc.gov/maps/2020/01/taprobana-sumatra-or-ceylon/">Taprobana: Sumatra or Ceylon?, Library of Congress Worlds Revealed blog</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Taprobana">Taprobana, Wikipedia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Mahavamsa">Mahavamsa, Wikipedia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Giacomo_Gastaldi">Giacomo Gastaldi, Wikipedia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Eratosthenes">Eratosthenes, Wikipedia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Strabo">Strabo, Wikipedia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Pliny_the_Elder">Pliny the Elder, Wikipedia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Claudius">Claudius, Wikipedia</a></li>
+          <li><a href="https://en.wikipedia.org/wiki/Jerusalem_Delivered">Jerusalem Delivered, Wikipedia</a></li>
+          <li><a href="https://www.groglass.com/framers-program">Artglass AR 99, Groglass</a></li>
+          <li><a href="https://www.iso.org/standard/60813.html">ISO 18902, International Organization for Standardization</a></li>
+        </ol>
+      </details>
+    </article>
+  </section>
+
+  <section data-screen-label="03 In the sky" style="border-top:1px solid rgba(238,231,215,.1);background:radial-gradient(ellipse 60% 80% at 50% 0%,#111834,#070A14 70%)">
+    <div style="max-width:1240px;margin:0 auto;box-sizing:border-box;padding:clamp(80px,8vw,120px) clamp(20px,4.5vw,64px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:clamp(32px,5vw,88px)">
+      <div data-reveal="1" style="display:flex;flex-direction:column;gap:18px">
+        <div style="font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370">In the sky</div>
+        <h2 style="margin:0;font:400 clamp(32px,3.6vw,48px)/1.08 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance">This star belongs to a constellation.</h2>
+        <sc-for list="{{ cons }}" as="c" hint-placeholder-count="1">
+          <a href="#" style="display:grid;grid-template-columns:168px minmax(0,1fr);gap:28px;align-items:center;padding:26px 0;border-top:1px solid rgba(238,231,215,.12);color:#EEE7D7" style-hover="border-top-color:rgba(211,179,112,.6)">
+            <span style="position:relative;display:block;width:168px;height:76px">
+              <svg viewBox="0 0 168 76" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><path d="{{ c.d }}" style="fill:none;stroke:rgba(211,179,112,.6);stroke-width:1"></path></svg>
+              <sc-for list="{{ c.dots }}" as="p" hint-placeholder-count="0">
+                <span style="position:absolute;left:{{ p.left }};top:{{ p.top }};width:{{ p.size }};height:{{ p.size }};transform:translate(-50%,-50%);border-radius:50%;background:{{ p.color }};box-shadow:0 0 8px 2px rgba(255,240,205,.4)"></span>
+              </sc-for>
+            </span>
+            <span style="display:flex;flex-direction:column;gap:8px">
+              <span style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F">{{ c.meta }}</span>
+              <span style="font:400 24px/1.15 Gloock,Georgia,serif;color:#F3ECDC">{{ c.name }}</span>
+              <span style="font:400 16.5px/1.5 'EB Garamond',Georgia,serif;color:#B8B2A5">{{ c.premise }}</span>
+            </span>
+          </a>
+        </sc-for>
+      </div>
+      <div data-reveal="1" style="display:flex;flex-direction:column;gap:14px">
+        <div style="font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F">Neighbours in time</div>
+        <sc-for list="{{ near }}" as="n" hint-placeholder-count="2">
+          <a href="#" style="display:grid;grid-template-columns:72px minmax(0,1fr);gap:18px;align-items:baseline;padding:16px 0;border-top:1px solid rgba(238,231,215,.1)">
+            <span style="font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#D3B370">{{ n.dir }}</span>
+            <span style="display:flex;flex-direction:column;gap:5px"><span style="font:400 19px/1.2 Gloock,Georgia,serif;color:#F3ECDC">{{ n.name }}</span><span style="font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F">{{ n.date }}</span></span>
+          </a>
+        </sc-for>
+        <div style="margin-top:22px;font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F">Also on the Island</div>
+        <sc-for list="{{ island }}" as="n" hint-placeholder-count="3">
+          <a href="#" style="display:flex;justify-content:space-between;gap:18px;align-items:baseline;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)">
+            <span style="font:400 18px/1.25 Gloock,Georgia,serif;color:#F2CF85">{{ n.name }}</span>
+            <span style="flex:none;font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F">{{ n.date }}</span>
+          </a>
+        </sc-for>
+        <div style="margin-top:26px;padding:18px 20px;border:1px solid rgba(211,179,112,.3);display:flex;flex-direction:column;gap:10px">
+          <span style="font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F">Cite this object</span>
+          <span style="font:400 13px/1.6 'IBM Plex Mono',monospace;color:#E2DBCB;word-break:break-word">Descrittione dell'Isola Taprobana, The Meridian, collection of Yulan Galagoda, meridian.yulan.me/collection/descrittione-isola-taprobana-1590</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer data-screen-label="04 Footer" style="padding:clamp(90px,9vw,140px) clamp(20px,4.5vw,64px) 52px;text-align:center;background:radial-gradient(ellipse 60% 70% at 50% 100%,#111834 0%,#070A14 72%)">
+    <div data-reveal="1" style="display:flex;flex-direction:column;align-items:center;gap:18px">
+      <span style="width:6px;height:6px;border-radius:50%;background:#FFF8E8;box-shadow:0 0 10px 3px rgba(255,248,232,.55)"></span>
+      <p style="margin:0;font:italic 400 clamp(36px,4.4vw,60px)/1.05 'EB Garamond',Georgia,serif;color:#F3ECDC">Vayadhammā saṅkhārā</p>
+      <p style="margin:0;font:500 10.5px/1.6 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370">All conditioned things are subject to decay.</p>
+    </div>
+    <nav style="margin:72px auto 0;max-width:1100px;display:flex;flex-wrap:wrap;justify-content:center;gap:14px 36px;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F">
+      <a href="Archive - Collecting Policy.dc.html">Collecting Policy</a>
+      <a href="Archive - Verification and Provenance.dc.html">Verification &amp; Provenance</a>
+      <a href="Archive - Seeking.dc.html">Seeking</a>
+      <a href="Archive - Access Citation and Image Use.dc.html">Access, Citation &amp; Image Use</a>
+      <a href="Archive - Annual Review.dc.html">Annual Review</a>
+      <a href="Archive - About.dc.html">About</a>
+    </nav>
+    <div style="margin-top:28px;font:italic 400 15px/1.5 'EB Garamond',Georgia,serif;color:#8D897F">The Meridian · the collection of Yulan Galagoda · meridian.yulan.me</div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { data: null, inspecting: false, copied: false };
+  rootRef = React.createRef();
+  plateRef = React.createRef();
+  lineRef = React.createRef();
+  SLUG = 'descrittione-isola-taprobana-1590';
+
+  componentDidMount() {
+    this.reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const wait = () => { if (window.MERIDIAN_DATA) this.setState({ data: window.MERIDIAN_DATA }); else this.waitT = setTimeout(wait, 40); };
+    wait();
+    const root = this.rootRef.current;
+    if (root && !this.reduced) {
+      root.querySelectorAll('[data-in]').forEach(el => {
+        const i = +el.getAttribute('data-in');
+        el.animate([{ opacity: 0, transform: 'translateY(26px)', filter: 'blur(6px)' }, { opacity: 1, transform: 'none', filter: 'blur(0px)' }], { duration: 1400, delay: 150 + i * 220, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'both' });
+      });
+    }
+    if (root) {
+      this.io = new IntersectionObserver(es => es.forEach(e => {
+        if (!e.isIntersecting) return;
+        this.io.unobserve(e.target);
+        e.target.animate([{ opacity: 0, transform: 'translateY(26px)' }, { opacity: 1, transform: 'none' }], { duration: 1200, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'both' });
+      }), { threshold: 0.12 });
+      root.querySelectorAll('[data-reveal]').forEach(el => { if (el.getBoundingClientRect().top > innerHeight) { el.style.opacity = 0; this.io.observe(el); } });
+    }
+    this.onScroll = () => { if (!this._rq) this._rq = requestAnimationFrame(() => { this._rq = 0; this.progress(); }); };
+    window.addEventListener('scroll', this.onScroll, { passive: true });
+    window.addEventListener('resize', this.onScroll);
+    this.onKey = e => { if (e.key === 'Escape' && this.state.inspecting) this.toggle(); };
+    window.addEventListener('keydown', this.onKey);
+    this.progress();
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.waitT); cancelAnimationFrame(this._rq); clearTimeout(this.copyT);
+    window.removeEventListener('scroll', this.onScroll); window.removeEventListener('resize', this.onScroll); window.removeEventListener('keydown', this.onKey);
+    this.io && this.io.disconnect();
+  }
+
+  progress() {
+    const line = this.lineRef.current; if (!line) return;
+    const r = line.getBoundingClientRect(), p = Math.max(0, Math.min(1, (innerHeight * 0.45 - r.top) / r.height));
+    const fill = line.querySelector('[data-c="fill"]'), star = line.querySelector('[data-c="pstar"]');
+    if (fill) fill.style.transform = 'scaleY(' + p.toFixed(4) + ')';
+    if (star) star.style.transform = 'translateY(' + (p * r.height).toFixed(1) + 'px)';
+  }
+
+  toggle() {
+    const z = this.plateRef.current && this.plateRef.current.querySelector('[data-c="zoom"]');
+    const on = !this.state.inspecting;
+    if (z) { z.style.transform = on ? 'scale(2.6)' : ''; if (!on) z.style.transformOrigin = '50% 50%'; }
+    this.setState({ inspecting: on });
+  }
+
+  glyph(D, n) {
+    const X = [[1580, 0], [1820, 0.12], [1860, 0.27], [1900, 0.46], [1940, 0.73], [1985, 1]];
+    const xr = y => { for (let i = 1; i < X.length; i++) if (y <= X[i][0]) { const a = X[i - 1], b = X[i]; return a[1] + (b[1] - a[1]) * (y - a[0]) / (b[0] - a[0]); } return 1; };
+    const h = s => { let x = 2166136261; for (let i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967296; };
+    const groups = {};
+    D.items.forEach(it => (groups[it.year] = groups[it.year] || []).push(it));
+    const pos = s => { const it = D.bySlug[s], g = groups[it.year], i = g.indexOf(it), cx = 0.035 + xr(it.year) * 0.93, cy = 0.14 + h(g[0].slug + 'y') * 0.66; if (g.length === 1) return [cx * 1320, cy * 600]; const ang = i * 2.39996 + 0.6, rad = 0.03 * Math.sqrt(i + 0.5); return [(cx + Math.cos(ang) * rad * 0.45) * 1320, (cy + Math.sin(ang) * rad) * 600]; };
+    const its = n.items.filter(s => D.bySlug[s]).sort((a, b) => D.bySlug[a].year - D.bySlug[b].year);
+    const pts = its.map(pos), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const minx = Math.min(...xs), miny = Math.min(...ys), bw = Math.max(Math.max(...xs) - minx, 1), bh = Math.max(Math.max(...ys) - miny, 1), sc = Math.min(152 / bw, 60 / bh, 3);
+    const ox = (168 - bw * sc) / 2, oy = (76 - bh * sc) / 2, gp = pts.map(p => [ox + (p[0] - minx) * sc, oy + (p[1] - miny) * sc]);
+    return {
+      d: gp.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' '),
+      dots: gp.map((p, i) => { const me = its[i] === this.SLUG; return { left: (p[0] / 1.68).toFixed(2) + '%', top: (p[1] / 0.76).toFixed(2) + '%', size: me ? '9px' : '5px', color: me ? '#F2CF85' : '#FFF6E2' }; })
+    };
+  }
+
+  renderVals() {
+    const D = this.state.data;
+    const base = {
+      rootRef: this.rootRef, plateRef: this.plateRef, lineRef: this.lineRef,
+      inspecting: this.state.inspecting, inspectLabel: this.state.inspecting ? 'Leave inspection ✕' : '⊕ Inspect the details',
+      toggleInspect: () => this.toggle(),
+      inspectMove: e => {
+        if (!this.state.inspecting) return;
+        const el = this.plateRef.current, z = el && el.querySelector('[data-c="zoom"]'); if (!z) return;
+        const r = el.getBoundingClientRect();
+        z.style.transformOrigin = (((e.clientX - r.left) / r.width) * 100).toFixed(2) + '% ' + (((e.clientY - r.top) / r.height) * 100).toFixed(2) + '%';
+      },
+      citeLabel: this.state.copied ? 'Citation copied ✓' : 'Copy citation',
+      copyCite: () => {
+        const t = "Descrittione dell'Isola Taprobana, The Meridian, collection of Yulan Galagoda, meridian.yulan.me/collection/descrittione-isola-taprobana-1590";
+        try { navigator.clipboard && navigator.clipboard.writeText(t); } catch (err) {}
+        this.setState({ copied: true }); clearTimeout(this.copyT); this.copyT = setTimeout(() => this.setState({ copied: false }), 2200);
+      }
+    };
+    if (!D) return Object.assign(base, { cons: [], near: [], island: [] });
+    const me = D.bySlug[this.SLUG];
+    const cons = me.narratives.map(s => { const n = D.narratives.find(x => x.slug === s), g = this.glyph(D, n), ys = n.items.map(i => D.bySlug[i].year); return { name: n.name, premise: n.premise, d: g.d, dots: g.dots, meta: n.items.length + ' objects · ' + Math.min(...ys) + '–' + Math.max(...ys) }; });
+    const sorted = D.items.slice().sort((a, b) => a.year - b.year || a.order - b.order), i = sorted.indexOf(me);
+    const near = [];
+    near.push(i > 0 ? { dir: '← Earlier', name: sorted[i - 1].name, date: sorted[i - 1].date } : { dir: '← Earlier', name: 'Nothing in the collection is older.', date: 'The first star in the sky' });
+    if (i < sorted.length - 1) near.push({ dir: 'Later →', name: sorted[i + 1].name, date: sorted[i + 1].date });
+    const island = D.items.filter(it => it.island && it.slug !== this.SLUG).map(it => ({ name: it.name, date: it.date }));
+    return Object.assign(base, { cons, near, island });
+  }
+}
+</script>
+</body>
+</html>

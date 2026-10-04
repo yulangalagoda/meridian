@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&amp;family=EB+Garamond:ital,wght@0,400;0,500;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap">
+<script src="./meridian-data.js"></script>
+<style>
+html,body{margin:0;background:#070A14}
+body{color:#EEE7D7;font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+a:hover{color:#D3B370}
+::selection{background:#D3B370;color:#070A14}
+</style>
+</helmet>
+<div style="min-height:100vh;background:radial-gradient(ellipse 70% 40% at 50% 0%,#141C38 0%,#0B1124 45%,#070A14 100%);color:#EEE7D7">
+  <header style="display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:28px clamp(20px,4.5vw,64px)">
+    <nav style="display:flex;flex-wrap:wrap;gap:12px clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5">
+      <a href="Collection.dc.html">Collection</a>
+      <a href="Narratives.dc.html" style="color:#D3B370">Narratives</a>
+      <a href="Timeline - The Sky Over Time.dc.html">Timeline</a>
+    </nav>
+    <a href="Home - Night Sky.dc.html" style="display:grid;grid-template-columns:120px 30px 120px;align-items:center;font:400 15px/1 Gloock,Georgia,serif;letter-spacing:.42em;color:#F3ECDC">
+      <span style="text-align:right;margin-right:-.42em">THE</span>
+      <span style="justify-self:center;width:5px;height:5px;border-radius:50%;background:#F6E7C4;box-shadow:0 0 8px 2px rgba(246,231,196,.6)"></span>
+      <span>MERIDIAN</span>
+    </a>
+    <nav style="justify-self:end;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:12px clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5">
+      <a href="The Island.dc.html">The Island</a>
+      <a href="Archive - About.dc.html">About</a>
+      <a href="Search.dc.html">Search ⌘K</a>
+    </nav>
+  </header>
+
+  <main data-screen-label="01 Narratives" style="max-width:1320px;margin:0 auto;box-sizing:border-box;padding:clamp(56px,7vw,100px) clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:24px 48px;align-items:end;margin-bottom:44px">
+      <div>
+        <div style="font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370">Narratives · {{ count }} constellations</div>
+        <h1 style="margin:18px 0 0;font:400 clamp(40px,4.8vw,68px)/1.02 Gloock,Georgia,serif;color:#F3ECDC">Stories told across objects.</h1>
+      </div>
+      <p style="margin:0;justify-self:end;max-width:440px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty">Each narrative joins objects the way a constellation joins stars. Point at one below to find it in the sky.</p>
+    </div>
+
+    <div style="position:relative;height:clamp(260px,30vw,380px);margin-bottom:12px;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(20,28,56,.7),rgba(7,10,20,0))">
+      <div style="position:absolute;left:3%;right:3%;top:12%;bottom:16%">
+        <sc-for list="{{ paths }}" as="p" hint-placeholder-count="0">
+          <svg viewBox="0 0 1320 360" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none">
+            <path d="{{ p.d }}" style="fill:none;stroke:{{ p.stroke }};stroke-width:{{ p.w }};vector-effect:non-scaling-stroke;transition:stroke .5s"></path>
+          </svg>
+        </sc-for>
+        <sc-for list="{{ stars }}" as="s" hint-placeholder-count="0">
+          <span style="position:absolute;left:{{ s.left }};top:{{ s.top }};width:{{ s.size }};height:{{ s.size }};transform:translate(-50%,-50%);border-radius:50%;background:{{ s.color }};box-shadow:{{ s.glow }};opacity:{{ s.op }};transition:opacity .5s,box-shadow .5s"></span>
+        </sc-for>
+      </div>
+      <sc-for list="{{ axis }}" as="a" hint-placeholder-count="0">
+        <span style="position:absolute;bottom:12px;left:{{ a.left }};transform:translateX(-50%);font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#8D897F">{{ a.y }}</span>
+      </sc-for>
+      <span style="position:absolute;top:14px;left:16px;font:italic 400 16px/1 'EB Garamond',Georgia,serif;color:#B8B2A5">{{ skyLabel }}</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));column-gap:clamp(28px,4vw,56px)">
+      <sc-for list="{{ cards }}" as="c" hint-placeholder-count="6">
+        <a href="{{ c.href }}" onMouseEnter="{{ c.enter }}" onMouseLeave="{{ leave }}" onFocus="{{ c.enter }}" onBlur="{{ leave }}" style="display:flex;flex-direction:column;gap:14px;padding:36px 0 44px;border-top:1px solid rgba(238,231,215,.12);color:#EEE7D7" style-hover="border-top-color:rgba(211,179,112,.7);color:#EEE7D7">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+            <svg viewBox="0 0 168 76" style="width:168px;height:76px;overflow:visible">
+              <path d="{{ c.d }}" style="fill:none;stroke:rgba(211,179,112,.65);stroke-width:1;stroke-linecap:round"></path>
+            </svg>
+            <span style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#8D897F">{{ c.num }}</span>
+          </div>
+          <h2 style="margin:0;font:400 26px/1.15 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance">{{ c.name }}</h2>
+          <p style="margin:0;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty">{{ c.premise }}</p>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:4px">
+            <span style="font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F">{{ c.meta }}</span>
+            <span style="font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:5px;white-space:nowrap">Follow →</span>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </main>
+
+  <footer data-screen-label="02 Footer" style="padding:clamp(80px,8vw,120px) clamp(20px,4.5vw,64px) 52px;text-align:center;background:radial-gradient(ellipse 60% 70% at 50% 100%,#111834 0%,#070A14 72%)">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+      <span style="width:6px;height:6px;border-radius:50%;background:#FFF8E8;box-shadow:0 0 10px 3px rgba(255,248,232,.55)"></span>
+      <p style="margin:0;font:italic 400 clamp(32px,4vw,52px)/1.05 'EB Garamond',Georgia,serif;color:#F3ECDC">Vayadhammā saṅkhārā</p>
+      <p style="margin:0;font:500 10.5px/1.6 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370">All conditioned things are subject to decay.</p>
+    </div>
+    <div style="margin-top:48px;font:italic 400 15px/1.5 'EB Garamond',Georgia,serif;color:#8D897F">The Meridian · the collection of Yulan Galagoda · meridian.yulan.me</div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { D: null, hot: null };
+  componentDidMount() { const w = () => { if (window.MERIDIAN_DATA) { this.prep(window.MERIDIAN_DATA); this.setState({ D: window.MERIDIAN_DATA }); } else this.t = setTimeout(w, 40); }; w(); }
+  componentWillUnmount() { clearTimeout(this.t); }
+  h(s) { let x = 2166136261; for (let i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619); } return (x >>> 0) / 4294967296; }
+  xr(y) { const X = [[1580, 0], [1820, 0.12], [1860, 0.27], [1900, 0.46], [1940, 0.73], [1985, 1]]; for (let i = 1; i < X.length; i++) if (y <= X[i][0]) { const a = X[i - 1], b = X[i]; return a[1] + (b[1] - a[1]) * (y - a[0]) / (b[0] - a[0]); } return 1; }
+  curve(pts, seed) { let d = ''; pts.forEach((p, i) => { if (!i) { d = 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); return; } const q = pts[i - 1], mx = (q[0] + p[0]) / 2, my = (q[1] + p[1]) / 2, dx = p[0] - q[0], dy = p[1] - q[1], L = Math.hypot(dx, dy) || 1, o = (this.h(seed + i) - 0.5) * Math.min(40, L * 0.3); d += ' Q' + (mx - dy / L * o).toFixed(1) + ' ' + (my + dx / L * o).toFixed(1) + ' ' + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }); return d; }
+  prep(D) {
+    const g = {}; D.items.forEach(it => (g[it.year] = g[it.year] || []).push(it));
+    this.pos = {};
+    Object.keys(g).forEach(y => { const a = g[y], cx = this.xr(+y), cy = 0.08 + this.h(a[0].slug + 'y') * 0.84; a.forEach((it, i) => { const ang = i * 2.39996 + 0.6, r = a.length > 1 ? 0.035 * Math.sqrt(i + 0.5) : 0; this.pos[it.slug] = [cx + Math.cos(ang) * r * 0.4, cy + Math.sin(ang) * r]; }); });
+    this.nar = D.narratives.map((n, k) => {
+      const its = n.items.map(s => D.bySlug[s]).filter(Boolean).sort((a, b) => a.year - b.year);
+      const big = its.map(it => [this.pos[it.slug][0] * 1320, this.pos[it.slug][1] * 360]);
+      const xs = big.map(p => p[0]), ys = big.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      const sc = Math.min(156 / Math.max(1, x1 - x0), 64 / Math.max(1, y1 - y0)), ox = (168 - (x1 - x0) * sc) / 2, oy = (76 - (y1 - y0) * sc) / 2;
+      const small = big.map(p => [ox + (p[0] - x0) * sc, oy + (p[1] - y0) * sc]);
+      return { n, k, its, set: new Set(n.items), d: this.curve(big, n.slug), dm: this.curve(small, n.slug + 'm') };
+    });
+  }
+  renderVals() {
+    const D = this.state.D, hot = this.state.hot, leave = () => this.setState({ hot: null });
+    if (!D || !this.nar) return { count: '', paths: [], stars: [], axis: [], cards: [], leave, skyLabel: '' };
+    const H = hot ? this.nar.find(x => x.n.slug === hot) : null;
+    return {
+      count: D.narratives.length, leave,
+      skyLabel: H ? H.n.name : 'All twelve constellations, by year',
+      paths: this.nar.map(x => ({ d: x.d, stroke: H ? (H === x ? 'rgba(242,212,147,.95)' : 'rgba(232,206,150,.07)') : 'rgba(232,206,150,.32)', w: H === x ? 1.6 : 1 })),
+      stars: D.items.map(it => { const p = this.pos[it.slug], on = H && H.set.has(it.slug); return { left: (p[0] * 100).toFixed(2) + '%', top: (p[1] * 100).toFixed(2) + '%', size: on ? '7px' : '4px', color: it.island ? '#F2CF85' : '#F6F0E2', op: H && !on ? 0.3 : 1, glow: on ? '0 0 12px 4px rgba(255,240,205,.75)' : '0 0 5px 1px rgba(255,240,205,.3)' }; }),
+      axis: [1600, 1700, 1800, 1850, 1900, 1950].map(y => ({ y: String(y), left: (3 + this.xr(y) * 94).toFixed(2) + '%' })),
+      cards: this.nar.map(x => { const a = x.its[0].year, b = x.its[x.its.length - 1].year; return { num: String(x.k + 1).padStart(2, '0'), name: x.n.name, premise: x.n.premise, d: x.dm, meta: x.its.length + ' objects · ' + (a === b ? a : a + '–' + b), href: x.n.slug === 'the-year-1927' ? 'Narrative - The Year 1927.dc.html' : '#' + x.n.slug, enter: () => this.setState({ hot: x.n.slug }) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>
