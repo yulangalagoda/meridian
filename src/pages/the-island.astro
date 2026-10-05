@@ -58,8 +58,8 @@ const jsonLd = [
       {entries.map(({ it, gap, gapH }) => (
         <div class="is-entry">
           {gap && (
-            <div class="is-gap">
-              <span class="is-dash" style={`height:${gapH}`}></span>
+            <div class="is-gap" style={`--gh:${gapH}`}>
+              <span class="is-dash"></span>
               <span class="is-gaptext">{gap}</span>
             </div>
           )}
@@ -113,7 +113,7 @@ const jsonLd = [
   .is-line{max-width:67.5rem;margin:0 auto;box-sizing:border-box;padding:0 var(--gut) var(--sec)}
   .is-entry{display:flex;flex-direction:column}
   .is-gap{display:flex;align-items:center;gap:1.125rem;padding:0 0 0 calc(clamp(6rem,14vw,10.625rem) - 1px)}
-  .is-dash{width:1px;background:repeating-linear-gradient(to bottom,rgba(211,179,112,.6) 0 3px,rgba(211,179,112,0) 3px 9px)}
+  .is-dash{width:1px;height:var(--gh);background:repeating-linear-gradient(to bottom,rgba(211,179,112,.6) 0 3px,rgba(211,179,112,0) 3px 9px)}
   .is-gaptext{font:italic 400 1rem/1 'EB Garamond',Georgia,serif;color:#8D897F}
   .is-row{display:grid;grid-template-columns:clamp(6rem,14vw,10.625rem) minmax(0,1fr);gap:0 clamp(1.5rem,4vw,3.5rem);padding:1.75rem 0;border-top:1px solid rgba(238,231,215,.1)}
   .is-when{display:flex;flex-direction:column;align-items:flex-end;gap:.625rem;padding-right:clamp(1rem,2vw,1.75rem);border-right:1px solid rgba(211,179,112,.5)}
@@ -139,4 +139,31 @@ const jsonLd = [
   .is-want{display:flex;align-items:baseline;gap:1rem;padding:1.125rem 0;border-top:1px solid rgba(238,231,215,.12)}
   .is-want:last-child{border-bottom:1px solid rgba(238,231,215,.12)}
   .is-wanttitle{font:400 1.3125rem/1.3 Gloock,Georgia,serif;color:#F3ECDC}
+
+  @media (max-width:1023px){
+    .is-read,.is-all{display:inline-flex;align-items:flex-end;min-height:44px;box-sizing:border-box}
+  }
+  /* Phones (board 6c): H1 clamp(56px, 17vw, 80px); each row stacks — year
+     clamp(52px, 16vw, 72px) over its gold rule, image 4:3, meta, name,
+     description, ring and link; the dashed gap runs down the left edge, its
+     height still scaled to the years, clamped to 48–200px. */
+  @media (max-width:767px){
+    .is-hero{padding-top:2.75rem;gap:1rem}
+    .is-eye{font-size:.625rem;line-height:1.5}
+    .is-title{font-size:clamp(3.5rem,17vw,5rem)}
+    .is-intro{margin-top:.25rem;font-size:1.1875rem}
+    .is-gap{position:relative;height:clamp(48px,var(--gh),200px);margin:1rem 0;padding:0}
+    .is-dash{position:absolute;left:0;top:0;bottom:0;height:auto;width:0;background:none;border-left:1px dashed rgba(211,179,112,.5)}
+    .is-gaptext{margin-left:1.125rem;font-size:1.0625rem;color:#D3B370}
+    .is-row{display:flex;flex-direction:column;gap:0;padding:0;border-top:0}
+    .is-when{flex-direction:row;align-items:baseline;gap:.75rem;padding:0 0 .75rem;border-right:0;background:linear-gradient(90deg,#D3B370,rgba(211,179,112,.1)) left bottom / 100% 1px no-repeat}
+    .is-year{font-size:clamp(3.25rem,16vw,4.5rem);color:#F2CF85}
+    .is-body{display:flex;flex-direction:column;align-items:stretch;gap:.75rem;margin-top:1.375rem}
+    .is-text{gap:.75rem}
+    .is-meta{margin-top:.375rem}
+    .is-name{font-size:1.5rem;color:#F2CF85}
+    .is-short{font-size:1.0625rem}
+    .is-foot{margin-top:0}
+    .is-read{align-items:center;height:44px;padding-bottom:0;border-bottom:0}
+  }
 </style>

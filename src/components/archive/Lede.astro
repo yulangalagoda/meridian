@@ -3,14 +3,18 @@
 interface Props {
   html: string;
   after: 32 | 48 | 56 | 72; // space below, per the reference
+  afterSmall?: number; // space below under L, where the board draws one
   pretty?: boolean;
 }
 
-const { html, after, pretty = false } = Astro.props;
+const { html, after, afterSmall, pretty = false } = Astro.props;
+const vars = `--ld-after:${after / 16}rem` + (afterSmall ? `;--ld-after-s:${afterSmall / 16}rem` : '');
 ---
 
-<p class="ld" style={`margin:0 0 ${after / 16}rem${pretty ? ';text-wrap:pretty' : ''}`} set:html={html} />
+<p class="ld" style={vars + (pretty ? ';text-wrap:pretty' : '')} set:html={html} />
 
 <style>
-  .ld{font:400 1.5625rem/1.5 'EB Garamond',Georgia,serif;color:#F3ECDC}
+  .ld{margin:0 0 var(--ld-after);font:400 1.5625rem/1.5 'EB Garamond',Georgia,serif;color:#F3ECDC}
+  /* Below L (board 7a): lede 21/1.5. */
+  @media (max-width:1023px){ .ld{margin-bottom:var(--ld-after-s,var(--ld-after));font-size:1.3125rem} }
 </style>

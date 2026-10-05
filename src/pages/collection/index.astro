@@ -9,6 +9,7 @@ import SiteHeader from '../../components/SiteHeader.astro';
 import MottoFooter from '../../components/MottoFooter.astro';
 import ShelfLabel from '../../components/ShelfLabel.astro';
 import ObjectCard from '../../components/ObjectCard.astro';
+import Sheet from '../../components/Sheet.astro';
 import { getSiteData } from '../../lib/notion';
 import { ERA_OPTIONS, type Item } from '../../lib/types';
 import { breadcrumbs, listPage, yearSpan } from '../../components/seo';
@@ -67,25 +68,54 @@ const jsonLd = [
         <p class="cl-intro">Gold names belong to The Island. A dashed ring means research is ongoing; a solid one, verified.</p>
       </div>
 
-      <div class="cl-bar">
+      <div class="cl-bar" data-cl-controls>
         <div class="cl-group">
           <span class="cl-label">Arrange by</span>
-          {ARRANGE.map(([key, name], i) => (
-            <button type="button" class:list={['cl-opt', { 'cl-on': i === 0 }]} data-arrange={key} aria-pressed={i === 0 ? 'true' : 'false'}>{name}</button>
-          ))}
+          <div class="cl-opts cl-seg">
+            {ARRANGE.map(([key, name], i) => (
+              <button type="button" class:list={['cl-opt', { 'cl-on': i === 0 }]} data-arrange={key} aria-pressed={i === 0 ? 'true' : 'false'}>{name}</button>
+            ))}
+          </div>
         </div>
         <div class="cl-group">
           <span class="cl-label">Show</span>
-          {SHOW.map(([key, name, count], i) => (
-            <button type="button" class:list={['cl-opt', 'cl-show', { 'cl-on': i === 0 }]} data-show={key} aria-pressed={i === 0 ? 'true' : 'false'}>{name} <span class="cl-count">{count}</span></button>
-          ))}
+          <div class="cl-opts cl-chips">
+            {SHOW.map(([key, name, count], i) => (
+              <button type="button" class:list={['cl-opt', 'cl-show', { 'cl-on': i === 0, 'cl-isl': key === 'island' }]} data-show={key} aria-pressed={i === 0 ? 'true' : 'false'}>{name} <span class="cl-count">{count}</span></button>
+            ))}
+          </div>
         </div>
       </div>
+
+      <div class="cl-sticky" data-cl-sticky>
+        <span class="cl-sticky-name" data-cl-current>{fieldShelves[0]?.name}</span>
+        <button type="button" class="cl-sticky-btn" data-sheet-open="cl-arrange"><span>Arrange</span></button>
+      </div>
+      <Sheet id="cl-arrange" label="Arrange">
+        <div class="cl-sheet">
+          <div class="cl-group">
+            <span class="cl-label">Arrange by</span>
+            <div class="cl-opts cl-seg">
+              {ARRANGE.map(([key, name], i) => (
+                <button type="button" class:list={['cl-opt', { 'cl-on': i === 0 }]} data-arrange={key} aria-pressed={i === 0 ? 'true' : 'false'}>{name}</button>
+              ))}
+            </div>
+          </div>
+          <div class="cl-group">
+            <span class="cl-label">Show</span>
+            <div class="cl-opts cl-chips">
+              {SHOW.map(([key, name, count], i) => (
+                <button type="button" class:list={['cl-opt', 'cl-show', { 'cl-on': i === 0, 'cl-isl': key === 'island' }]} data-show={key} aria-pressed={i === 0 ? 'true' : 'false'}>{name} <span class="cl-count">{count}</span></button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Sheet>
 
       {ARRANGE.map(([key, , shelves], i) => (
         <div class="cl-shelves" data-arrangement={key} hidden={i !== 0}>
           {shelves.map((s) => (
-            <section class="cl-shelf" data-slugs={s.items.map((it) => it.slug).join(' ')} data-kind={key}>
+            <section class="cl-shelf" data-slugs={s.items.map((it) => it.slug).join(' ')} data-kind={key} data-name={s.name}>
               <ShelfLabel name={s.name} note={s.note} />
               {s.desc && <p class="cl-desc">{s.desc}</p>}
               <div class="cl-grid">{i === 0 && s.items.map((it) => <ObjectCard {...card(it)} />)}</div>
@@ -121,6 +151,49 @@ const jsonLd = [
   .cl-desc{margin:-.375rem 0 .25rem;max-width:38.75rem;font:italic 400 1.0625rem/1.5 'EB Garamond',Georgia,serif;color:#B8B2A5}
   .cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13.125rem),1fr));gap:clamp(1.125rem,2.2vw,1.875rem)}
   .cl-grid > :global([hidden]){display:none !important}
+  .cl-opts{display:contents}
+  .cl-sticky,.cl-sheet{display:none}
+
+  /* Below L (board 6a): "Arrange by" is a full-width three-part segmented
+     control and "Show" a sideways row of chips, both 44px; once they scroll
+     away a 44px bar under the header names the current shelf, and "Arrange"
+     opens the same controls in a sheet. Card grid: 2 / 3 / 3 / 4 columns. */
+  @media (max-width:1023px){
+    .cl-eye{font-size:.625rem}
+    .cl-title{margin-top:1rem}
+    .cl-hero{margin-bottom:1.75rem}
+    .cl-bar{display:block;padding:0;border:0;margin-bottom:3rem}
+    .cl-group{display:block}
+    .cl-group + .cl-group{margin-top:1.125rem}
+    .cl-label{display:block;font-size:var(--mono-min)}
+    .cl-seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:.625rem;border:1px solid rgba(211,179,112,.35)}
+    .cl-seg .cl-opt{height:44px;display:grid;place-items:center;border:0;font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#B8B2A5}
+    .cl-seg .cl-opt + .cl-opt{border-left:1px solid rgba(211,179,112,.35)}
+    .cl-seg .cl-on{background:rgba(211,179,112,.14);color:#F2D493}
+    .cl-chips{display:flex;gap:8px;margin:.625rem calc(-1 * var(--gut)) 0;padding:0 var(--gut);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;white-space:nowrap}
+    .cl-chips::-webkit-scrollbar{display:none}
+    .cl-chips .cl-opt{flex:none;height:44px;box-sizing:border-box;display:inline-flex;align-items:center;gap:8px;padding:0 14px;border:1px solid rgba(238,231,215,.16);font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#B8B2A5}
+    .cl-chips .cl-isl{color:#F2CF85}
+    .cl-chips .cl-on{border-color:#D3B370;color:#F3ECDC}
+    .cl-chips .cl-count{font-size:.625rem;letter-spacing:.16em}
+    .cl-shelf{gap:1.25rem}
+    .cl-desc{margin:-.25rem 0 0}
+    .cl-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem}
+
+    .cl-sticky{position:fixed;left:0;right:0;top:var(--head-h);z-index:25;display:flex;align-items:center;justify-content:space-between;gap:1rem;height:44px;box-sizing:border-box;padding:0 max(var(--gut),env(safe-area-inset-right)) 0 var(--gut);background:rgba(7,10,20,.92);border-bottom:1px solid rgba(238,231,215,.1);visibility:hidden;opacity:0;transition:opacity .22s ease,visibility .22s,top .22s ease}
+    .cl-sticky.cl-up{visibility:visible;opacity:1}
+    .cl-sticky-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:.4375rem .75rem;background:linear-gradient(135deg,#A8834D,#E6CC92 45%,#A07B45);color:#141008;font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase}
+    .cl-sticky-btn{flex:none;height:44px;display:flex;align-items:center;font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC}
+    .cl-sticky-btn span{border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:.3125rem}
+    .cl-sheet{display:block;padding-bottom:.5rem}
+  }
+  @media (min-width:1024px) and (max-width:1279px){ .cl-grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
+  @media (max-width:767px){
+    .cl{padding-top:2rem}
+    .cl-grid{gap:1.25rem}
+  }
+  @media (max-width:479px){ .cl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem} }
+  @media (prefers-reduced-motion:reduce){ .cl-sticky{transition:none} }
 </style>
 
 <script>
@@ -165,5 +238,30 @@ const jsonLd = [
       b.addEventListener('click', () => { by = b.dataset.arrange!; pick('arrange', by); render(); }));
     root.querySelectorAll<HTMLElement>('[data-show]').forEach((b) =>
       b.addEventListener('click', () => { show = b.dataset.show!; pick('show', show); render(); }));
+
+    // Below L: the bar that takes over once the controls scroll away, naming
+    // the shelf under it.
+    const controls = root.querySelector<HTMLElement>('[data-cl-controls]')!;
+    const bar = root.querySelector<HTMLElement>('[data-cl-sticky]')!;
+    const name = bar.querySelector<HTMLElement>('[data-cl-current]')!;
+    const compact = matchMedia('(max-width: 1023px)');
+    let queued = false;
+    const track = () => {
+      queued = false;
+      if (!compact.matches) { bar.classList.remove('cl-up'); return; }
+      const line = bar.getBoundingClientRect().bottom + 8;
+      const up = controls.getBoundingClientRect().bottom < bar.getBoundingClientRect().top && root.getBoundingClientRect().bottom > line + 40;
+      bar.classList.toggle('cl-up', up);
+      bar.setAttribute('aria-hidden', up ? 'false' : 'true');
+      const shelves = [...root.querySelectorAll<HTMLElement>(`[data-arrangement="${by}"] .cl-shelf`)].filter((sh) => !sh.hidden);
+      let cur = shelves[0];
+      for (const sh of shelves) if (sh.getBoundingClientRect().top <= line) cur = sh;
+      if (cur && name.textContent !== cur.dataset.name) name.textContent = cur.dataset.name ?? '';
+    };
+    const later = () => { if (!queued) { queued = true; requestAnimationFrame(track); } };
+    addEventListener('scroll', later, { passive: true });
+    addEventListener('resize', later);
+    root.querySelectorAll('[data-arrange],[data-show]').forEach((b) => b.addEventListener('click', later));
+    track();
   }
 </script>

@@ -138,12 +138,16 @@ const here = Astro.url.pathname.replace(/\/$/, '');
     .hd-over{position:fixed;z-index:30}
     .hd-nav{display:none}
     .hd-ctl{display:flex;align-items:center;gap:.75rem;height:44px;font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#EEE7D7}
+    .hd-logo{min-height:44px}
     .hd-menu{justify-self:start}
     .hd-find{justify-self:end}
     .hd-bars{display:flex;flex-direction:column;gap:6px}
     .hd-bars span{width:20px;height:1px;background:#EEE7D7}
     .hd-glass{position:relative;flex:none;width:13px;height:13px;box-sizing:border-box;border:1px solid #EEE7D7;border-radius:50%}
     .hd-glass::after{content:'';position:absolute;left:10px;top:10px;width:6px;height:1px;background:#EEE7D7;transform:rotate(45deg);transform-origin:0 0}
+    .hd-find[aria-current="page"]{color:#D3B370}
+    .hd-find[aria-current="page"] .hd-glass{border-color:#D3B370}
+    .hd-find[aria-current="page"] .hd-glass::after{background:#D3B370}
     .hd-solid{background-color:rgba(7,10,20,.86);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom-color:rgba(238,231,215,.08)}
     .hd-hide{transform:translateY(-100%)}
   }
@@ -156,7 +160,7 @@ const here = Astro.url.pathname.replace(/\/$/, '');
     .hd{height:calc(3.5rem + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(.5rem,env(safe-area-inset-right)) 0 max(.5rem,env(safe-area-inset-left));grid-template-columns:44px minmax(0,1fr) 44px}
     .hd-ctl{width:44px;justify-content:center}
     .hd-lab{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-    .hd-logo{display:flex;justify-self:center;gap:.625rem;font-size:.8125rem;letter-spacing:.36em}
+    .hd-logo{display:flex;align-items:center;justify-self:center;gap:.625rem;font-size:.8125rem;letter-spacing:.36em}
     .hd-the{margin-right:-.36em}
     .hd-dot{width:4px;height:4px}
   }

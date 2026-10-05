@@ -37,4 +37,11 @@ for (const b of blocks.slice(1)) {
   .ar-num{margin:0;font:400 clamp(3.5rem,6vw,5.25rem)/1 Gloock,Georgia,serif;color:#F2D493;font-variant-numeric:tabular-nums}
   .ar-text{margin:0;font:400 1.3125rem/1.65 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
   .ar-text :global(em){color:#F3ECDC}
+
+  /* Below L (board 7b): the year line keeps its rule, indent 44 → 28; body 19/1.6. */
+  @media (max-width:1023px){
+    .ar-line{padding-left:1.75rem}
+    .ar-star{left:-1.75rem}
+    .ar-text{font-size:1.1875rem;line-height:1.6}
+  }
 </style>

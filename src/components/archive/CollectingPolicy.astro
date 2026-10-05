@@ -21,7 +21,7 @@ const after = qi >= 0 && blocks[qi + 1]?.type === 'paragraph' && (di < 0 || qi +
 const closing = di >= 0 ? blocks.slice(di + 1).filter((b) => b.type === 'paragraph') : [];
 ---
 
-<Lede html={html(lede)} after={32} />
+<Lede html={html(lede)} after={32} afterSmall={26} />
 
 <div class="cp-threads">
   {cards.map((c, i) => (
@@ -60,4 +60,18 @@ const closing = di >= 0 ? blocks.slice(di + 1).filter((b) => b.type === 'paragra
   .cp-close p{margin:0 0 1.1em}
   .cp-close p:last-child{margin:0}
   .cp-close :global(a){color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)}
+
+  /* Below L (board 7a, 7b): the thread cards stack; body 19/1.6; the test
+     question clamp(28px, 8vw, 40px). */
+  @media (max-width:1023px){
+    .cp-say,.cp-close{font-size:1.1875rem;line-height:1.6}
+    .cp-question{font-size:clamp(1.75rem,8vw,2.5rem)}
+  }
+  @media (max-width:767px){
+    .cp-threads{gap:1rem}
+    .cp-card{padding:1.5rem 1.375rem;gap:.75rem;border-color:rgba(238,231,215,.12)}
+    .cp-num{color:#D3B370}
+    .cp-title{font-size:1.75rem;line-height:1.05}
+    .cp-text{font-size:1.0625rem;line-height:1.55}
+  }
 </style>

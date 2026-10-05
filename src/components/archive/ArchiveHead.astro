@@ -13,10 +13,16 @@ const { eyebrow, title, long = false, gap = 36 } = Astro.props;
 ---
 
 <div class="ah-eye">{eyebrow}</div>
-<h1 class:list={['ah-title', { 'ah-long': long }]} style={`margin:1.25rem 0 ${gap / 16}rem`}>{title}</h1>
+<h1 class:list={['ah-title', { 'ah-long': long }]} style={`--ah-gap:${gap / 16}rem`}>{title}</h1>
 
 <style>
   .ah-eye{font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
-  .ah-title{font:400 clamp(3rem,6vw,5.25rem)/1 Gloock,Georgia,serif;color:#F3ECDC;letter-spacing:-.01em}
+  .ah-title{margin:1.25rem 0 var(--ah-gap);font:400 clamp(3rem,6vw,5.25rem)/1 Gloock,Georgia,serif;color:#F3ECDC;letter-spacing:-.01em}
   .ah-long{font:400 clamp(2.75rem,5.4vw,4.75rem)/1.02 Gloock,Georgia,serif;text-wrap:balance}
+  /* Below L (board 7a): H1 clamp(40px, 12vw, 52px) — drawn at 46px on the 390
+     frame, hence 11.8vw — 18px under the eyebrow, 26px above the lede. */
+  @media (max-width:1023px){
+    .ah-eye{font-size:.625rem}
+    .ah-title,.ah-long{margin:1.125rem 0 1.625rem;font-size:clamp(2.5rem,11.8vw,3.25rem);line-height:1}
+  }
 </style>

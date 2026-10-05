@@ -68,4 +68,15 @@ const jsonLd = [
   .ab-label{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
   .ab-mail{font:400 clamp(1.375rem,2.4vw,1.875rem)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
   .ab-seek{font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:.4375rem}
+
+  /* Below L (board 7b): body 19/1.6, lede 21/1.5; the pull quote drops to 28px
+     with its gold rule above; the mailto block is a full-width 48px button. */
+  @media (max-width:1023px){
+    .ab-prose{font-size:1.1875rem;line-height:1.6}
+    .ab-prose .ab-lede{font-size:1.3125rem;line-height:1.5}
+    .ab-quote{padding:2.125rem 0;border-left:0;border-top:1px solid rgba(211,179,112,.6);font-size:1.75rem}
+    .ab-write{width:100%}
+    .ab-mail{display:flex;align-items:center;justify-content:center;height:48px;box-sizing:border-box;padding:0 1rem;border:1px solid rgba(211,179,112,.6);font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;color:#F3ECDC;overflow-wrap:anywhere}
+    .ab-seek{display:inline-flex;align-items:flex-end;min-height:44px;box-sizing:border-box}
+  }
 </style>

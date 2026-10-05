@@ -50,4 +50,12 @@ const subject = (lead: string) => encodeURIComponent(`Seeking: ${lead.replace(/\
   .sk-tip{align-self:flex-start;margin-top:.25rem;font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:.375rem}
   .sk-note{margin:2.75rem 0 0;font:italic 400 1.1875rem/1.6 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
   .sk-note :global(a){color:#F2D493;border-bottom:1px solid rgba(211,179,112,.4)}
+
+  /* Below L (board 7b): the number-and-ring column narrows to 40px; body 19/1.6;
+     "I know of one →" becomes a 44px row, its subject still filled in. */
+  @media (max-width:1023px){
+    .sk-want{grid-template-columns:2.5rem minmax(0,1fr);gap:.5rem 1rem}
+    .sk-text{font-size:1.1875rem;line-height:1.6}
+    .sk-tip{align-self:stretch;display:flex;align-items:center;min-height:44px;box-sizing:border-box;margin-top:.25rem;padding:0;border-bottom:0;border-top:1px solid rgba(238,231,215,.1)}
+  }
 </style>

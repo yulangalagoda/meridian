@@ -41,6 +41,7 @@ const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: 
       <span>{date}</span> · <span>{origin}</span>
     </span>
     <span class="cd-name" style={island ? 'color:#F2CF85' : undefined}>{name}</span>
+    <span class="cd-ring"><VerificationRing verified={verified} size={9} noShrink /></span>
   </span>
 </Tag>
 
@@ -64,4 +65,21 @@ const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: 
   .cd-meta{font:500 var(--mono-min)/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
   .cd-collection .cd-meta{display:flex;align-items:center;gap:.5rem}
   .cd-name{font:400 1.1875rem/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .cd-ring{display:none}
+
+  /* Phones (board 6a, 3g): a compact case — the image fills the top of the
+     bordered card and the text sits inside it: date, name 16px, then the ring. */
+  @media (max-width:767px){
+    .cd{gap:0;position:relative;background:#0B1124}
+    .cd-collection{border:1px solid rgba(238,231,215,.12)}
+    .cd-timeline{border:1px solid rgba(238,231,215,calc(.08 + var(--lit) * .3));transition:border-color .8s}
+    .cd-collection .cd-case,.cd-timeline .cd-case{padding:0;border:0;box-shadow:none}
+    .cd-bar{left:-1px;right:-1px;width:auto;margin-left:0;z-index:2}
+    .cd-text{padding:.75rem .75rem .875rem;gap:.4375rem}
+    .cd-meta{letter-spacing:.12em}
+    .cd-collection .cd-meta{display:block}
+    .cd-collection .cd-meta > :global(:first-child){display:none}
+    .cd-name{font-size:1rem}
+    .cd-ring{display:flex}
+  }
 </style>
