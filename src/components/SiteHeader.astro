@@ -53,16 +53,16 @@ const RIGHT: [Section, string, string][] = [
 </header>
 
 <style>
-  .hd{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:28px clamp(20px,4.5vw,64px)}
-  .hd-flow{gap:16px}
+  .hd{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;padding:calc(1.75rem + env(safe-area-inset-top)) var(--gut) 1.75rem}
+  .hd-flow{gap:1rem}
   .hd-over{position:absolute;top:0;left:0;right:0}
   .hd-pass{pointer-events:none}
   .hd-pass > *{pointer-events:auto}
-  .hd-nav{display:flex;gap:clamp(16px,2.4vw,34px);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5}
-  .hd-flow .hd-nav{flex-wrap:wrap;gap:12px clamp(16px,2.4vw,34px)}
+  .hd-nav{display:flex;gap:clamp(1rem,2.4vw,2.125rem);font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#B8B2A5}
+  .hd-flow .hd-nav{flex-wrap:wrap;gap:.75rem clamp(1rem,2.4vw,2.125rem)}
   .hd-end{justify-self:end}
   .hd-flow .hd-end{justify-content:flex-end}
   .hd-on{color:#D3B370}
-  .hd-logo{display:grid;grid-template-columns:120px 30px 120px;align-items:center;font:400 15px/1 Gloock,Georgia,serif;letter-spacing:.42em;color:#F3ECDC}
+  .hd-logo{display:grid;grid-template-columns:7.5rem 1.875rem 7.5rem;align-items:center;font:400 .9375rem/1 Gloock,Georgia,serif;letter-spacing:.42em;color:#F3ECDC}
   .hd-the{text-align:right;margin-right:-.42em}
 </style>

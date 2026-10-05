@@ -26,7 +26,7 @@ const jsonLd = Astro.props.jsonLd ?? [webPage(`${title} — The Meridian`, path,
     <SiteHeader current={current === 'about' ? 'about' : undefined} />
     <main class="ap">
       <ArchiveRail current={current} />
-      <article class="ap-col" style={`max-width:${width}px`}>
+      <article class="ap-col" style={`max-width:${width / 16}rem`}>
         <slot />
       </article>
     </main>
@@ -35,6 +35,6 @@ const jsonLd = Astro.props.jsonLd ?? [webPage(`${title} — The Meridian`, path,
 </NightSky>
 
 <style>
-  .ap{max-width:1180px;margin:0 auto;box-sizing:border-box;padding:clamp(64px,8vw,120px) clamp(20px,4.5vw,64px) clamp(80px,9vw,140px);display:flex;flex-wrap:wrap;align-items:flex-start;gap:48px clamp(40px,6vw,96px)}
-  .ap-col{flex:1 1 480px;min-width:0}
+  .ap{max-width:73.75rem;margin:0 auto;box-sizing:border-box;padding:clamp(4rem,8vw,7.5rem) var(--gut) clamp(5rem,9vw,8.75rem);display:flex;flex-wrap:wrap;align-items:flex-start;gap:3rem clamp(2.5rem,6vw,6rem)}
+  .ap-col{flex:1 1 30rem;min-width:0}
 </style>

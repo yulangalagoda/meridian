@@ -27,7 +27,7 @@ const ogImage = new URL(image || '/og-default.png', site).href;
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <script is:inline>document.documentElement.classList.add('js');addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key&&e.key.toLowerCase()==='k'&&!/^\/search\/?$/.test(location.pathname)){e.preventDefault();location.href='/search'}})</script>
     {description && <meta name="description" content={description} />}
@@ -70,8 +70,29 @@ const ogImage = new URL(image || '/og-default.png', site).href;
   body{color:#EEE7D7;font-family:"EB Garamond",Georgia,serif;-webkit-font-smoothing:antialiased}
   body.legible{text-rendering:optimizeLegibility}
   a{color:inherit;text-decoration:none}
-  a:hover{color:#D3B370}
+  @media (hover:hover) and (pointer:fine){a:hover{color:#D3B370}}
   button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
   ::selection{background:#D3B370;color:#070A14}
   :focus-visible{outline:1px solid #D3B370;outline-offset:3px}
+
+  /* Responsive system (07-responsive.md and the Responsive System board). Tiers:
+     XS 320–479 · S 480–767 · M 768–1023 · L 1024–1279 · XL 1280–2399 (shipped, unchanged)
+     · XXL 2400–3199 · 3XL 3200+. The same numbers live in src/components/responsive.ts.
+     Type, spacing and max-widths are in rem, so XXL and 3XL scale the whole page with the
+     root size. --gut is the side gutter and --sec the section padding; the shipped clamp()
+     values hold from 1280 to 2399. The gutter also clears notches in landscape.
+     --mono-min is the smallest mono label: the shipped 9.5px from XL up, 10px below it. */
+  :root{
+    --gut-t:clamp(1.25rem,4.5vw,4rem);
+    --sec:clamp(5rem,8vw,7.5rem);
+    --gut:max(var(--gut-t),env(safe-area-inset-left),env(safe-area-inset-right));
+    --mono-min:.59375rem;
+  }
+  @media (max-width:1279px){:root{--mono-min:.625rem}}
+  @media (max-width:479px){:root{--gut-t:20px;--sec:64px}}
+  @media (min-width:480px) and (max-width:767px){:root{--gut-t:24px;--sec:72px}}
+  @media (min-width:768px) and (max-width:1023px){:root{--gut-t:40px;--sec:88px}}
+  @media (min-width:1024px) and (max-width:1279px){:root{--gut-t:48px;--sec:100px}}
+  @media (min-width:2400px){html{font-size:112%}:root{--gut-t:96px;--sec:140px}}
+  @media (min-width:3200px){html{font-size:125%}:root{--gut-t:128px;--sec:160px}}
 </style>

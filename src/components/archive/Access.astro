@@ -47,14 +47,14 @@ const rows = blocks.filter(led).map((b) => ({ ...led(b)!, children: (b.children 
 
 <style>
   .ac-rows{display:flex;flex-direction:column;border-bottom:1px solid rgba(238,231,215,.12)}
-  .ac-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px 32px;padding:30px 0;border-top:1px solid rgba(238,231,215,.12)}
-  .ac-label{margin:0;font:400 24px/1.2 Gloock,Georgia,serif;color:#F3ECDC}
-  .ac-text{grid-column:span 2;min-width:0;font:400 20px/1.6 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
-  .ac-p{margin:0 0 18px}
-  .ac-cite{margin:0 0 18px;padding:18px 20px;background:rgba(11,17,36,.8);border:1px solid rgba(211,179,112,.35);font:400 14px/1.6 'IBM Plex Mono',monospace;color:#F3ECDC;overflow-wrap:anywhere}
-  .ac-cite :global(em){font-family:'EB Garamond',Georgia,serif;font-size:19px}
+  .ac-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11.25rem),1fr));gap:.625rem 2rem;padding:1.875rem 0;border-top:1px solid rgba(238,231,215,.12)}
+  .ac-label{margin:0;font:400 1.5rem/1.2 Gloock,Georgia,serif;color:#F3ECDC}
+  .ac-text{grid-column:span 2;min-width:0;font:400 1.25rem/1.6 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .ac-p{margin:0 0 1.125rem}
+  .ac-cite{margin:0 0 1.125rem;padding:1.125rem 1.25rem;background:rgba(11,17,36,.8);border:1px solid rgba(211,179,112,.35);font:400 .875rem/1.6 'IBM Plex Mono',monospace;color:#F3ECDC;overflow-wrap:anywhere}
+  .ac-cite :global(em){font-family:'EB Garamond',Georgia,serif;font-size:1.1875rem}
   .ac-cite :global(code){font:inherit;color:#F2D493}
-  .ac-write{margin-top:56px;display:flex;flex-direction:column;gap:12px}
-  .ac-wlabel{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
-  .ac-mail{font:400 clamp(22px,2.4vw,30px)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+  .ac-write{margin-top:3.5rem;display:flex;flex-direction:column;gap:.75rem}
+  .ac-wlabel{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
+  .ac-mail{font:400 clamp(1.375rem,2.4vw,1.875rem)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
 </style>
