@@ -120,7 +120,9 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
         <div class="nr-stage" data-stage>
           <canvas class="nr-canvas" data-canvas></canvas>
           {year && <div class="nr-ghost" aria-hidden="true">{year}</div>}
+          <div class="nr-pan" data-pan>
           <svg viewBox={`0 0 ${W0} ${H0}`} class="nr-svg" data-svg aria-hidden="true">
+            {segs0.map((s) => <path class="nr-guide" data-guide d={s.d} />)}
             {segs0.map((s) => <path class="nr-seg" data-seg d={s.d} style={`stroke-dasharray:${s.len};stroke-dashoffset:${s.len}`} />)}
             {year && <path class="nr-seg3" data-seg3 d="" style="opacity:0" />}
           </svg>
@@ -134,6 +136,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
                 <span class="nr-lab-num">{s.num} · {s.it.dateLabel}</span>
                 <span class="nr-lab-name">{s.it.name}</span>
               </span>
+              <span class="nr-tick" data-tick aria-hidden="true">{s.it.year}</span>
             </button>
           ))}
           {year && (
@@ -142,12 +145,15 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
               <span class="nr-wait-text">Waiting · the next object from {year}</span>
             </div>
           )}
+          </div>
+          <div class="nr-bandhead" aria-hidden="true"><span>{narrative.name}</span><span class="nr-count" data-count></span></div>
           <div class="nr-progress">
             <span data-station-label>Prologue</span>
             <span class="nr-bar"><span data-bar style="width:0%"></span></span>
           </div>
           <div class="nr-hint">Click a star to visit it</div>
         </div>
+        <div class="nr-fade" aria-hidden="true"></div>
       </div>
 
       <div class="nr-story">
@@ -155,7 +161,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
           <div class="nr-eyebrow">Narrative · a constellation of {inWords(stars.length)}</div>
           <h1 class="nr-h1" data-h1>{narrative.name}</h1>
           <p class="nr-premise">{narrative.premise}</p>
-          <div class="nr-open">
+          <div class="nr-open" data-station="0">
             {opening.map((c, i) => i === firstP
               ? <p><span class="nr-drop" set:html={drop} /><Fragment set:html={dropRest} /></p>
               : <Fragment set:html={pull(c)} />)}
@@ -275,12 +281,79 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
   @media (max-height:760px){
     .nr-stage{min-height:560px}
   }
+
+  .nr-pan{position:absolute;inset:0}
+  .nr-guide{fill:none;stroke:rgba(238,231,215,.18);stroke-width:1;stroke-dasharray:3 5;opacity:0}
+  .nr-tick,.nr-bandhead,.nr-fade{display:none}
+
+  /* L, and landscape phones: the shipped two columns at 1 : 1; on landscape
+     phones the stage is the screen's height. */
+  @media (min-width:1024px) and (max-width:1279px){ .nr-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+  @media (orientation:landscape) and (max-height:500px){
+    .nr-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+    .nr-stage{height:100svh;min-height:0}
+  }
+
+  /* Below L in portrait (Responsive System board, 04): the title block first,
+     then the stage as a full-bleed band that sticks under the header (at the
+     top while the header is away) above the story, with a 36px fade under it.
+     The open stars sit in the band with their names beneath; closed ones show
+     their year; a "2 / 3" counter takes the place of the progress line. */
+  @media (max-width:1023px) and (orientation:portrait), (max-width:1023px) and (min-height:501px){
+    .nr{--band-h:clamp(240px,36svh,340px);--top:calc(56px + env(safe-area-inset-top))}
+    .nr-grid{display:flex;flex-direction:column}
+    .nr-left,.nr-story,.nr-st0{display:contents}
+    .nr-story > *,.nr-st0 > *{order:2;box-sizing:border-box;width:100%;max-width:calc(37.5rem + 2 * var(--gut));align-self:center;padding-left:var(--gut);padding-right:var(--gut)}
+    .nr-st0 > .nr-eyebrow,.nr-st0 > .nr-h1,.nr-st0 > .nr-premise{order:0}
+    .nr-stage,.nr-fade{order:1}
+    .nr-st0 > .nr-eyebrow{margin-top:calc(var(--top) + 2rem);font-size:.625rem}
+    .nr-h1{margin:1rem 0 1.125rem;font-size:clamp(3rem,14vw,3.75rem)}
+    .nr-premise{margin:0;font-size:1.25rem}
+    .nr-stage{position:sticky;top:var(--head-h);z-index:5;height:var(--band-h);min-height:0;margin-top:2rem;border-bottom:1px solid transparent;background:radial-gradient(ellipse 80% 70% at 50% 45%,#151D3A 0%,#0B1124 50%,#070A14 100%);transition:top .22s ease}
+    .nr-fade{display:block;position:sticky;top:calc(var(--head-h) + var(--band-h));z-index:4;height:36px;margin-bottom:-36px;background:linear-gradient(#070A14,rgba(7,10,20,0));pointer-events:none;transition:top .22s ease}
+    .nr-ghost{bottom:4%;font-size:clamp(7.5rem,38vw,11.25rem)}
+    .nr-pan{right:auto;width:100%;transition:transform .8s cubic-bezier(.16,1,.3,1)}
+    .nr-guide{opacity:1}
+    .nr-lab{max-width:130px;gap:0}
+    .nr-lab-num{display:none}
+    .nr-lab-name{font-size:.8125rem;line-height:1.2;color:#F3ECDC}
+    .nr-lab[data-dim] .nr-lab-name{color:#B8B2A5}
+    .nr-tick{display:block;position:absolute;left:0;top:12px;transform:translateX(-50%);font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#8D897F;transition:opacity .8s}
+    .nr-progress,.nr-hint{display:none}
+    .nr-stuck{border-bottom-color:rgba(211,179,112,.2)}
+    .nr-bandhead{display:flex;visibility:hidden;position:absolute;left:var(--gut);right:var(--gut);top:22px;justify-content:space-between;gap:1rem;font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F;pointer-events:none}
+    .nr-bandhead span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .nr-count{flex:none;color:#D3B370}
+    .nr-stuck .nr-bandhead{visibility:visible}
+    .nr-open{order:2;padding-top:1.875rem}
+    .nr-story{font-size:1.1875rem;line-height:1.6}
+    .nr-drop{font-size:4rem;margin:.5rem .625rem 0 0}
+    .nr-body :global(h3){font:400 1.75rem/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+    .nr-st-final{padding-bottom:28svh}
+  }
+  @media (min-width:768px) and (max-width:1023px) and (min-height:501px){
+    .nr{--band-h:40svh;--top:calc(64px + env(safe-area-inset-top))}
+    .nr-ghost{font-size:14.375rem}
+    .nr-bandhead{top:28px;font-size:.625rem}
+    .nr-lab{max-width:180px}
+    .nr-lab-name{font-size:.9375rem}
+    .nr-story{font-size:1.25rem;line-height:1.62}
+    .nr-body :global(h3){font-size:2.125rem}
+  }
+  @media (max-width:1023px) and (prefers-reduced-motion:reduce){ .nr-stage,.nr-fade,.nr-pan,.nr-tick{transition:none} }
+  @media (max-width:1023px){
+    .nr-more-link{display:flex;align-items:center;min-height:44px}
+    .nr-back{display:inline-flex;align-items:center;min-height:44px}
+  }
+  /* On touch every star answers a 44px tap. */
+  @media (pointer:coarse){ .nr-star::before{content:'';position:absolute;left:-22px;top:-22px;width:44px;height:44px} }
 </style>
 
 <script>
   // Port of the reference's componentDidMount, startSky, points, seg and
   // renderVals. Stations are the story's blocks; the one crossing the middle of
   // the screen (rootMargin -42% / -52%) is current.
+  import { MQ } from '../../components/responsive';
   const root = document.querySelector<HTMLElement>('[data-narrative]');
   const json = document.getElementById('nr-data');
   if (root && json) {
@@ -289,6 +362,12 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
     const stage = root.querySelector<HTMLElement>('[data-stage]')!;
     const svg = root.querySelector<SVGSVGElement>('[data-svg]')!;
     const segEls = [...root.querySelectorAll<SVGPathElement>('[data-seg]')];
+    const guides = [...root.querySelectorAll<SVGPathElement>('[data-guide]')];
+    const pan = root.querySelector<HTMLElement>('[data-pan]')!;
+    const count = root.querySelector<HTMLElement>('[data-count]')!;
+    // Below L in portrait the stage is the sticky band above the story.
+    const bandMQ = matchMedia(MQ.narrativeBand);
+    const sm = matchMedia('(min-width: 768px)');
     const seg3 = root.querySelector<SVGPathElement>('[data-seg3]');
     const wait = root.querySelector<HTMLElement>('[data-wait]');
     const btns = [...root.querySelectorAll<HTMLButtonElement>('[data-star]')];
@@ -296,10 +375,18 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
     const bar = root.querySelector<HTMLElement>('[data-bar]')!;
     const R = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI', 'XVII', 'XVIII', 'XIX', 'XX'];
     let station = 0, W = 700, H = 800, first = true;
+    // The band's drawing: more than six stars spread wider than the band and pan.
+    const bandW = () => (D.stars.length > 6 ? Math.max(W, D.stars.length * 140) : W);
 
     const points = () => {
       const xs = D.raw.map((p) => p[0]), ys = D.raw.map((p) => p[1]);
       const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      if (bandMQ.matches) {
+        // In the band; past six stars they keep story order, evenly spaced, so the
+        // names under the open ones never collide while the band pans.
+        const BW = bandW(), n = D.raw.length, wide = n > 6;
+        return D.raw.map((p, i) => [BW * (wide ? 0.08 + (0.84 * i) / (n - 1) : 0.18 + 0.64 * (x1 > x0 ? (p[0] - x0) / (x1 - x0) : 0.5)), H * (0.3 + 0.38 * (y1 > y0 ? (p[1] - y0) / (y1 - y0) : 0.5))]);
+      }
       return D.raw.map((p) => [W * (0.2 + 0.6 * (x1 > x0 ? (p[0] - x0) / (x1 - x0) : 0.5)), H * (0.2 + 0.5 * (y1 > y0 ? (p[1] - y0) / (y1 - y0) : 0.5))]);
     };
     const seg = (a: number[], b: number[]) => {
@@ -308,8 +395,59 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
       return { d: 'M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) + ' Q' + cx.toFixed(1) + ' ' + cy.toFixed(1) + ' ' + b[0].toFixed(1) + ' ' + b[1].toFixed(1), len: Math.ceil(L * 1.06) };
     };
 
+    // The band (board 4a, 4b, 4c): the active star opens to 88px (M: 120), the
+    // earlier ones stay open at 56px (M: 76) with their names under them,
+    // closed stars show their year, the faint dashed course runs ahead.
+    const renderBand = () => {
+      const st = station, P = points(), BW = bandW(), big = sm.matches ? 120 : 88, small = sm.matches ? 76 : 56;
+      count.textContent = st >= 1 && st <= D.S ? st + ' / ' + D.S : '';
+      svg.setAttribute('viewBox', '0 0 ' + BW + ' ' + H);
+      pan.style.width = BW + 'px';
+      let focus = -1;
+      D.stars.forEach((s, i) => {
+        const p = P[i], active = st === s.sec + 1, lead = active && s.first, seen = st > s.sec + 1 || st >= D.F || (active && !s.first);
+        const size = lead ? big : seen ? small : 0;
+        if (lead || (focus < 0 && active)) focus = i;
+        const b = btns[i], ap = b.children[0] as HTMLElement, dot = b.children[1] as HTMLElement, lab = b.children[2] as HTMLElement, tick = b.children[3] as HTMLElement;
+        b.style.left = p[0].toFixed(1) + 'px'; b.style.top = p[1].toFixed(1) + 'px'; b.style.zIndex = lead ? '3' : '2';
+        ap.style.width = ap.style.height = size + 'px';
+        ap.style.opacity = size ? '1' : '0';
+        ap.style.boxShadow = lead ? '0 0 0 1px rgba(242,212,147,.9),0 0 34px 8px rgba(211,179,112,.32)' : '0 0 0 1px rgba(211,179,112,.4)';
+        dot.style.width = dot.style.height = '6px';
+        dot.style.opacity = size ? '0' : '1';
+        dot.style.boxShadow = '0 0 10px 3px rgba(255,240,205,.5)';
+        lab.style.left = '0px'; lab.style.top = (size / 2 + 10) + 'px';
+        lab.style.transform = 'translateX(-50%)'; lab.style.textAlign = 'center';
+        lab.style.opacity = size ? '1' : '0';
+        if (lead) delete lab.dataset.dim; else lab.dataset.dim = '1';
+        tick.style.opacity = size ? '0' : '1';
+      });
+      segEls.forEach((el, j) => {
+        const s = seg(P[j], P[j + 1]);
+        el.setAttribute('d', s.d); guides[j]?.setAttribute('d', s.d);
+        el.style.strokeDasharray = String(s.len);
+        el.style.strokeDashoffset = String(st >= D.stars[j + 1].sec + 1 ? 0 : s.len);
+      });
+      // Keep the active star in the middle when the drawing is wider than the band.
+      const fx = focus >= 0 ? P[focus][0] : st >= D.F ? BW : 0;
+      pan.style.transform = BW > W ? 'translateX(' + Math.max(W - BW, Math.min(0, W / 2 - fx)).toFixed(1) + 'px)' : '';
+      if (seg3 && wait) {
+        const C = [[0.84, 0.24], [0.84, 0.76], [0.16, 0.76], [0.16, 0.24]].map((c) => [c[0] * BW, c[1] * H]);
+        const wpt = C.map((c) => ({ c, d: Math.min(...P.map((p) => Math.hypot(p[0] - c[0], p[1] - c[1]))) })).sort((a, b) => b.d - a.d)[0].c;
+        seg3.setAttribute('d', seg(P[P.length - 1], wpt).d);
+        seg3.style.opacity = st >= D.final ? '1' : '0';
+        wait.hidden = st < D.final;
+        wait.style.left = wpt[0].toFixed(1) + 'px'; wait.style.top = wpt[1].toFixed(1) + 'px';
+        const txt = wait.lastElementChild as HTMLElement;
+        txt.style.left = wpt[0] > BW / 2 ? 'auto' : ''; txt.style.right = wpt[0] > BW / 2 ? '24px' : '';
+      }
+    };
+
     const render = () => {
+      if (bandMQ.matches) return renderBand();
       const st = station, P = points(), AP = Math.min(220, W * 0.3);
+      pan.style.width = pan.style.transform = '';
+      btns.forEach((b) => delete (b.children[2] as HTMLElement).dataset.dim);
       label.textContent = st === 0 ? 'Prologue' : st <= D.S ? 'Star ' + R[st - 1] + ' of ' + R[D.S - 1] : 'The constellation, complete';
       bar.style.width = ((Math.min(st, D.F) / D.F) * 100).toFixed(0) + '%';
       svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
@@ -342,6 +480,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
         seg3.style.opacity = st >= D.final ? '1' : '0';
         wait.hidden = st < D.final;
         wait.style.left = wpt[0].toFixed(1) + 'px'; wait.style.top = wpt[1].toFixed(1) + 'px';
+        (wait.lastElementChild as HTMLElement).style.left = (wait.lastElementChild as HTMLElement).style.right = '';
       }
     };
 
@@ -350,7 +489,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
     const paint = () => {
       if (!first) { render(); return; }
       first = false;
-      const els = [...segEls, ...btns.flatMap((b) => [...b.children] as HTMLElement[])] as (HTMLElement | SVGElement)[];
+      const els = [...segEls, pan, ...btns.flatMap((b) => [...b.children] as HTMLElement[])] as (HTMLElement | SVGElement)[];
       els.forEach((e) => (e.style.transition = 'none'));
       render();
       void stage.offsetWidth;
@@ -360,14 +499,29 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
     measure();
     new ResizeObserver(measure).observe(stage);
 
-    const io = new IntersectionObserver((es) => es.forEach((e) => {
-      if (e.isIntersecting) { station = +(e.target.getAttribute('data-station') ?? 0); paint(); }
-    }), { rootMargin: '-42% 0px -52% 0px' });
-    root.querySelectorAll('[data-station]').forEach((el) => io.observe(el));
+    // The station crossing the trigger line is current: the middle of the
+    // screen, or 62% under the band so a station opens once it clears it.
+    let io: IntersectionObserver | null = null;
+    const watch = () => {
+      io?.disconnect();
+      io = new IntersectionObserver((es) => es.forEach((e) => {
+        if (e.isIntersecting) { station = +(e.target.getAttribute('data-station') ?? 0); paint(); }
+      }), { rootMargin: bandMQ.matches ? '-59% 0px -35% 0px' : '-42% 0px -52% 0px' });
+      root.querySelectorAll('[data-station]').forEach((el) => io!.observe(el));
+    };
+    watch();
+    bandMQ.addEventListener('change', () => { watch(); paint(); });
+    // Pinned, the band gets its hairline and names the narrative with the counter.
+    let pq = false;
+    const pinned = () => { pq = false; stage.classList.toggle('nr-stuck', bandMQ.matches && stage.getBoundingClientRect().top <= parseFloat(getComputedStyle(stage).top) + 1 && scrollY > 0); };
+    addEventListener('scroll', () => { if (!pq) { pq = true; requestAnimationFrame(pinned); } }, { passive: true });
+    pinned();
+    sm.addEventListener('change', () => paint());
 
     btns.forEach((b, i) => b.addEventListener('click', () => {
       const el = root.querySelector('[data-station="' + (D.stars[i].sec + 1) + '"]');
-      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - innerHeight * 0.3, behavior: reduced ? 'auto' : 'smooth' });
+      const off = bandMQ.matches ? stage.getBoundingClientRect().bottom + 40 : innerHeight * 0.3;
+      if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - off, behavior: reduced ? 'auto' : 'smooth' });
     }));
 
     const h1 = root.querySelector('[data-h1]');

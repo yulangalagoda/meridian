@@ -16,6 +16,8 @@ export const MQ = {
   landscapePhone: '(orientation: landscape) and (max-height: 500px)',
   ultrawide: '(min-aspect-ratio: 21/9)',
   reduced: '(prefers-reduced-motion: reduce)',
+  // The narrative's sticky band: below L, except on landscape phones.
+  narrativeBand: '(max-width: 1023px) and (orientation: portrait), (max-width: 1023px) and (min-height: 501px)',
 } as const;
 
 export const matches = (q: string) => typeof window !== 'undefined' && !!window.matchMedia && matchMedia(q).matches;
