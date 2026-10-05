@@ -9,6 +9,7 @@ import MottoFooter from '../components/MottoFooter.astro';
 import ShelfLabel from '../components/ShelfLabel.astro';
 import ObjectCard from '../components/ObjectCard.astro';
 import VerificationRing from '../components/VerificationRing.astro';
+import Sheet from '../components/Sheet.astro';
 import { skyPositions } from '../components/sky/geometry';
 import { view, constellationPath, ERAS, Y0, Y1, DEG, START, type TLData, type TLItem } from '../components/timeline/model';
 import { getSiteData } from '../lib/notion';
@@ -69,6 +70,7 @@ const jsonLd = [
       <div class="tl-meridian"></div>
 
       <div class="tl-sky" data-sky style={`z-index:${v.skyZ}`}>
+        <div class="tl-pan" data-pan>
         {data.narratives.map((n, i) => (
           <svg viewBox="0 0 1320 600" preserveAspectRatio="none" class="tl-svg" aria-hidden="true">
             <path data-path={n.slug} d={n.d} class="tl-path" style={`opacity:${v.paths[i].op}`} />
@@ -81,6 +83,7 @@ const jsonLd = [
             <button type="button" class="tl-hit" data-pick={it.slug} aria-label={it.name} title={it.name} style={`pointer-events:${v.stars[i].pe};--ring:${v.stars[i].ring}`}></button>
           </div>
         ))}
+        </div>
         <div class="tl-sel" data-sel hidden>
           <div class="tl-card" data-card>
             <div class="tl-card-top">
@@ -99,11 +102,16 @@ const jsonLd = [
       </div>
 
       <button type="button" class="tl-play" data-play>▶ Wind the centuries</button>
+      <div class="tl-sides" aria-hidden="true"><span>← Risen</span><span>Still to rise →</span></div>
+      <button type="button" class="tl-passbar" data-sheet-open="tl-passing">
+        <span class="tl-pb-k"><span class="tl-pb-long">Passing through</span><span class="tl-pb-short">Passing ·</span></span>
+        <span class="tl-pb-n"><span data-pass-n>{v.passCount + (v.passCount === 1 ? ' object' : ' objects')}</span> ⌃</span>
+      </button>
 
       <div class="tl-year">
         <span class="tl-year-eye">The sky in</span>
         <span class="tl-year-num" data-year>{v.yearText}</span>
-        <span class="tl-year-era"><span data-era>{v.era}</span> · <span data-risen>{v.risenText}</span></span>
+        <span class="tl-year-era"><span data-era>{v.era}</span><span class="tl-risen"> · <span data-risen>{v.risenText}</span></span></span>
       </div>
 
       <div class="tl-pass">
@@ -136,9 +144,20 @@ const jsonLd = [
           ))}
         </div>
         <div class="tl-pointer"><span></span></div>
-        <div class="tl-hint">Drag the dial · ← → to step a year</div>
+        <div class="tl-hint"><span class="tl-hint-dial">Drag the dial · ← → to step a year</span><span class="tl-hint-sky">Drag the dial or the sky</span></div>
       </div>
     </section>
+
+    <Sheet id="tl-star" label="">
+      <span class="tls-name" data-ss-name></span>
+      <p class="tls-short" data-ss-short></p>
+      <span class="tls-in" data-ss-in></span>
+      <div class="tls-ver"><span class="tls-ring" data-ss-ring></span><span data-ss-ver></span></div>
+      <a class="tls-read" href="#" data-ss-href>Read the object →</a>
+    </Sheet>
+    <Sheet id="tl-passing" label={v.passTitle}>
+      <div class="tlp-list" data-pl></div>
+    </Sheet>
 
     <section class="tl-list">
       <div class="tl-hero">
@@ -150,9 +169,11 @@ const jsonLd = [
       </div>
       <div class="tl-routes">
         <span class="tl-routes-label">Narratives through the sky</span>
+        <div class="tl-routes-row" data-routes-row>
         {data.narratives.map((n) => (
-          <button type="button" class="tl-route" data-route={n.slug} aria-pressed="false">{n.name} <span class="tl-route-count">{n.items.length} objects</span></button>
+          <button type="button" class="tl-route" data-route={n.slug} aria-pressed="false"><span class="tl-route-name">{n.name}</span> <span class="tl-route-count">{n.items.length} objects</span></button>
         ))}
+        </div>
       </div>
       <div class="tl-shelves">
         {shelves.map((s) => (
@@ -243,6 +264,7 @@ const jsonLd = [
   @media (hover:hover) and (pointer:fine){.tl-route:hover{color:#F2D493}}
   .tl-route[aria-pressed='true']{color:#F2D493;border-bottom-color:#D3B370}
   .tl-route-count{font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;font-style:normal;letter-spacing:.1em;color:#8D897F}
+  .tl-routes-row{display:contents}
   .tl-shelves{display:flex;flex-direction:column;gap:clamp(3.5rem,6vw,5.25rem)}
   .tl-shelf{display:flex;flex-direction:column;gap:1.375rem}
   .tl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,13.125rem),1fr));gap:clamp(1.125rem,2.2vw,1.875rem)}
@@ -257,10 +279,145 @@ const jsonLd = [
     .tl-dial{height:160px}
     .tl-sky{bottom:160px}
   }
+
+  .tl-pan{position:absolute;inset:0}
+  .tl-sides,.tl-passbar,.tl-hint-sky,.tl-pb-short{display:none}
+
+  /* L (Responsive System board, 3c): the shipped layout with the side panels at
+     min(260px, 24vw); the dial's clear window is tied to them. */
+  @media (min-width:1024px) and (max-width:1279px){
+    .tl{--panel:min(16.25rem,24vw)}
+    .tl-pass{width:var(--panel)}
+    .tl-dial{-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) calc(var(--gut) + var(--panel)),#000 calc(var(--gut) + var(--panel) + 120px),#000 calc(100% - var(--gut) - var(--panel) - 120px),rgba(0,0,0,0) calc(100% - var(--gut) - var(--panel)),rgba(0,0,0,0) 100%);mask-image:linear-gradient(90deg,rgba(0,0,0,0) 0px,rgba(0,0,0,0) calc(var(--gut) + var(--panel)),#000 calc(var(--gut) + var(--panel) + 120px),#000 calc(100% - var(--gut) - var(--panel) - 120px),rgba(0,0,0,0) calc(100% - var(--gut) - var(--panel)),rgba(0,0,0,0) 100%)}
+  }
+
+  /* Below L: the year block and the controls move up under the header, the
+     dial runs across the full width, and on touch the star card and the
+     "Passing through" list are bottom sheets (board 3b). */
+  @media (max-width:1023px){
+    .tl{--head:calc(64px + env(safe-area-inset-top))}
+    .tl-stage{height:max(100svh,640px)}
+    .tl-year{top:calc(var(--head) + 2.5rem);bottom:auto;left:var(--gut)}
+    .tl-year-num{font-size:6.5rem}
+    .tl-year-era{font-size:1.125rem}
+    .tl-play{left:auto;right:var(--gut);top:calc(var(--head) + 2.5rem);transform:none;height:44px;box-sizing:border-box;padding:0 1rem}
+    .tl-pass{top:calc(var(--head) + 2.5rem + 68px);bottom:auto;width:16.25rem;gap:.625rem}
+    .tl-pass a[data-pass-slot]:nth-of-type(4){display:none}
+    .tl-pass-item{min-height:44px;box-sizing:border-box}
+    .tl-sky{top:calc(var(--head) + 17.875rem);bottom:292px}
+    .tl-dial{height:calc(230px + env(safe-area-inset-bottom));-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 10%,#000 90%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 10%,#000 90%,rgba(0,0,0,0))}
+    .tl-hint{bottom:calc(22px + env(safe-area-inset-bottom))}
+    .tl-tag.tl-tag-l{left:auto;right:12px;text-align:right}
+    /* Routes (board 3e): the label, then one sideways-scrolling row with a
+       right fade; only the active route is underlined, in gold. */
+    .tl-routes{display:block;margin:0 calc(-1 * var(--gut)) 3rem;padding:.875rem 0 .375rem var(--gut)}
+    .tl-routes-row{display:flex;gap:1.375rem;margin:.375rem 0 0 calc(-1 * var(--gut));padding:0 20vw 0 var(--gut);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,#000 80%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,#000 80%,rgba(0,0,0,0))}
+    .tl-routes-row::-webkit-scrollbar{display:none}
+    .tl-route{flex:none;height:44px;align-items:center;gap:.375rem;font-size:1.125rem;line-height:1;color:#B8B2A5;border-bottom:0}
+    .tl-route-name{border-bottom:1px solid rgba(211,179,112,0);padding-bottom:3px}
+    .tl-route[aria-pressed='true'] .tl-route-name{border-bottom-color:rgba(211,179,112,.8)}
+    .tl-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:1.5rem}
+    /* the sky's 28px ring stays drawn at 28px inside a 44px hit area */
+    .tl-sheeted .tl-play,.tl-sheeted .tl-pass,.tl-sheeted .tl-sides,.tl-sheeted .tl-passbar,.tl-sheeted .tl-year-eye,.tl-sheeted .tl-risen{display:none}
+    .tl-sheeted .tl-year{flex-direction:row;align-items:baseline;gap:.75rem}
+    .tl-sheeted .tl-year-num{font-size:2.75rem;line-height:1}
+    .tl-sheeted .tl-year-era{font-size:1rem}
+    .tl-sheeted .tl-sky{top:calc(var(--head) + 5.25rem)}
+  }
+  @media (max-width:1023px) and (prefers-reduced-motion:no-preference){ .tl-route-name{transition:border-color .4s} }
+  @media (max-width:1023px) and (pointer:coarse){
+    .tl-hit{left:-22px;top:-22px;width:44px;height:44px;box-shadow:none}
+    .tl-hit::before{content:'';position:absolute;inset:8px;border-radius:50%;box-shadow:var(--ring);transition:box-shadow .3s}
+  }
+  @media (min-width:1024px) and (max-width:1279px){ .tl-grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
+
+  /* Phones (board 3a): pan mode — the sky is drawn 2.6 × the screen and slides
+     so the current year sits on the meridian; dragging it scrubs the year.
+     Year top-left (clamp(64px, 19vw, 84px)), "▶ Wind" top-right, "Passing
+     through" as a 48px bar, the dial 196px with its mask on the outer 12%. */
+  @media (max-width:767px){
+    .tl{--head:calc(56px + env(safe-area-inset-top))}
+    .tl-year{top:calc(var(--head) + 1rem);gap:.375rem}
+    .tl-year-num{font-size:clamp(4rem,19vw,5.25rem)}
+    .tl-year-era{font-size:1rem}
+    .tl-play{top:calc(var(--head) + 1.875rem);padding:0 .875rem}
+    .tl-pass{display:none}
+    .tl-sides{display:flex;position:absolute;left:var(--gut);right:var(--gut);top:calc(var(--head) + 9.375rem);z-index:6;justify-content:space-between;font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F;pointer-events:none}
+    .tl-sky{left:0;right:0;top:calc(var(--head) + 10.625rem);bottom:calc(288px + env(safe-area-inset-bottom))}
+    .tl-tag{font-size:.8125rem;max-width:9.375rem}
+    .tl-passbar{display:flex;position:absolute;left:var(--gut);right:var(--gut);bottom:calc(206px + env(safe-area-inset-bottom));z-index:6;height:48px;align-items:center;justify-content:space-between;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12)}
+    .tl-pb-k{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370}
+    .tl-pb-n{font:italic 400 1rem/1 'EB Garamond',Georgia,serif;color:#B8B2A5}
+    .tl-dial{height:calc(196px + env(safe-area-inset-bottom));-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 12%,#000 88%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 12%,#000 88%,rgba(0,0,0,0))}
+    .tl-hint{bottom:calc(20px + env(safe-area-inset-bottom))}
+    .tl-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:1.25rem}
+    .tl-list{padding-top:4rem}
+    .tl-eye{font-size:.625rem}
+    .tl-hero{gap:1rem;margin-bottom:1.75rem}
+    .tl-title{margin-top:1rem;font-size:2rem;line-height:1.08}
+    .tl-intro{font-size:1.0625rem}
+    .tl-routes{margin-bottom:2.75rem}
+    .tl-shelf{gap:1.25rem}
+  }
+  @media (max-width:479px){ .tl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem} }
+  .tl-panmode .tl-sky{left:0;right:0;pointer-events:auto;touch-action:pan-y;cursor:grab}
+  .tl-panmode .tl-pan{right:auto;width:260%}
+  .tl-panmode .tl-hint-dial{display:none}
+  .tl-panmode .tl-hint-sky{display:inline}
+
+  /* Landscape phones (board 3d): the whole sky above one row (year, era,
+     "Passing · N", "▶ Wind") and a 120px dial without its hint. */
+  @media (orientation:landscape) and (max-height:500px){
+    .tl-stage{height:100svh;min-height:0}
+    .tl-sky{left:32px;right:32px;top:16px;bottom:184px}
+    .tl-year{top:auto;bottom:134px;left:44px;flex-direction:row;align-items:baseline;gap:.75rem}
+    .tl-year-eye,.tl-risen,.tl-pass,.tl-sides,.tl-hint,.tl-tag{display:none}
+    .tl-year-num{font-size:2.75rem;line-height:1}
+    .tl-year-era{font-size:.9375rem}
+    .tl-play{top:auto;bottom:134px;right:44px;height:40px;padding:0 .75rem}
+    .tl-passbar{display:flex;position:absolute;left:auto;right:calc(44px + 6.5rem);bottom:134px;z-index:6;height:40px;align-items:center;gap:14px;border:0;font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#D3B370}
+    .tl-pb-k,.tl-pb-n{font:inherit;color:inherit}
+    .tl-pb-n{display:flex;align-items:center;gap:14px}
+    /* both are drawn 40px tall; their hit areas reach 44px */
+    .tl-play::after,.tl-passbar::after{content:'';position:absolute;left:0;right:0;top:-2px;bottom:-2px}
+    .tl-play::after{top:-3px;bottom:-3px}
+    .tl-pb-long{display:none}
+    .tl-pb-short{display:inline}
+    .tl-dial{height:120px;-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 10%,#000 90%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 10%,#000 90%,rgba(0,0,0,0))}
+    .tl-wheel{top:36px}
+    .tl-pointer{top:22px}
+  }
+  :global(html.tl-skyfill [data-hd]){transform:translateY(-100%)}
+
+  /* Ultrawide and 3XL: the sky in a box of at most 2400px (× the root scale),
+     centred on the meridian and fading across its outer 8%; the year block and
+     the Passing list anchor to it. */
+  @media (min-aspect-ratio:21/9) and (min-width:2400px), (min-width:3200px){
+    .tl-sky{left:max(4%,calc(50% - 75rem));right:max(4%,calc(50% - 75rem));-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 8%,#000 92%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 8%,#000 92%,rgba(0,0,0,0))}
+    .tl-year{left:max(var(--gut),calc(50% - 75rem))}
+    .tl-pass{right:max(var(--gut),calc(50% - 75rem))}
+  }
+
+  /* The sheets' content (board 3b). */
+  .tls-name{font:400 1.5rem/1.15 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .tls-short{margin:0;font:400 1.0625rem/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .tls-in{font:italic 400 .9375rem/1.35 'EB Garamond',Georgia,serif;color:#8D897F}
+  .tls-in:empty{display:none}
+  .tls-ver{display:flex;align-items:center;gap:.5rem;padding-top:.75rem;border-top:1px solid rgba(238,231,215,.1);font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#B8B2A5}
+  .tls-ring{width:9px;height:9px;box-sizing:border-box;border-radius:50%;border:1px solid #D3B370}
+  .tls-read{display:flex;align-items:center;justify-content:center;height:48px;border:1px solid rgba(211,179,112,.6);font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC}
+  .tlp-list{display:flex;flex-direction:column}
+  .tlp-list :global(a){display:flex;flex-direction:column;justify-content:center;gap:.1875rem;min-height:56px;box-sizing:border-box;padding:.5rem 0;border-top:1px solid rgba(238,231,215,.12)}
+  .tlp-list :global(.tlp-name){font:400 1.0625rem/1.2 Gloock,Georgia,serif;color:#F3ECDC}
+  .tlp-list :global(.tlp-date){font:500 var(--mono-min)/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .tlp-list :global(.tlp-none){margin:0;padding:.5rem 0;font:italic 400 1rem/1.3 'EB Garamond',Georgia,serif;color:#8D897F}
 </style>
 
 <script>
   import { view, clamp, Y0, Y1, DEG, R, START, type TLData } from '../components/timeline/model';
+  import { xr } from '../components/sky/geometry';
+  import { MQ } from '../components/responsive';
+  import { openSheet, closeSheet } from '../components/sheet';
 
   const root = document.querySelector<HTMLElement>('[data-timeline]');
   const json = document.getElementById('tl-data');
@@ -280,6 +437,26 @@ const jsonLd = [
     const playBtn = q<HTMLButtonElement>('[data-play]');
     const selBox = q('[data-sel]'), selCard = q('[data-card]');
     const ringEl = q('[data-sel-ring] span');
+    const pan = q('[data-pan]');
+    const passN = q('[data-pass-n]'), passbar = q('.tl-passbar');
+    const starSheet = document.getElementById('tl-star') as HTMLDialogElement;
+    const passSheet = document.getElementById('tl-passing') as HTMLDialogElement;
+    const bySlug = new Map(D.items.map((it) => [it.slug, it]));
+
+    // Modes (Responsive System board, 03). Pan mode whenever the sky box would be
+    // narrower than 700px; sheets on phones, landscape phones and touch below L.
+    const phone = matchMedia(MQ.belowM), compact = matchMedia(MQ.belowL), coarse = matchMedia(MQ.coarse);
+    const land = matchMedia(MQ.landscapePhone), huge = matchMedia(MQ.xxxl);
+    let panMode = false;
+    const sheetMode = () => phone.matches || land.matches || (compact.matches && coarse.matches);
+    const windLabel = () => (phone.matches || land.matches ? '▶ Wind' : '▶ Wind the centuries');
+    const layout = () => {
+      panMode = compact.matches && stage.clientWidth - (land.matches ? 64 : 0) < (land.matches ? 700 : 761);
+      stage.classList.toggle('tl-panmode', panMode);
+      if (!playing) playBtn.textContent = windLabel();
+      // Landscape: "Passing · N ⌃" sits 14px left of the Wind button.
+      passbar.style.right = land.matches ? stage.clientWidth - playBtn.offsetLeft + 14 + 'px' : '';
+    };
 
     let Y = START, playing = false, pick: string | null = null, route: string | null = null;
     let formed = new Set(D.narratives.filter((p) => p.last <= Y).map((p) => p.slug));
@@ -292,15 +469,41 @@ const jsonLd = [
       return Math.round(top - sy);
     };
 
+    // In pan mode the drawing slides so x(year) sits on the meridian line.
+    const panTo = () => {
+      if (!panMode) { pan.style.transform = ''; return; }
+      const w = pan.offsetWidth, x = (0.035 + xr(clamp(Y)) * 0.93) * w;
+      pan.style.transform = 'translateX(' + (stage.clientWidth / 2 - sky.offsetLeft - x).toFixed(1) + 'px)';
+    };
+    // Passing tags that would overlap stack downward by the height of the tag above;
+    // one that would run off the right edge sits to the left of its star instead.
+    const stackTags = () => {
+      tags.forEach((t) => { t.style.translate = ''; t.classList.remove('tl-tag-l'); });
+      if (!compact.matches) return;
+      const edge = stage.getBoundingClientRect().right - 8;
+      tags.forEach((t) => { if (!t.hidden && t.getBoundingClientRect().right > edge) t.classList.add('tl-tag-l'); });
+      const shown = tags.filter((t) => !t.hidden).map((t) => ({ t, r: t.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
+      const placed: DOMRect[] = [];
+      shown.forEach(({ t, r }) => {
+        let dy = 0;
+        for (const p of placed) if (r.left < p.right && r.right > p.left && r.top + dy < p.bottom && r.bottom + dy > p.top) dy = p.bottom - r.top;
+        if (dy) t.style.translate = '0 ' + dy.toFixed(1) + 'px';
+        placed.push(new DOMRect(r.left, r.top + dy, r.width, r.height));
+      });
+    };
+
     const render = () => {
       const v = view(D, Y, pick, route);
+      panTo();
       wheel.style.transform = 'rotate(' + v.wheelRot + ')';
       sky.style.zIndex = String(v.skyZ);
       q('[data-year]').textContent = v.yearText;
       q('[data-era]').textContent = v.era;
       q('[data-risen]').textContent = v.risenText;
       q('[data-pass-title]').textContent = v.passTitle;
-      q('[data-pass-more]').textContent = v.passMore;
+      // Below L the list shows three rows.
+      q('[data-pass-more]').textContent = compact.matches && v.passCount > 3 && !land.matches ? 'and ' + (v.passCount - 3) + ' more' : v.passMore;
+      passN.textContent = v.passCount + (v.passCount === 1 ? ' object' : ' objects');
       slots.forEach((a, k) => {
         const p = v.passing[k];
         a.hidden = !p;
@@ -309,7 +512,7 @@ const jsonLd = [
       D.items.forEach((it, i) => {
         const s = v.stars[i], dot = dots[i];
         dot.style.opacity = String(s.op);
-        dot.style.transform = 'translate(-50%,-50%) scale(' + s.scale + ')';
+        dot.style.transform = 'translate(-50%,-50%) scale(' + (huge.matches ? s.scale * 1.15 : s.scale) + ')';
         dot.style.boxShadow = s.glow;
         tags[i].hidden = !s.tag;
         hits[i].style.pointerEvents = s.pe;
@@ -326,8 +529,10 @@ const jsonLd = [
       cards.forEach((c) => c.style.setProperty('--lit', String(v.lit[c.dataset.open!])));
 
       const it = v.sel;
-      selBox.hidden = !it;
-      if (it) {
+      selBox.hidden = !it || sheetMode();
+      if (it && sheetMode()) fillSheet(it, v.selNames);
+      else if (!it && starSheet.open) closeSheet(starSheet);
+      if (it && !sheetMode()) {
         selBox.style.left = (it.pos[0] * 100).toFixed(3) + '%';
         selBox.style.top = (it.pos[1] * 100).toFixed(3) + '%';
         selCard.style.transform = 'translate(' + (it.pos[0] > 0.62 ? 'calc(-100% - 22px)' : '22px') + ',' + popY(it.pos[1]) + 'px)';
@@ -339,12 +544,50 @@ const jsonLd = [
         if (ringEl) ringEl.style.borderStyle = it.verified ? 'solid' : 'dashed';
         q<HTMLAnchorElement>('[data-sel-href]').href = '/collection/' + it.slug;
       }
+      stackTags();
     };
+
+    // The star sheet (board 3b): the card's content in the same order. While it
+    // is open the sky compresses above it and the year shrinks to one line.
+    const fillSheet = (it: (typeof D.items)[number], names: string[]) => {
+      starSheet.querySelector('.bs-label')!.textContent = it.date + ' · ' + it.origin;
+      const nm = starSheet.querySelector<HTMLElement>('[data-ss-name]')!; nm.textContent = it.name; nm.style.color = it.island ? '#F2CF85' : '#F3ECDC';
+      starSheet.querySelector('[data-ss-short]')!.textContent = it.short;
+      starSheet.querySelector('[data-ss-in]')!.textContent = names.length ? 'In ' + names.join(' · ') : '';
+      starSheet.querySelector<HTMLElement>('[data-ss-ring]')!.style.borderStyle = it.verified ? 'solid' : 'dashed';
+      starSheet.querySelector('[data-ss-ver]')!.textContent = it.verification;
+      starSheet.querySelector<HTMLAnchorElement>('[data-ss-href]')!.href = '/collection/' + it.slug;
+      if (!starSheet.open) { openSheet(starSheet); squeeze(); }
+    };
+    const squeeze = () => {
+      stage.classList.add('tl-sheeted');
+      const panel = starSheet.querySelector<HTMLElement>('[data-sheet-panel]')!;
+      const below = Math.max(0, stage.getBoundingClientRect().bottom - innerHeight);
+      sky.style.bottom = (panel.offsetHeight + 24 + below).toFixed(0) + 'px';
+      panTo(); stackTags();
+    };
+    starSheet.addEventListener('sheet:close', () => {
+      stage.classList.remove('tl-sheeted'); sky.style.bottom = '';
+      if (pick) { pick = null; render(); }
+    });
+
+    // The "Passing through" sheet: every object passing through the year.
+    passSheet.addEventListener('sheet:open', () => {
+      const v = view(D, Y, pick, route);
+      passSheet.querySelector('.bs-label')!.textContent = v.passTitle;
+      const list = passSheet.querySelector<HTMLElement>('[data-pl]')!;
+      list.replaceChildren(...(v.passAll.length ? v.passAll.map((p) => {
+        const a = document.createElement('a'); a.href = '/collection/' + p.slug;
+        const n = document.createElement('span'); n.className = 'tlp-name'; n.textContent = p.name;
+        const d = document.createElement('span'); d.className = 'tlp-date'; d.textContent = p.date;
+        a.append(n, d); return a;
+      }) : [Object.assign(document.createElement('p'), { className: 'tlp-none', textContent: v.passMore })]));
+    });
 
     const setY = (y: number) => { Y = y; render(); };
     const stopPlay = () => {
       if (playRaf) { cancelAnimationFrame(playRaf); playRaf = 0; }
-      if (playing) { playing = false; playBtn.textContent = '▶ Wind the centuries'; }
+      if (playing) { playing = false; playBtn.textContent = windLabel(); }
     };
     const glideTo = (target: number) => {
       cancelAnimationFrame(tw); stopPlay();
@@ -368,13 +611,27 @@ const jsonLd = [
         y = Math.min(Y1, y + dt * (near ? 6 : 42));
         setY(y);
         if (y < Y1) playRaf = requestAnimationFrame(f);
-        else { playRaf = 0; playing = false; playBtn.textContent = '▶ Wind the centuries'; }
+        else { playRaf = 0; playing = false; playBtn.textContent = windLabel(); }
       };
       playRaf = requestAnimationFrame(f);
     };
     playBtn.addEventListener('click', togglePlay);
 
-    // Stars and the card.
+    // Stars and the card. On touch below L a tap goes to the nearest risen star
+    // within 22px (44px hit areas; where they overlap, the nearest centre wins).
+    let dragged = 0;
+    sky.addEventListener('click', (e) => {
+      if (!(compact.matches && coarse.matches)) return;
+      e.stopPropagation(); e.preventDefault();
+      if (performance.now() - dragged < 250) return;
+      let best: string | null = null, bd = 22;
+      hits.forEach((h) => {
+        if (h.style.pointerEvents === 'none') return;
+        const r = h.getBoundingClientRect(), d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
+        if (d <= bd) { bd = d; best = h.dataset.pick!; }
+      });
+      if (best) { pick = pick === best ? null : best; render(); }
+    }, true);
     hits.forEach((b) => b.addEventListener('click', () => { pick = pick === b.dataset.pick ? null : b.dataset.pick!; render(); }));
     q('[data-unpick]').addEventListener('click', () => { pick = null; render(); });
 
@@ -409,8 +666,49 @@ const jsonLd = [
     dial.addEventListener('pointerup', up);
     dial.addEventListener('pointercancel', up);
 
+    // Pan mode: dragging the sky sideways scrubs the year with the dial's ppy and
+    // momentum (vertical swipes still scroll: touch-action pan-y). A drag starts
+    // past 6px, so a tap still lands on a star.
+    let pre: { x: number; id: number } | null = null;
+    sky.addEventListener('pointerdown', (e) => { if (panMode) pre = { x: e.clientX, id: e.pointerId }; });
+    sky.addEventListener('pointermove', (e) => {
+      if (!panMode) return;
+      if (pre && !drag && Math.abs(e.clientX - pre.x) > 6) {
+        cancelAnimationFrame(tw); stopPlay(); yy = Y;
+        drag = { x: pre.x, Y, lx: e.clientX, lt: performance.now(), v: 0 };
+        try { sky.setPointerCapture(pre.id); } catch (err) {}
+      }
+      const d = drag; if (!d || !pre) return;
+      const now = performance.now(); d.v = (e.clientX - d.lx) / Math.max(1, now - d.lt); d.lx = e.clientX; d.lt = now;
+      yy = clamp(d.Y - (e.clientX - d.x) / ppy);
+      if (!rq) rq = requestAnimationFrame(() => { rq = 0; setY(yy); });
+    });
+    const skyUp = () => { if (pre && drag) { dragged = performance.now(); up(); } pre = null; };
+    sky.addEventListener('pointerup', skyUp);
+    sky.addEventListener('pointercancel', skyUp);
+
+    // Landscape phones: the header steps aside while the sky fills the screen and
+    // comes back on any upward scroll.
+    let lastY = scrollY;
+    const skyFill = () => {
+      const up = scrollY < lastY; lastY = scrollY;
+      document.documentElement.classList.toggle('tl-skyfill', land.matches && !up && scrollY < stage.offsetTop + stage.offsetHeight - innerHeight + 2);
+    };
+    addEventListener('scroll', skyFill, { passive: true });
+    [phone, compact, coarse, land, huge].forEach((m) => m.addEventListener('change', () => { layout(); skyFill(); render(); }));
+    new ResizeObserver(() => { layout(); render(); }).observe(stage);
+    layout(); skyFill();
+    document.fonts?.ready.then(() => { layout(); render(); });
+
     // Routes and shelves.
-    routes.forEach((b) => b.addEventListener('click', () => { route = route === b.dataset.route ? null : b.dataset.route!; render(); }));
+    // Below L the active route scrolls into view in its row.
+    const routesRow = q('[data-routes-row]');
+    routes.forEach((b) => b.addEventListener('click', () => {
+      route = route === b.dataset.route ? null : b.dataset.route!; render();
+      if (!route || !compact.matches) return;
+      const rr = routesRow.getBoundingClientRect(), br = b.getBoundingClientRect(), pad = parseFloat(getComputedStyle(routesRow).paddingLeft);
+      if (br.left < rr.left + pad || br.right > rr.left + rr.width * 0.8) routesRow.scrollTo({ left: routesRow.scrollLeft + br.left - rr.left - pad, behavior: reduced ? 'auto' : 'smooth' });
+    }));
     cards.forEach((c) => c.addEventListener('click', () => {
       const slug = c.dataset.open!, it = D.items.find((x) => x.slug === slug)!;
       window.scrollTo({ top: stage.offsetTop, behavior: reduced ? 'auto' : 'smooth' });
