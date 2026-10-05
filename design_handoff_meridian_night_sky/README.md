@@ -19,6 +19,8 @@ To view a reference, open it in a browser from this folder. Each file loads `sup
 5. `05-cloud-session-setup.md`: one-time cloud session setup
 6. `06-claude-code-prompt.md`: the prompt to paste
 7. `screenshots-xl/INDEX.md`: full-page large-screen references (the main target); `screenshots/` has the 909 px layout
+8. `07-responsive.md` and `designs/Responsive System.dc.html`: phones, tablets, large monitors and ultrawides
+9. `08-responsive-prompt.md`: the prompt for the responsive pass on the live site
 
 ## Files
 See `designs/`. The data shape the designs read is in `designs/meridian-data.js`; it mirrors the `Item` and `Narrative` types in `src/lib/types.ts`.

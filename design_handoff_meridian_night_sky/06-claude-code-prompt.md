@@ -6,6 +6,8 @@ its colours, fonts, layouts, components and CSS. Do not adapt, restyle or "evolv
 The only target is the Night Sky design in design_handoff_meridian_night_sky/.
 
 Before writing any code:
+0. Run `npm ci` (fall back to `npm install` if it fails). Then confirm `npm run build` works
+   with NOTION_TOKEN before you change anything.
 1. Read CLAUDE.md (repo root). It holds the hard rules and the banned list.
 2. Read the handoff README.md and docs 01–04.
 3. Open every image in design_handoff_meridian_night_sky/screenshots-xl/ (see its INDEX.md).

@@ -16,7 +16,7 @@ In Notion, open Settings → Integrations, then the integration your site uses. 
 2. Add an environment called `meridian`:
    - **Network access:** Full. This is the simplest option, because the build needs `api.notion.com`, Notion's image storage and Google Fonts, and screenshots need a browser download. The default Trusted level blocks those.
    - **Environment variables:** your `NOTION_TOKEN=…` line, plus any other lines from your local `.env`.
-   - **Setup script:** `npm ci`
+   - **Setup script:** leave it **empty**. The script may not run inside the repo folder, so `npm ci` fails and the session never starts. Claude runs `npm ci` itself once the session is open.
 
 ## 4. Turn on Cloudflare preview builds
 In Cloudflare Pages, go to the project → Settings → Environment variables → **Preview** and add `NOTION_TOKEN` there too. Each phase Claude pushes then gets a preview link, which you check against the design.
