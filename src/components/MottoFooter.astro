@@ -69,4 +69,23 @@ const ARCHIVE_LINKS: [string, string][] = [
   .ft-credit{margin-top:3rem;font:italic 400 .9375rem/1.5 'EB Garamond',Georgia,serif;color:#8D897F}
   .ft-timeline .ft-credit{margin-top:3.5rem}
   .ft-object .ft-credit,.ft-home .ft-credit{margin-top:1.75rem}
+
+  /* Below L (Responsive System board, 1g): the motto keeps its order; the
+     archive links become a grid of 48px rows, two columns on XS–S and three
+     on M; from L the shipped wrapping row returns. */
+  @media (max-width:1023px){
+    .ft-home{padding-top:5.5rem}
+    .ft-home .ft-pali{font-size:3.25rem}
+    .ft-links,.ft-home .ft-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:1.25rem;row-gap:0;max-width:none;font:500 .625rem/1.35 'IBM Plex Mono',monospace;letter-spacing:.16em;text-align:left}
+    .ft-links a{min-height:48px;display:flex;align-items:center;border-top:1px solid rgba(238,231,215,.1)}
+  }
+  @media (max-width:767px){
+    .ft-home .ft-motto{gap:1.25rem}
+    .ft-home .ft-pali{font-size:2.625rem}
+    .ft-decay{max-width:18.75rem;font:500 .625rem/1.7 'IBM Plex Mono',monospace}
+    .ft-home .ft-note{margin-top:.25rem;font-size:1.125rem}
+    .ft-links,.ft-home .ft-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .ft-home .ft-links{margin-top:3.25rem}
+    .ft-home .ft-credit{margin-top:1.625rem}
+  }
 </style>
