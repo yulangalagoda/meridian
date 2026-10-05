@@ -101,6 +101,7 @@ const description = `A private archive of ${items.length} antiques and historica
         </div>
 
         <div class="hm-feature">
+          <div class="hm-culm hm-culm-xs" data-c="flank-l">Culminating today · <span data-today>{today}</span></div>
           <div class="hm-flank-l" data-c="flank-l">
             <div class="hm-culm">Culminating today · <span data-today>{today}</span></div>
             <h1 class="hm-name">{feat?.name}</h1>
@@ -145,6 +146,12 @@ const description = `A private archive of ${items.length} antiques and historica
       <button type="button" class="hm-replay" data-replay>↺ Replay the opening</button>
     </section>
 
+    <div class="hm-under" data-c="flank-r">
+      <div class="hm-maker">{feat?.maker}</div>
+      <p class="hm-short">{feat?.short}</p>
+      <button type="button" class="hm-replay-xs" data-replay>↺ Replay the opening</button>
+    </div>
+
     <section class="hm-sky">
       <div class="hm-sky-head" data-reveal="1">
         <div>
@@ -156,7 +163,7 @@ const description = `A private archive of ${items.length} antiques and historica
 
       <div class="hm-chart" data-chart>
         {ticks.map((t) => (
-          <div class="hm-tick" style={`left:${t.left}`}><span>{t.label}</span></div>
+          <div class="hm-tick" data-y={t.label} style={`left:${t.left}`}><span>{t.label}</span></div>
         ))}
         <div class="hm-layer" data-c="starlayer">
           {nar.map((n) => (
@@ -173,6 +180,8 @@ const description = `A private archive of ${items.length} antiques and historica
             </div>
           ))}
         </div>
+        {/* Below L the chart's box changes shape, so the constellations stretch with it. */}
+        <script is:inline>matchMedia('(max-width: 1023px)').matches && document.currentScript.parentElement.querySelectorAll('svg[viewBox="0 0 1320 600"]').forEach((g) => g.setAttribute('preserveAspectRatio', 'none'))</script>
         <div class="hm-hc" data-hc hidden>
           <div class="hm-hc-meta" data-hc-meta></div>
           <div class="hm-hc-name" data-hc-name></div>
@@ -370,6 +379,125 @@ const description = `A private archive of ${items.length} antiques and historica
     .hm-hero{min-height:max(100svh,640px)}
     .hm-aperture{width:min(25rem,34vw,52svh)}
   }
+
+  .hm-culm-xs,.hm-under{display:none}
+
+  /* L (Responsive System board, 2c): the shipped three-column hero, the
+     aperture min(360px, 30vw), the flanks at most 300px. */
+  @media (min-width:1024px) and (max-width:1279px){
+    .hm-aperture{width:min(22.5rem,30vw)}
+    .hm-flank-l,.hm-flank-r{max-width:18.75rem}
+  }
+  @media (min-width:1024px) and (max-width:1279px) and (max-height:760px){ .hm-aperture{width:min(22.5rem,30vw,52svh)} }
+
+  /* Below L: the sky chart changes its box but not its scale; tapping a star
+     docks its card under the chart; the constellation names run in one
+     sideways row; the threads stack with a 48px gold rule between them. */
+  @media (max-width:1023px){
+    .hm-hero{min-height:max(100svh,640px)}
+    .hm-sky-head{grid-template-columns:minmax(0,1fr);gap:1rem;margin-bottom:2rem}
+    .hm-sky-p{justify-self:start}
+    .hm-chart{aspect-ratio:16/10}
+    .hm-svg path{vector-effect:non-scaling-stroke}
+    .hm-below{margin-top:3.5rem;grid-template-columns:minmax(0,1fr);gap:1.375rem}
+    .hm-legend{flex-wrap:nowrap;gap:22px;margin:.875rem calc(-1 * var(--gut)) 0;padding:0 20vw 0 var(--gut);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;white-space:nowrap;-webkit-mask-image:linear-gradient(90deg,#000 80%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,#000 80%,rgba(0,0,0,0))}
+    .hm-legend::-webkit-scrollbar{display:none}
+    .hm-leg{flex:none;line-height:1;padding:22px 0 3px}
+    .hm-caption{min-height:0;padding:.25rem 0 .25rem 1.25rem;gap:.75rem}
+    .hm-follow{display:inline-flex;align-items:flex-end;min-height:44px;box-sizing:border-box}
+    .hm-hc-dock{position:relative;left:auto;top:auto;width:auto;margin-top:3rem;transform:none;pointer-events:auto}
+    .hm-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .hm-threads-rule{display:none}
+    .hm-threads-grid{grid-template-columns:minmax(0,1fr)}
+    .hm-thread-l,.hm-thread-r{align-items:flex-start;text-align:left}
+    .hm-thread-l{padding:3.5rem var(--gut) 3rem}
+    .hm-thread-r{position:relative;padding:3rem var(--gut) 3.5rem}
+    .hm-thread-r::before{content:'';position:absolute;left:var(--gut);top:0;width:48px;height:1px;background:rgba(211,179,112,.6)}
+    .hm-thread-a{display:inline-flex;align-items:flex-end;min-height:44px;box-sizing:border-box}
+    .hm-enter{display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box;padding-bottom:0;border-bottom:0;text-decoration:underline;text-decoration-color:rgba(211,179,112,.6);text-decoration-thickness:1px;text-underline-offset:.5rem}
+    .hm-seal{min-height:44px}
+    .hm-replay{display:flex;align-items:center;height:44px;bottom:.3125rem}
+  }
+  @media (max-width:1023px) and (pointer:coarse){
+    .hm-st{width:44px;height:44px;margin:-22px 0 0 -22px}
+    .hm-st-ring{inset:14px}
+    .hm-st-tag{left:29px;top:8px}
+  }
+
+  /* M (board 2c): the aperture 340px with its tick ring at −24px on its own
+     row under the star; the flanks under it either side of the meridian line. */
+  @media (min-width:768px) and (max-width:1023px){
+    .hm-stage{padding-top:calc(64px + env(safe-area-inset-top) + 2.25rem)}
+    .hm-epi{max-width:32.5rem;font-size:1.125rem}
+    .hm-star{margin:1.75rem 0 2.875rem}
+    .hm-feature{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"ap ap" "l r";column-gap:64px;row-gap:3.75rem;align-items:start}
+    .hm-aperture{grid-area:ap;justify-self:center;width:21.25rem}
+    .hm-ticks{inset:-24px}
+    .hm-ticks-ring{inset:18px}
+    .hm-flank-l{grid-area:l;max-width:18.75rem;gap:.875rem}
+    .hm-flank-r{grid-area:r;max-width:18.75rem;gap:1.25rem}
+    .hm-name{font-size:2.25rem}
+    .hm-maker{font-size:1rem}
+    .hm-short{font-size:1.125rem}
+    .hm-acts{gap:1.375rem}
+  }
+  @media (min-width:768px) and (max-width:1023px) and (max-height:760px){ .hm-aperture{width:min(21.25rem,52svh)} }
+
+  /* Phones (board 2a, 2b): one centred column (epigraph, star, eyebrow,
+     aperture min(64vw, 300px) with its tick ring at −18px, name, date · origin,
+     actions); the meridian line stops 16px under the aperture; maker, short
+     description and "↺ Replay the opening" continue under the fold. Chart 4:5
+     (1:1 on S) with four year ticks; narrative cards in one column. */
+  @media (max-width:767px){
+    .hm-line{bottom:auto;height:var(--line-h,100%)}
+    .hm-horizon{width:2400px;height:2400px;margin-left:-1200px}
+    .hm-stage{padding:calc(56px + env(safe-area-inset-top) + 1rem) var(--gut) 5rem}
+    .hm-epi{max-width:18.75rem;font-size:1rem}
+    .hm-star{width:7px;height:7px;margin:1.25rem 0}
+    .hm-star-h{width:56px;margin-left:-28px}
+    .hm-star-v{height:56px;margin-top:-28px}
+    .hm-feature{display:flex;flex-direction:column;align-items:center}
+    .hm-culm-xs{display:block;order:0;text-align:center;font-size:.625rem}
+    .hm-aperture{order:1;width:min(64vw,300px);margin-top:2.125rem}
+    .hm-ticks{inset:-18px}
+    .hm-ticks-ring{inset:14px}
+    .hm-flank-l{order:2;justify-self:auto;align-items:center;text-align:center;max-width:20.625rem;gap:.75rem;margin-top:2.125rem}
+    .hm-flank-l .hm-culm,.hm-flank-l .hm-maker,.hm-flank-r .hm-short{display:none}
+    .hm-name{font-size:1.875rem}
+    .hm-date{font-size:.65625rem}
+    .hm-flank-r{order:3;align-items:center;margin-top:.75rem}
+    .hm-acts{justify-content:center;gap:1.5rem}
+    .hm-cue{position:absolute;left:0;right:0;bottom:5.125rem;padding:0;font-size:var(--mono-min)}
+    .hm-cue-line{height:28px}
+    .hm-epi-big-p{font-size:clamp(1.625rem,7.4vw,2.125rem)}
+    .hm-replay{display:none}
+    .hm-under{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:.875rem;margin-top:-.5rem;padding:0 var(--gut);text-align:center}
+    .hm-under .hm-maker{max-width:20.625rem}
+    .hm-under .hm-short{font-size:1.125rem}
+    .hm-replay-xs{display:inline-flex;align-items:center;height:44px;font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F}
+    .hm-sky{padding-top:4rem;padding-bottom:0}
+    .hm-eyebrow{font-size:.625rem;line-height:1.5}
+    .hm-sky-h2{margin-top:1rem;font-size:2rem}
+    .hm-sky-p{font-size:1.0625rem}
+    .hm-chart{aspect-ratio:1/1}
+    .hm-tick span{bottom:-1.5rem}
+    .hm-cap-name{font-size:1.625rem}
+    .hm-cap-premise{font-size:1.0625rem}
+    .hm-cons{padding-top:6rem}
+    .hm-cons-head{margin-bottom:2.5rem;gap:1rem}
+    .hm-cons-h2{font-size:2.25rem}
+    .hm-cons-p{font-size:1.0625rem}
+    .hm-cards{grid-template-columns:minmax(0,1fr)}
+    .hm-card{gap:.75rem;padding:1.75rem 0 2rem}
+    .hm-glyph{margin-bottom:.25rem}
+    .hm-card-name{font-size:1.4375rem}
+    .hm-thread-h{font-size:2.25rem}
+    .hm-thread-p{font-size:1.0625rem}
+  }
+  @media (max-width:479px){
+    .hm-chart{aspect-ratio:4/5}
+    .hm-tick:not([data-y="1700"]):not([data-y="1850"]):not([data-y="1900"]):not([data-y="1950"]){display:none}
+  }
 </style>
 
 <script>
@@ -385,18 +513,24 @@ const description = `A private archive of ${items.length} antiques and historica
     const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     const hero = root.querySelector<HTMLElement>('[data-hero]')!;
     const q = (s: string) => root.querySelector<HTMLElement>('[data-c="' + s + '"]');
+    const qa = (s: string) => root.querySelectorAll<HTMLElement>('[data-c="' + s + '"]');
     const E = 'cubic-bezier(.16,1,.3,1)';
+    const fine = matchMedia('(hover: hover) and (pointer: fine)');
+    const coarse = matchMedia('(pointer: coarse)');
+    const compact = matchMedia('(max-width: 1023px)');
+    const phone = matchMedia('(max-width: 767px)');
 
     // Today's date, from the visitor's clock.
-    const today = root.querySelector('[data-today]');
-    if (today) today.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    root.querySelectorAll('[data-today]').forEach((t) => { t.textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }); });
 
-    // The ceremony.
+    // The ceremony. Below 768px and with Save-Data it runs in the reference's
+    // "short" mode: every delay and duration × 0.45.
     let cer: Animation[] = [], spin: Animation | null = null;
     const ceremony = () => {
       cer.forEach((a) => a.cancel());
       cer = [];
-      const A = (el: Element | null, kf: Keyframe[], delay: number, dur: number, easing?: string) => { if (el) cer.push(el.animate(kf, { delay, duration: dur, easing: easing || E, fill: 'both' })); };
+      const k = phone.matches || (navigator as any).connection?.saveData ? 0.45 : 1;
+      const A = (el: Element | null, kf: Keyframe[], delay: number, dur: number, easing?: string) => { if (el) cer.push(el.animate(kf, { delay: delay * k, duration: dur * k, easing: easing || E, fill: 'both' })); };
       const star = q('star')!, hb = hero.getBoundingClientRect(), sb = star.getBoundingClientRect();
       const dy = Math.max(220, hb.bottom - 30 - (sb.top + sb.height / 2));
       A(q('line'), [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], 0, 2000, 'cubic-bezier(.65,0,.35,1)');
@@ -408,8 +542,8 @@ const description = `A private archive of ${items.length} antiques and historica
       A(q('epi-small'), [{ opacity: 0, transform: 'translateY(12px)' }, { opacity: 1, transform: 'none' }], 7000, 1400);
       A(q('lens'), [{ clipPath: 'circle(0% at 50% 50%)', transform: 'scale(.9)' }, { clipPath: 'circle(160% at 50% 50%)', transform: 'scale(1)' }], 6900, 2200, 'cubic-bezier(.7,0,.2,1)');
       A(q('ticks'), [{ opacity: 0, transform: 'rotate(-50deg) scale(.94)' }, { opacity: 1, transform: 'none' }], 7300, 2400);
-      A(q('flank-l'), [{ opacity: 0, transform: 'translateX(48px)' }, { opacity: 1, transform: 'none' }], 7700, 1400);
-      A(q('flank-r'), [{ opacity: 0, transform: 'translateX(-48px)' }, { opacity: 1, transform: 'none' }], 7800, 1400);
+      qa('flank-l').forEach((el) => A(el, [{ opacity: 0, transform: 'translateX(48px)' }, { opacity: 1, transform: 'none' }], 7700, 1400));
+      qa('flank-r').forEach((el) => A(el, [{ opacity: 0, transform: 'translateX(-48px)' }, { opacity: 1, transform: 'none' }], 7800, 1400));
       A(q('head'), [{ opacity: 0 }, { opacity: 1 }], 8000, 1400);
       A(q('cue'), [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], 8500, 1200);
       if (reduced) cer.forEach((a) => a.finish());
@@ -418,7 +552,13 @@ const description = `A private archive of ${items.length} antiques and historica
     requestAnimationFrame(ceremony);
     const skip = () => cer.forEach((a) => { if (a.playState === 'running') a.playbackRate = 7; });
     ['wheel', 'keydown', 'touchstart'].forEach((e) => window.addEventListener(e, skip, { passive: true }));
-    root.querySelector('[data-replay]')!.addEventListener('click', ceremony);
+    root.querySelectorAll('[data-replay]').forEach((b) => b.addEventListener('click', ceremony));
+
+    // Phones: the meridian line stops 16px under the aperture.
+    const ap = q('aperture')!;
+    const lineLen = () => { hero.style.setProperty('--line-h', (ap.getBoundingClientRect().bottom - hero.getBoundingClientRect().top + 16).toFixed(0) + 'px'); };
+    new ResizeObserver(lineLen).observe(hero);
+    lineLen();
 
     // The hero's field of stars, drifting a little against the pointer.
     const cv = root.querySelector<HTMLCanvasElement>('[data-canvas]')!;
@@ -428,7 +568,7 @@ const description = `A private archive of ${items.length} antiques and historica
     const size = () => { const r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; };
     size();
     new ResizeObserver(() => { size(); if (reduced) draw(0); }).observe(cv);
-    window.addEventListener('pointermove', (e) => { mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
+    window.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
     new IntersectionObserver(([e]) => { heroHidden = !e.isIntersecting; }).observe(cv);
     const draw = (t: number) => {
       if (!reduced) requestAnimationFrame(draw);
@@ -463,6 +603,17 @@ const description = `A private archive of ${items.length} antiques and historica
     const caption = q('caption')!, bar = q('bar')!, track = root.querySelector<HTMLElement>('[data-bar-track]')!;
     const bySlug = new Map(D.items.map((it) => [it.slug, it]));
     let active = D.start, hover: string | null = null, locked = false, paused = false, chartHover = false, barA: Animation | null = null;
+    // On touch the hover card docks under the chart, full width.
+    let docked = false;
+    const dock = () => {
+      docked = coarse.matches;
+      if (docked) chart.after(hcEl); else chart.appendChild(hcEl);
+      hcEl.classList.toggle('hm-hc-dock', docked);
+    };
+    dock();
+    coarse.addEventListener('change', () => { dock(); render(); });
+    const legRow = root.querySelector<HTMLElement>('.hm-legend')!;
+    compact.addEventListener('change', () => chart.querySelectorAll('svg').forEach((g) => { if (compact.matches) g.setAttribute('preserveAspectRatio', 'none'); else g.removeAttribute('preserveAspectRatio'); }));
 
     const render = () => {
       const actN = D.nar.find((n) => n.slug === active)!;
@@ -489,11 +640,14 @@ const description = `A private archive of ${items.length} antiques and historica
       labEl.style.top = Math.max(4, actN.ly - 4).toFixed(2) + '%';
       const it = hover ? bySlug.get(hover) : null;
       hcEl.hidden = !it;
+      if (it && docked) { hcEl.style.left = hcEl.style.top = hcEl.style.transform = ''; }
       if (it) {
         const right = it.pos[0] > 0.62;
-        hcEl.style.left = (it.pos[0] * 100).toFixed(2) + '%';
-        hcEl.style.top = (Math.min(Math.max(it.pos[1], 0.2), 0.8) * 100).toFixed(2) + '%';
-        hcEl.style.transform = right ? 'translate(calc(-100% - 22px),-50%)' : 'translate(22px,-50%)';
+        if (!docked) {
+          hcEl.style.left = (it.pos[0] * 100).toFixed(2) + '%';
+          hcEl.style.top = (Math.min(Math.max(it.pos[1], 0.2), 0.8) * 100).toFixed(2) + '%';
+          hcEl.style.transform = right ? 'translate(calc(-100% - 22px),-50%)' : 'translate(22px,-50%)';
+        }
         hcEl.querySelector('[data-hc-meta]')!.textContent = it.meta;
         hcEl.querySelector('[data-hc-name]')!.textContent = it.name;
         hcEl.querySelector('[data-hc-short]')!.textContent = it.short;
@@ -505,6 +659,14 @@ const description = `A private archive of ${items.length} antiques and historica
       root.querySelector('[data-cap-premise]')!.textContent = actN.premise;
       root.querySelector<HTMLAnchorElement>('[data-cap-href]')!.href = '/narratives/' + actN.slug;
       track.style.opacity = locked ? '0' : '1';
+      // Below L the names run in one row: keep the active one in view.
+      const lb = legs.get(active)!;
+      if (compact.matches && legRow.scrollWidth > legRow.clientWidth) {
+        const pad = parseFloat(getComputedStyle(legRow).paddingLeft) || 0;
+        const x = lb.getBoundingClientRect().left - legRow.getBoundingClientRect().left + legRow.scrollLeft;
+        if (x < legRow.scrollLeft + pad || x + lb.offsetWidth > legRow.scrollLeft + legRow.clientWidth * 0.8)
+          legRow.scrollTo({ left: Math.max(0, x - pad), behavior: reduced ? 'auto' : 'smooth' });
+      }
     };
 
     const drawActive = () => {
@@ -526,8 +688,8 @@ const description = `A private archive of ${items.length} antiques and historica
     }, 5200);
 
     stars.forEach((el, slug) => {
-      el.addEventListener('mouseenter', () => { hover = slug; render(); });
-      el.addEventListener('mouseleave', () => { hover = null; render(); });
+      el.addEventListener('mouseenter', () => { if (coarse.matches) return; hover = slug; render(); });
+      el.addEventListener('mouseleave', () => { if (coarse.matches) return; hover = null; render(); });
     });
     legs.forEach((b, slug) => {
       b.addEventListener('click', () => { locked = true; setActive(slug); });
@@ -535,7 +697,16 @@ const description = `A private archive of ${items.length} antiques and historica
       b.addEventListener('mouseleave', () => { paused = false; });
     });
     root.querySelectorAll<HTMLElement>('[data-card]').forEach((c) => c.addEventListener('mouseenter', () => setActive(c.dataset.card!)));
+    // Touch: a tap lights the nearest star within 22px (its 44px hit area) and
+    // docks its card; a tap on empty sky clears it.
+    chart.addEventListener('click', (e) => {
+      if (!coarse.matches) return;
+      let best: string | null = null, bd = 22;
+      stars.forEach((el, slug) => { const r = el.getBoundingClientRect(); const d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)); if (d <= bd) { bd = d; best = slug; } });
+      hover = best; render();
+    });
     chart.addEventListener('mousemove', (e) => {
+      if (!fine.matches) return;
       const r = chart.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
       layer.style.transform = 'translate(' + (-x * 12).toFixed(1) + 'px,' + (-y * 9).toFixed(1) + 'px)';
       chartHover = true;
