@@ -57,7 +57,7 @@ const para = (html: string) => {
 <article class="ob-story">
   {parts.map((p, i) =>
     p.kind === 'section' ? (
-      <div data-reveal="1" style={i === 0 || p.afterQuote ? undefined : 'margin-top:56px'}>
+      <div data-reveal="1" class:list={['ob-part', { 'ob-sec': !(i === 0 || p.afterQuote) }]}>
         {p.num && <div class="ob-num">{p.num}</div>}
         {p.title && <h2 class="ob-h">{p.title}</h2>}
         {p.paras.map((h) => {
@@ -82,6 +82,7 @@ const para = (html: string) => {
 
 <style>
   .ob-story{font:400 1.28125rem/1.72 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .ob-sec{margin-top:3.5rem}
   .ob-num{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#8D897F}
   .ob-h{margin:.75rem 0 1.375rem;font:400 2rem/1.15 Gloock,Georgia,serif;color:#F3ECDC}
   .ob-p{margin:0 0 1.1em}
@@ -94,4 +95,24 @@ const para = (html: string) => {
   .ob-refs summary{cursor:pointer;list-style:none;font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#B8B2A5}
   .ob-refs summary::-webkit-details-marker{display:none}
   .ob-refs ol{margin:1.25rem 0 0;padding-left:1.375rem;font:400 1rem/1.7 'EB Garamond',Georgia,serif;color:#B8B2A5}
+  /* Below L: References opens from a 44px row and each source is a 44px target. */
+  @media (max-width:1023px){
+    .ob-refs summary{display:flex;align-items:center;min-height:44px}
+    .ob-refs li{padding:.625rem 0}
+    .ob-refs li :global(a){display:inline-block;padding:.625rem 0;margin:-.625rem 0}
+  }
+  /* Phones (board 5a): each section opens on one gold mono label ("01 · Opening"),
+     body 19/1.6 without the drop cap; References a 56px row. */
+  @media (max-width:767px){
+    .ob-story{font-size:1.1875rem;line-height:1.6}
+    .ob-part{font-size:.625rem;line-height:1}
+    .ob-part .ob-p{font-size:1.1875rem;line-height:1.6}
+    .ob-sec{margin-top:2.25rem}
+    .ob-num,.ob-h{display:inline;margin:0;font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+    .ob-num + .ob-h::before{content:' · '}
+    .ob-h + .ob-p,.ob-num + .ob-p{margin-top:.875rem}
+    .ob-drop{float:none;font:inherit;color:inherit;margin:0}
+    .ob-refs{padding-top:0;border-bottom:1px solid rgba(238,231,215,.12)}
+    .ob-refs summary{min-height:56px;font-size:.625rem;color:#8D897F}
+  }
 </style>
