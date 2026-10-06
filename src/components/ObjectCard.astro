@@ -6,6 +6,7 @@
 //               brightness all follow it over 0.8s; no ring
 // Names of objects in The Island thread are gold.
 import VerificationRing from './VerificationRing.astro';
+import { responsive } from '../lib/images';
 
 interface Props {
   variant: 'collection' | 'timeline';
@@ -18,10 +19,13 @@ interface Props {
   alt: string;
   href?: string; // collection
   lit?: number; // timeline
+  eager?: boolean; // cards in the first viewport
   [attr: `data-${string}`]: string;
 }
 
-const { variant, name, date, origin, verified, island, image, alt, href, lit = 0.06, ...rest } = Astro.props;
+const { variant, name, date, origin, verified, island, image, alt, href, lit = 0.06, eager = false, ...rest } = Astro.props;
+// The case's width: half the screen on XS, a third on S–M, a quarter on L, then 320px.
+const img = await responsive(image, [['(max-width: 479px)', '50vw'], ['(max-width: 1023px)', '33vw'], ['(max-width: 1279px)', '25vw'], [null, '320px']]);
 const Tag = variant === 'collection' ? 'a' : 'button';
 const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: `--lit:${lit}` };
 ---
@@ -29,7 +33,7 @@ const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: 
 <Tag class:list={['cd', `cd-${variant}`]} {...tagAttrs} {...rest}>
   <span class="cd-case">
     <span class="cd-well">
-      {image && <img src={image} alt={alt || name} loading="lazy" decoding="async" />}
+      {image && <img src={image} {...img} alt={alt || name} loading={eager ? 'eager' : 'lazy'} decoding="async" />}
     </span>
     {variant === 'timeline' && <span class="cd-bar"></span>}
   </span>

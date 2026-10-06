@@ -12,6 +12,7 @@ import Star from '../components/Star.astro';
 import VerificationRing from '../components/VerificationRing.astro';
 import { getSiteData, fetchPageBlocks, POLICY_PAGES } from '../lib/notion';
 import { blockSpans, splitBoldLead } from '../lib/richtext';
+import { responsive } from '../lib/images';
 import { breadcrumbs, listPage } from '../components/seo';
 
 const { items } = await getSiteData();
@@ -27,10 +28,13 @@ const wants = seeking
   .map((spans) => splitBoldLead(spans)!.lead);
 
 const its = items.filter((it) => it.thread === 'The Island').sort((a, b) => (a.year ?? 0) - (b.year ?? 0) || a.displayOrder - b.displayOrder);
+// Images (4:3): nearly full width on phones, about 380px beside the text above that.
+const imgs = await Promise.all(its.map((it) => responsive(it.primaryImage, [['(max-width: 767px)', '92vw'], [null, '380px']], 4 / 3)));
 const entries = its.map((it, i) => {
   const g = i ? (it.year ?? 0) - (its[i - 1].year ?? 0) : 0;
   return {
     it,
+    img: imgs[i],
     gap: i ? (g ? g + ' years later' : 'The same decade') : '',
     gapH: Math.round(28 + Math.min(g, 300) * 0.4) + 'px',
   };
@@ -55,7 +59,7 @@ const jsonLd = [
     </section>
 
     <section class="is-line">
-      {entries.map(({ it, gap, gapH }) => (
+      {entries.map(({ it, img, gap, gapH }) => (
         <div class="is-entry">
           {gap && (
             <div class="is-gap" style={`--gh:${gapH}`}>
@@ -69,7 +73,7 @@ const jsonLd = [
               <span class="is-era">{it.era}</span>
             </div>
             <div class="is-body">
-              <div class="is-image">{it.primaryImage && <img src={it.primaryImage} alt={it.imageAltText || it.name} loading="lazy" decoding="async" />}</div>
+              <div class="is-image">{it.primaryImage && <img src={it.primaryImage} {...img} alt={it.imageAltText || it.name} loading="lazy" decoding="async" />}</div>
               <div class="is-text">
                 <span class="is-meta">{it.dateLabel} · {it.originCountry}</span>
                 <h2 class="is-name">{it.name}</h2>

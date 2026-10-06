@@ -21,3 +21,8 @@ export const MQ = {
 } as const;
 
 export const matches = (q: string) => typeof window !== 'undefined' && !!window.matchMedia && matchMedia(q).matches;
+
+// Background stars (board, 00 · 08): one per 2,800 px² of canvas, so about 120
+// on a phone. XL keeps the count it shipped with.
+export const starCount = (w: number, h: number, shipped: number) =>
+  matches(MQ.belowXL) || matches(MQ.xxl) ? Math.round((w * h) / 2800) : shipped;

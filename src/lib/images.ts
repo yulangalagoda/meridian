@@ -77,3 +77,63 @@ export async function downloadCategoryImage(
   if (!url) return null;
   return download(url, `category-${slug}`);
 }
+
+/**
+ * Responsive candidates for a downloaded image (07-responsive.md, Images): JPEGs
+ * 480, 800, 1200, 1800 and 2600 px wide (only those narrower than the original),
+ * written next to it in public/images on first use, plus the original at its own
+ * width.
+ */
+export const SRCSET_WIDTHS = [480, 800, 1200, 1800, 2600];
+type Variants = { srcset: string; width: number; height: number };
+const made = new Map<string, Promise<Variants | undefined>>();
+
+function variants(src: string | null | undefined): Promise<Variants | undefined> {
+  if (!src || !src.startsWith('/images/') || !src.endsWith('.jpg')) return Promise.resolve(undefined);
+  let v = made.get(src);
+  if (!v) {
+    v = makeVariants(src);
+    made.set(src, v);
+  }
+  return v;
+}
+
+async function makeVariants(src: string): Promise<Variants | undefined> {
+  const file = path.join(IMAGES_DIR, path.basename(src));
+  try {
+    const { width, height } = await sharp(file).metadata();
+    if (!width || !height) return undefined;
+    const base = path.basename(src, '.jpg');
+    const out: string[] = [];
+    for (const w of SRCSET_WIDTHS) {
+      if (w >= width) break;
+      const name = `${base}-w${w}.jpg`;
+      const dest = path.join(IMAGES_DIR, name);
+      if (!fs.existsSync(dest)) await sharp(file).resize({ width: w }).jpeg({ quality: 82, mozjpeg: true }).toFile(dest);
+      out.push(`/images/${name} ${w}w`);
+    }
+    out.push(`${src} ${width}w`);
+    return { srcset: out.join(', '), width, height };
+  } catch (e) {
+    console.warn(`[meridian] Could not make sizes for ${src}`, e);
+    return undefined;
+  }
+}
+
+/**
+ * srcset and sizes for an <img>. `sizes` lists [media condition, box width] pairs,
+ * the last without a condition. When the box crops the image with object-fit:
+ * cover, `cover` is the box's width ÷ height: an image wider than the box is drawn
+ * wider than it, so its sizes grow by the same factor.
+ */
+export async function responsive(
+  src: string | null | undefined,
+  sizes: [string | null, string][],
+  cover?: number
+): Promise<{ srcset?: string; sizes?: string }> {
+  const v = await variants(src);
+  if (!v) return {};
+  const k = cover ? Math.max(1, v.width / v.height / cover) : 1;
+  const len = (l: string) => (k > 1.01 ? `calc(${l} * ${k.toFixed(2)})` : l);
+  return { srcset: v.srcset, sizes: sizes.map(([q, l]) => (q ? `${q} ${len(l)}` : len(l))).join(', ') };
+}

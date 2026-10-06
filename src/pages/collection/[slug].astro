@@ -13,6 +13,7 @@ import ObjectBody from '../../components/object/ObjectBody.astro';
 import { CONTACT_EMAIL } from '../../components/archive/types';
 import { skyPositions, glyph } from '../../components/sky/geometry';
 import { getSiteData, fetchPageBlocks } from '../../lib/notion';
+import { responsive } from '../../lib/images';
 import type { Item } from '../../lib/types';
 import { objectData } from '../../components/seo';
 
@@ -57,6 +58,13 @@ const shots = [
   ...gallery.map((g, i) => ({ src: g.src, alt: g.alt, name: g.caption || `Detail ${i + 1}` })),
 ];
 const hots = item.primaryImage ? item.details : [];
+// Responsive candidates. The plate (29.5:20.5) is at most 980px, wider with the root
+// size on XXL / 3XL; a detail tile (3:2) 220px on phones and about 320px above; a
+// thumbnail 56px square. The viewer keeps the full-size original for zooming and
+// loads it when opened.
+const plateImg = await responsive(item.primaryImage, [['(min-width: 3200px)', '1225px'], ['(min-width: 2400px)', '1100px'], [null, 'min(100vw, 980px)']], 29.5 / 20.5);
+const detailImgs = await Promise.all(gallery.map((g) => responsive(g.src, [['(max-width: 767px)', '220px'], ['(min-width: 2400px)', '400px'], [null, '320px']], 3 / 2)));
+const thumbImgs = await Promise.all(shots.map((t) => responsive(t.src, [[null, '56px']], 1)));
 ---
 
 <NightSky title={`${item.name} · The Meridian`} description={item.shortDescription} image={item.primaryImage} jsonLd={objectData(item)} type="article" legible>
@@ -75,7 +83,7 @@ const hots = item.primaryImage ? item.details : [];
           <>
             <div data-in="2" class="ob-plate" data-plate>
               <div class="ob-zoom" data-zoom>
-                <img src={item.primaryImage} alt={item.imageAltText || item.name} decoding="async" />
+                <img src={item.primaryImage} {...plateImg} alt={item.imageAltText || item.name} decoding="async" fetchpriority="high" />
               </div>
               <div class="ob-leave" data-leave hidden></div>
               <div class="ob-corner ob-tl"></div>
@@ -96,7 +104,7 @@ const hots = item.primaryImage ? item.details : [];
           <div data-in="3" class="ob-details">
             {gallery.map((g, i) => (
               <figure class="ob-dfig">
-                <div class="ob-detail" data-view={item.primaryImage ? i + 1 : i}><img src={g.src} alt={g.alt} loading="lazy" decoding="async" /></div>
+                <div class="ob-detail" data-view={item.primaryImage ? i + 1 : i}><img src={g.src} {...detailImgs[i]} alt={g.alt} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" /></div>
                 {g.caption && <figcaption class="ob-dcap">{g.caption}</figcaption>}
               </figure>
             ))}
@@ -208,7 +216,7 @@ const hots = item.primaryImage ? item.details : [];
         </div>
         <div class="vw-stage" data-vw-stage>
           <div class="vw-layer" data-vw-layer>
-            <img src={shots[0].src} alt={shots[0].alt} decoding="async" />
+            <img src={shots[0].src} alt={shots[0].alt} loading="lazy" decoding="async" />
             {hots.map((h, i) => (
               <button type="button" class="vw-ring" style={`left:${(h.x * 100).toFixed(3)}%;top:${(h.y * 100).toFixed(3)}%`} data-vw-hot={i} aria-label={`Detail ${i + 1}: ${h.label}`}>{i + 1}</button>
             ))}
@@ -228,7 +236,7 @@ const hots = item.primaryImage ? item.details : [];
           {shots.length > 1 && (
             <div class="vw-thumbs">
               {shots.map((t, i) => (
-                <button type="button" class:list={['vw-thumb', { 'vw-on': i === 0 }]} aria-label={t.name} data-vw-thumb={i}><img src={t.src} alt="" loading="lazy" decoding="async" /></button>
+                <button type="button" class:list={['vw-thumb', { 'vw-on': i === 0 }]} aria-label={t.name} data-vw-thumb={i}><img src={t.src} {...thumbImgs[i]} alt="" loading="lazy" decoding="async" /></button>
               ))}
             </div>
           )}
@@ -327,6 +335,10 @@ const hots = item.primaryImage ? item.details : [];
   .ob-near-alone{grid-column:2}
   .ob-dfig{margin:0}
   .ob-sum,.ob-ring,.ob-dcap{display:none}
+
+  /* XXL / 3XL: the reading column stops at 840 / 920 (board, 08). */
+  @media (min-width:2400px){ .ob-lede{max-width:min(46.25rem,840px)} }
+  @media (min-width:3200px){ .ob-lede{max-width:min(46.25rem,920px)} }
 
   /* L: the shipped sticky aside at 260px. */
   @media (min-width:1024px) and (max-width:1279px){

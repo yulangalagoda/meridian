@@ -10,7 +10,7 @@ import ShelfLabel from '../components/ShelfLabel.astro';
 import ObjectCard from '../components/ObjectCard.astro';
 import VerificationRing from '../components/VerificationRing.astro';
 import Sheet from '../components/Sheet.astro';
-import { skyPositions } from '../components/sky/geometry';
+import { skyPositions, xr } from '../components/sky/geometry';
 import { view, constellationPath, ERAS, Y0, Y1, DEG, START, type TLData, type TLItem } from '../components/timeline/model';
 import { getSiteData } from '../lib/notion';
 import { ERA_OPTIONS, type Item } from '../lib/types';
@@ -146,6 +146,17 @@ const jsonLd = [
         <div class="tl-pointer"><span></span></div>
         <div class="tl-hint"><span class="tl-hint-dial">Drag the dial · ← → to step a year</span><span class="tl-hint-sky">Drag the dial or the sky</span></div>
       </div>
+      {/* Before first paint (the module script runs later): pan mode and the short
+          "▶ Wind" label, by the same rules as layout() and panTo() below. */}
+      <script is:inline define:vars={{ f0: 0.035 + xr(START) * 0.93 }}>
+        var st = document.currentScript.parentElement, sky = st.querySelector('[data-sky]'), pan = st.querySelector('[data-pan]');
+        var land = matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
+        if (land || matchMedia('(max-width: 767px)').matches) st.querySelector('[data-play]').textContent = '▶ Wind';
+        if (matchMedia('(max-width: 1023px)').matches && st.clientWidth - (land ? 64 : 0) < (land ? 700 : 761)) {
+          st.classList.add('tl-panmode');
+          pan.style.transform = 'translateX(' + (st.clientWidth / 2 - sky.offsetLeft - f0 * pan.offsetWidth).toFixed(1) + 'px)';
+        }
+      </script>
     </section>
 
     <Sheet id="tl-star" label="">
@@ -307,7 +318,8 @@ const jsonLd = [
     .tl-sky{top:calc(var(--head) + 17.875rem);bottom:292px}
     .tl-dial{height:calc(230px + env(safe-area-inset-bottom));-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 10%,#000 90%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 10%,#000 90%,rgba(0,0,0,0))}
     .tl-hint{bottom:calc(22px + env(safe-area-inset-bottom))}
-    .tl-tag.tl-tag-l{left:auto;right:12px;text-align:right}
+    .tl-tag.tl-tag-l{text-align:right}
+    .tl-stage:not(.tl-tags-ready) .tl-tag{visibility:hidden}
     /* Routes (board 3e): the label, then one sideways-scrolling row with a
        right fade; only the active route is underlined, in gold. */
     .tl-routes{display:block;margin:0 calc(-1 * var(--gut)) 3rem;padding:.875rem 0 .375rem var(--gut)}
@@ -360,6 +372,9 @@ const jsonLd = [
     .tl-shelf{gap:1.25rem}
   }
   @media (max-width:479px){ .tl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem} }
+  /* XXL / 3XL (board 8a): the list box grows to 1600 / 1800 and the card track to 240 / 260. */
+  @media (min-width:2400px){ .tl-list{max-width:1600px} .tl-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))} }
+  @media (min-width:3200px){ .tl-list{max-width:1800px} .tl-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))} }
   .tl-panmode .tl-sky{left:0;right:0;pointer-events:auto;touch-action:pan-y;cursor:grab}
   .tl-panmode .tl-pan{right:auto;width:260%}
   .tl-panmode .tl-hint-dial{display:none}
@@ -391,11 +406,11 @@ const jsonLd = [
 
   /* Ultrawide and 3XL: the sky in a box of at most 2400px (× the root scale),
      centred on the meridian and fading across its outer 8%; the year block and
-     the Passing list anchor to it. */
+     the Passing list anchor to it, 2rem inside its edges (board 8b). */
   @media (min-aspect-ratio:21/9) and (min-width:2400px), (min-width:3200px){
     .tl-sky{left:max(4%,calc(50% - 75rem));right:max(4%,calc(50% - 75rem));-webkit-mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 8%,#000 92%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,rgba(0,0,0,0),#000 8%,#000 92%,rgba(0,0,0,0))}
-    .tl-year{left:max(var(--gut),calc(50% - 75rem))}
-    .tl-pass{right:max(var(--gut),calc(50% - 75rem))}
+    .tl-year{left:max(var(--gut),calc(50% - 73rem))}
+    .tl-pass{right:max(var(--gut),calc(50% - 73rem))}
   }
 
   /* The sheets' content (board 3b). */
@@ -446,7 +461,8 @@ const jsonLd = [
     // Modes (Responsive System board, 03). Pan mode whenever the sky box would be
     // narrower than 700px; sheets on phones, landscape phones and touch below L.
     const phone = matchMedia(MQ.belowM), compact = matchMedia(MQ.belowL), coarse = matchMedia(MQ.coarse);
-    const land = matchMedia(MQ.landscapePhone), huge = matchMedia(MQ.xxxl);
+    // From XXL the stars are drawn 1.15 times larger (board, 08).
+    const land = matchMedia(MQ.landscapePhone), huge = matchMedia(MQ.xxl);
     let panMode = false;
     const sheetMode = () => phone.matches || land.matches || (compact.matches && coarse.matches);
     const windLabel = () => (phone.matches || land.matches ? '▶ Wind' : '▶ Wind the centuries');
@@ -477,17 +493,21 @@ const jsonLd = [
     };
     // Passing tags that would overlap stack downward by the height of the tag above;
     // one that would run off the right edge sits to the left of its star instead.
+    // Both are transforms, so the page doesn't shift.
     const stackTags = () => {
       tags.forEach((t) => { t.style.translate = ''; t.classList.remove('tl-tag-l'); });
       if (!compact.matches) return;
       const edge = stage.getBoundingClientRect().right - 8;
-      tags.forEach((t) => { if (!t.hidden && t.getBoundingClientRect().right > edge) t.classList.add('tl-tag-l'); });
-      const shown = tags.filter((t) => !t.hidden).map((t) => ({ t, r: t.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
+      const shown = tags.filter((t) => !t.hidden).map((t) => {
+        const r = t.getBoundingClientRect(), flip = r.right > edge;
+        if (flip) t.classList.add('tl-tag-l');
+        return { t, flip, r: flip ? new DOMRect(r.left - r.width - 24, r.top, r.width, r.height) : r };
+      }).sort((a, b) => a.r.top - b.r.top);
       const placed: DOMRect[] = [];
-      shown.forEach(({ t, r }) => {
+      shown.forEach(({ t, flip, r }) => {
         let dy = 0;
         for (const p of placed) if (r.left < p.right && r.right > p.left && r.top + dy < p.bottom && r.bottom + dy > p.top) dy = p.bottom - r.top;
-        if (dy) t.style.translate = '0 ' + dy.toFixed(1) + 'px';
+        if (dy || flip) t.style.translate = (flip ? 'calc(-100% - 24px) ' : '0 ') + dy.toFixed(1) + 'px';
         placed.push(new DOMRect(r.left, r.top + dy, r.width, r.height));
       });
     };
@@ -698,7 +718,10 @@ const jsonLd = [
     [phone, compact, coarse, land, huge].forEach((m) => m.addEventListener('change', () => { layout(); skyFill(); render(); }));
     new ResizeObserver(() => { layout(); render(); }).observe(stage);
     layout(); skyFill();
-    document.fonts?.ready.then(() => { layout(); render(); });
+    // Below L the passing tags show once they've been stacked with the real fonts,
+    // so they don't jump when the fonts arrive.
+    const tagsReady = () => { layout(); render(); stage.classList.add('tl-tags-ready'); };
+    if (document.fonts) document.fonts.ready.then(tagsReady); else tagsReady();
 
     // Routes and shelves.
     // Below L the active route scrolls into view in its row.

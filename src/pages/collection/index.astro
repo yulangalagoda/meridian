@@ -118,7 +118,7 @@ const jsonLd = [
             <section class="cl-shelf" data-slugs={s.items.map((it) => it.slug).join(' ')} data-kind={key} data-name={s.name}>
               <ShelfLabel name={s.name} note={s.note} />
               {s.desc && <p class="cl-desc">{s.desc}</p>}
-              <div class="cl-grid">{i === 0 && s.items.map((it) => <ObjectCard {...card(it)} />)}</div>
+              <div class="cl-grid">{i === 0 && s.items.map((it, k) => <ObjectCard {...card(it)} eager={k < 4} />)}</div>
             </section>
           ))}
         </div>
@@ -193,6 +193,10 @@ const jsonLd = [
     .cl-grid{gap:1.25rem}
   }
   @media (max-width:479px){ .cl-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem} }
+  /* XXL / 3XL (board 8a): the index box grows to 1600 / 1800 and the card track
+     to 240 / 260, so 2560 shows five cards per row instead of four stretched ones. */
+  @media (min-width:2400px){ .cl{max-width:1600px} .cl-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))} }
+  @media (min-width:3200px){ .cl{max-width:1800px} .cl-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr))} }
   @media (prefers-reduced-motion:reduce){ .cl-sticky{transition:none} }
 </style>
 

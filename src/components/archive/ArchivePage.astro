@@ -43,4 +43,7 @@ const jsonLd = Astro.props.jsonLd ?? [webPage(`${title} — The Meridian`, path,
     .ap{display:block;padding-top:0}
     .ap-col{max-width:none;padding-top:2.5rem}
   }
+  /* XXL / 3XL: the reading column stops at 840 / 920 (board, 08). */
+  @media (min-width:2400px){ .ap-col{max-width:min(var(--ap-w),840px)} }
+  @media (min-width:3200px){ .ap-col{max-width:min(var(--ap-w),920px)} }
 </style>

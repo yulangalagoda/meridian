@@ -18,6 +18,7 @@ import SiteHeader from '../../components/SiteHeader.astro';
 import { storyPoints } from '../../components/sky/geometry';
 import { inWords, roman } from '../../components/words';
 import { fetchNarrativeContent, getSiteData } from '../../lib/notion';
+import { responsive } from '../../lib/images';
 import type { Item, Narrative } from '../../lib/types';
 import { narrativeData } from '../../components/seo';
 
@@ -44,6 +45,8 @@ const sections = content.sections.map((s, k) => ({
   items: s.names.map(byName).filter(Boolean) as Item[],
 }));
 const stars = sections.flatMap((s, k) => s.items.map((it, j) => ({ it, sec: k, first: j === 0, num: s.num })));
+// A star's round aperture opens to at most 220px.
+const starImgs = await Promise.all(stars.map((s) => responsive(s.it.primaryImage, [[null, '220px']], 1)));
 const missing = mine.filter((it) => !stars.some((s) => s.it === it));
 if (missing.length) console.warn(`[narratives] ${narrative.slug}: no H3 for ${missing.map((it) => it.name).join(', ')}`);
 
@@ -129,7 +132,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
           {stars.map((s, i) => (
             <button type="button" class="nr-star" data-star={i} style={`left:${(frac[i][0] * 100).toFixed(3)}%;top:${(frac[i][1] * 100).toFixed(3)}%;z-index:2`}>
               <span class="nr-ap" data-ap style="width:0px;height:0px;opacity:0;box-shadow:0 0 0 1px rgba(211,179,112,0),0 30px 80px rgba(0,0,0,.55)">
-                {s.it.primaryImage && <img src={s.it.primaryImage} alt={s.it.imageAltText || s.it.name} loading="lazy" decoding="async" />}
+                {s.it.primaryImage && <img src={s.it.primaryImage} {...starImgs[i]} alt={s.it.imageAltText || s.it.name} loading="lazy" decoding="async" />}
               </span>
               <span class="nr-dot" data-dot style="width:6px;height:6px;box-shadow:0 0 8px 2px rgba(255,240,205,.35);opacity:.55"></span>
               <span class="nr-lab" data-lab style={`left:${frac[i][0] > 0.58 ? -16 : 16}px;top:0px;transform:${frac[i][0] > 0.58 ? 'translate(-100%,-50%)' : 'translate(0,-50%)'};text-align:${frac[i][0] > 0.58 ? 'right' : 'left'};opacity:0`}>
@@ -353,7 +356,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
   // Port of the reference's componentDidMount, startSky, points, seg and
   // renderVals. Stations are the story's blocks; the one crossing the middle of
   // the screen (rootMargin -42% / -52%) is current.
-  import { MQ } from '../../components/responsive';
+  import { MQ, starCount } from '../../components/responsive';
   const root = document.querySelector<HTMLElement>('[data-narrative]');
   const json = document.getElementById('nr-data');
   if (root && json) {
@@ -530,9 +533,13 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
     // The twinkling field behind the constellation.
     const cv = root.querySelector<HTMLCanvasElement>('[data-canvas]')!;
     const ctx = cv.getContext('2d')!, dpr = Math.min(2, window.devicePixelRatio || 1);
-    const field = Array.from({ length: 260 }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * Math.random() * 1.3 + 0.25, a: Math.random() * 0.6 + 0.2, s: Math.random() * 1.8 + 0.4, p: Math.random() * 6.28 }));
+    const field = Array.from({ length: starCount(cv.clientWidth, cv.clientHeight, 260) }, () => ({ x: Math.random(), y: Math.random(), r: Math.random() * Math.random() * 1.3 + 0.25, a: Math.random() * 0.6 + 0.2, s: Math.random() * 1.8 + 0.4, p: Math.random() * 6.28 }));
+    // Paused while the stage is off screen.
+    let offscreen = false;
+    new IntersectionObserver(([e]) => { offscreen = !e.isIntersecting; }).observe(cv);
     const draw = (t: number) => {
       if (!reduced) requestAnimationFrame(draw);
+      if (offscreen) return;
       const w = cv.clientWidth, h = cv.clientHeight;
       if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);

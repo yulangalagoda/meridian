@@ -15,12 +15,14 @@ interface Props {
 }
 
 import StarField from '../components/StarField.astro';
+import { FONTS_URL, fontFaces, latinFonts } from '../lib/fonts';
 
 const { title, description, legible = false, image, type = 'website', noindex = false, jsonLd } = Astro.props;
 const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 const site = Astro.site ?? new URL('https://meridian.yulan.me');
 const canonical = new URL(Astro.url.pathname, site).href;
 const ogImage = new URL(image || '/og-default.png', site).href;
+const faces = await fontFaces();
 ---
 
 <!doctype html>
@@ -49,12 +51,9 @@ const ogImage = new URL(image || '/og-default.png', site).href;
     {description && <meta name="twitter:description" content={description} />}
     <meta name="twitter:image" content={ogImage} />
     {ld.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block).replace(/</g, '\\u003c')} />)}
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Gloock&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap"
-    />
+    {faces && latinFonts(faces).map((href) => <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />)}
+    {faces ? <style is:inline set:html={faces} /> : <><link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="stylesheet" href={FONTS_URL} /></>}
   </head>
   <body class:list={[{ legible }]}>
     <StarField />

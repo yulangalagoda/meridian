@@ -15,6 +15,7 @@ import { constellationPath } from '../components/timeline/model';
 import { inWords } from '../components/words';
 import { website, yearSpan } from '../components/seo';
 import { fetchIdentity, getSiteData } from '../lib/notion';
+import { responsive } from '../lib/images';
 import type { Item } from '../lib/types';
 
 const { items, narratives } = await getSiteData();
@@ -32,6 +33,9 @@ const feat = f && {
   slug: f.slug, name: f.name, date: f.dateLabel, origin: f.originCountry, maker: f.maker, short: f.shortDescription,
   verification: f.verification, verified: verified(f), image: f.primaryImage ?? '', alt: f.imageAltText || f.name,
 };
+// The aperture: min(64vw, 300px) on phones, 340–360px on tablets, 400px on
+// laptops and desktops, and larger with the root size on XXL / 3XL.
+const lensImg = await responsive(feat?.image, [['(max-width: 767px)', 'min(64vw, 300px)'], ['(max-width: 1279px)', '360px'], ['(min-width: 3200px)', '500px'], ['(min-width: 2400px)', '448px'], [null, '400px']], 1);
 const today = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
 // The sky: the Timeline's star layout, its constellation curves, and a mini
@@ -116,7 +120,7 @@ const description = `A private archive of ${items.length} antiques and historica
               <div class="hm-ticks-ring"></div>
             </div>
             <div class="hm-lens" data-c="lens">
-              <img src={feat?.image || undefined} alt={feat?.alt} hidden={!feat?.image} decoding="async" />
+              <img src={feat?.image || undefined} {...lensImg} alt={feat?.alt} hidden={!feat?.image} decoding="async" fetchpriority="high" />
             </div>
           </div>
 
@@ -503,6 +507,7 @@ const description = `A private archive of ${items.length} antiques and historica
 <script>
   // Port of the reference's componentDidMount, ceremony, startSky,
   // setupReveals, twinkle, drawActive, tick and renderVals.
+  import { starCount } from '../components/responsive';
   type HItem = { slug: string; name: string; short: string; featured: boolean; verified: boolean; pos: [number, number]; meta: string; verification: string; n: number };
   type HNar = { slug: string; name: string; premise: string; items: string[]; lx: number; ly: number; span: string; count: number };
 
@@ -564,9 +569,9 @@ const description = `A private archive of ${items.length} antiques and historica
     const cv = root.querySelector<HTMLCanvasElement>('[data-canvas]')!;
     const ctx = cv.getContext('2d')!, dpr = Math.min(2, window.devicePixelRatio || 1);
     let W = 0, H = 0, tx = 0, ty = 0, mx = 0, my = 0, heroHidden = false;
-    const field = Array.from({ length: 460 }, () => ({ x: Math.random(), y: Math.random() * 0.95, r: Math.random() * Math.random() * 1.35 + 0.25, a: Math.random() * 0.65 + 0.2, s: Math.random() * 1.8 + 0.4, p: Math.random() * 6.28, d: Math.random() * 0.8 + 0.2 }));
     const size = () => { const r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr; };
     size();
+    const field = Array.from({ length: starCount(W, H, 460) }, () => ({ x: Math.random(), y: Math.random() * 0.95, r: Math.random() * Math.random() * 1.35 + 0.25, a: Math.random() * 0.65 + 0.2, s: Math.random() * 1.8 + 0.4, p: Math.random() * 6.28, d: Math.random() * 0.8 + 0.2 }));
     new ResizeObserver(() => { size(); if (reduced) draw(0); }).observe(cv);
     window.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
     new IntersectionObserver(([e]) => { heroHidden = !e.isIntersecting; }).observe(cv);

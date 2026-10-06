@@ -166,6 +166,9 @@ const jsonLd = [
     .nx-follow{display:inline-flex;align-items:center;height:44px;padding:0;border:0;letter-spacing:.18em}
   }
   @media (min-width:480px) and (max-width:767px){ .nx-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  /* XXL / 3XL (board 8a): the index box grows to 1600 / 1800. */
+  @media (min-width:2400px){ .nx{max-width:1600px} }
+  @media (min-width:3200px){ .nx{max-width:1800px} }
   @media (prefers-reduced-motion:reduce){ .nx-band{transition:none} }
 </style>
 
