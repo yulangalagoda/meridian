@@ -7,4 +7,4 @@ export type ArchiveSlug =
   | 'annual-review';
 
 // The archive contact address, as in the references' mailto links.
-export const CONTACT_EMAIL = 'yulangalagoda1@gmail.com';
+export const CONTACT_EMAIL = 'hi@yulan.me';
