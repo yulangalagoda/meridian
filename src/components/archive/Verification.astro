@@ -56,16 +56,28 @@ const quote = blocks.find((b) => b.type === 'quote');
 {quote && <p class="vp-close" set:html={html(quote)} />}
 
 <style>
-  .vp-body{margin:0 0 1.1em;font:400 21px/1.62 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
-  .vp-label{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F;margin-bottom:22px}
-  .vp-panels{display:flex;flex-direction:column;gap:20px}
-  .vp-panel{padding:30px 28px 32px;background:rgba(11,17,36,.7);border:1px solid rgba(238,231,215,.1);display:flex;flex-direction:column;gap:14px}
-  .vp-panel-rows{padding:30px 28px 18px}
-  .vp-title{margin:0;font:400 clamp(26px,2.6vw,32px)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
-  .vp-text{margin:0;font:400 19px/1.58 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .vp-body{margin:0 0 1.1em;font:400 1.3125rem/1.62 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .vp-label{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F;margin-bottom:1.375rem}
+  .vp-panels{display:flex;flex-direction:column;gap:1.25rem}
+  .vp-panel{padding:1.875rem 1.75rem 2rem;background:rgba(11,17,36,.7);border:1px solid rgba(238,231,215,.1);display:flex;flex-direction:column;gap:.875rem}
+  .vp-panel-rows{padding:1.875rem 1.75rem 1.125rem}
+  .vp-title{margin:0;font:400 clamp(1.625rem,2.6vw,2rem)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+  .vp-text{margin:0;font:400 1.1875rem/1.58 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
   .vp-panel-rows .vp-text{text-wrap:wrap}
-  .vp-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:8px 24px;padding:22px 0;border-top:1px solid rgba(238,231,215,.1)}
-  .vp-badge{display:inline-flex;align-items:center;gap:10px;align-self:start;padding-top:6px;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#D3B370}
-  .vp-rowtext{margin:0;font:400 19px/1.58 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
-  .vp-close{margin:80px 0 0;padding-top:40px;border-top:1px solid rgba(211,179,112,.35);font:400 clamp(28px,3.2vw,40px)/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .vp-row{display:grid;grid-template-columns:9.375rem minmax(0,1fr);gap:.5rem 1.5rem;padding:1.375rem 0;border-top:1px solid rgba(238,231,215,.1)}
+  .vp-badge{display:inline-flex;align-items:center;gap:.625rem;align-self:start;padding-top:.375rem;font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#D3B370}
+  .vp-rowtext{margin:0;font:400 1.1875rem/1.58 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .vp-close{margin:5rem 0 0;padding-top:2.5rem;border-top:1px solid rgba(211,179,112,.35);font:400 clamp(1.75rem,3.2vw,2.5rem)/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+
+  /* Below L (board 7b): body 19/1.6; the 150px label column becomes a label row
+     above its text (ring and mono label, then the paragraph). */
+  @media (max-width:1023px){
+    .vp-body{font-size:1.1875rem;line-height:1.6}
+    .vp-row{grid-template-columns:minmax(0,1fr);gap:.625rem}
+    .vp-badge{padding-top:0}
+  }
+  @media (max-width:767px){
+    .vp-panel{padding:1.5rem 1.375rem}
+    .vp-panel-rows{padding:1.5rem 1.375rem .75rem}
+  }
 </style>

@@ -13,6 +13,7 @@ import ObjectBody from '../../components/object/ObjectBody.astro';
 import { CONTACT_EMAIL } from '../../components/archive/types';
 import { skyPositions, glyph } from '../../components/sky/geometry';
 import { getSiteData, fetchPageBlocks } from '../../lib/notion';
+import { responsive } from '../../lib/images';
 import type { Item } from '../../lib/types';
 import { objectData } from '../../components/seo';
 
@@ -50,13 +51,27 @@ const alsoIsland = island ? items.filter((it) => it.thread === 'The Island' && i
 
 const citation = `${item.name}, The Meridian, collection of Yulan Galagoda, meridian.yulan.me/collection/${item.slug}`;
 const mail = (subject: string) => `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`;
-const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCaptions[i] ?? item.name }));
+const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCaptions[i] ?? item.name, caption: item.galleryCaptions[i] ?? '' }));
+// The touch viewer's images: the primary, then the detail images.
+const shots = [
+  ...(item.primaryImage ? [{ src: item.primaryImage, alt: item.imageAltText || item.name, name: 'Primary' }] : []),
+  ...gallery.map((g, i) => ({ src: g.src, alt: g.alt, name: g.caption || `Detail ${i + 1}` })),
+];
+const hots = item.primaryImage ? item.details : [];
+// Responsive candidates. The plate (29.5:20.5) is at most 980px, wider with the root
+// size on XXL / 3XL; a detail tile (3:2) 220px on phones and about 320px above; a
+// thumbnail 56px square. The viewer keeps the full-size original for zooming and
+// loads it when opened.
+const plateImg = await responsive(item.primaryImage, [['(min-width: 3200px)', '1225px'], ['(min-width: 2400px)', '1100px'], [null, 'min(100vw, 980px)']], 29.5 / 20.5);
+const detailImgs = await Promise.all(gallery.map((g) => responsive(g.src, [['(max-width: 767px)', '220px'], ['(min-width: 2400px)', '400px'], [null, '320px']], 3 / 2)));
+const thumbImgs = await Promise.all(shots.map((t) => responsive(t.src, [[null, '56px']], 1)));
 ---
 
 <NightSky title={`${item.name} · The Meridian`} description={item.shortDescription} image={item.primaryImage} jsonLd={objectData(item)} type="article" legible>
   <div class="ob" data-object>
     <SiteHeader current="collection" overlay z={20} />
 
+    <main>
     <section class="ob-top">
       <div class="ob-axis"></div>
       <div class="ob-col">
@@ -69,23 +84,31 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
           <>
             <div data-in="2" class="ob-plate" data-plate>
               <div class="ob-zoom" data-zoom>
-                <img src={item.primaryImage} alt={item.imageAltText || item.name} decoding="async" />
+                <img src={item.primaryImage} {...plateImg} alt={item.imageAltText || item.name} decoding="async" fetchpriority="high" />
               </div>
               <div class="ob-leave" data-leave hidden></div>
               <div class="ob-corner ob-tl"></div>
               <div class="ob-corner ob-br"></div>
+              {hots.map((h, i) => (
+                <button type="button" class="ob-ring" style={`left:${(h.x * 100).toFixed(3)}%;top:${(h.y * 100).toFixed(3)}%`} data-hot={i} aria-label={`Detail ${i + 1}: ${h.label}`}><span>{i + 1}</span></button>
+              ))}
             </div>
 
             <div data-in="3" class="ob-cap">
               <span>{item.dimensions}</span>
-              <button type="button" class="ob-inspect" data-inspect>⊕ Inspect the details</button>
+              <button type="button" class="ob-inspect" data-inspect><span class="ob-insp">⊕ Inspect the details</span></button>
             </div>
           </>
         )}
 
         {gallery.length > 0 && (
           <div data-in="3" class="ob-details">
-            {gallery.map((g) => <div class="ob-detail"><img src={g.src} alt={g.alt} loading="lazy" decoding="async" /></div>)}
+            {gallery.map((g, i) => (
+              <figure class="ob-dfig">
+                <div class="ob-detail" data-view={item.primaryImage ? i + 1 : i}><img src={g.src} {...detailImgs[i]} alt={g.alt} loading={i < 3 ? 'eager' : 'lazy'} decoding="async" /></div>
+                {g.caption && <figcaption class="ob-dcap">{g.caption}</figcaption>}
+              </figure>
+            ))}
           </div>
         )}
 
@@ -102,6 +125,9 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
 
     <section class="ob-record">
       <aside class="ob-aside">
+        <details class="ob-rec" open data-rec>
+        <summary class="ob-sum"><span class="ob-sum-t"><span class="ob-sum-k">The record</span><span class="ob-sum-v">Maker, materials, origin, provenance</span></span><span class="ob-sum-plus" aria-hidden="true">+</span></summary>
+        <div class="ob-rec-body">
         <div class="ob-rhead">The record</div>
         {item.dateDetail && <div class="ob-field"><span class="ob-k">Date</span><span class="ob-v">{item.dateDetail}</span></div>}
         {item.materials && <div class="ob-field"><span class="ob-k">Materials</span><span class="ob-v">{item.materials}</span></div>}
@@ -115,6 +141,9 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
           {item.provenance && <span class="ob-pv">{item.provenance}</span>}
           <span class="ob-status"><span class:list={['ob-dot', { 'ob-dot-open': !verified }]}></span>{item.verification}</span>
         </div>
+        </div>
+        </details>
+        <script is:inline>matchMedia('(max-width: 767px)').matches && (document.currentScript.previousElementSibling.open = false)</script>
         <div class="ob-acts">
           <button type="button" class="ob-btn" data-cite={citation}>Copy citation</button>
           <a class="ob-btn" href={mail(`The Meridian: ${item.name}`)}>Write to the collector</a>
@@ -151,7 +180,7 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
             ))}
           </div>
         )}
-        <div data-reveal="1" class="ob-near" style={cons.length ? undefined : 'grid-column:2'}>
+        <div data-reveal="1" class:list={['ob-near', { 'ob-near-alone': !cons.length }]}>
           <div class="ob-eye ob-eye-dim">Neighbours in time</div>
           {earlier ? (
             <a href={`/collection/${earlier.slug}`} class="ob-nb"><span class="ob-dir">← Earlier</span><span class="ob-nbt"><span class="ob-nbn">{earlier.name}</span><span class="ob-nbd">{earlier.dateLabel}</span></span></a>
@@ -163,7 +192,7 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
           )}
           {alsoIsland.length > 0 && (
             <>
-              <div class="ob-eye ob-eye-dim" style="margin-top:22px">Also on the Island</div>
+              <div class="ob-eye ob-eye-dim" style="margin-top:1.375rem">Also on the Island</div>
               {alsoIsland.map((it) => (
                 <a href={`/collection/${it.slug}`} class="ob-isl"><span class="ob-isln">{it.name}</span><span class="ob-isld">{it.dateLabel}</span></a>
               ))}
@@ -176,20 +205,59 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
         </div>
       </div>
     </section>
+    </main>
 
     <MottoFooter variant="object" />
+
+    {shots.length > 0 && (
+      <dialog class="vw" aria-label="Image viewer" data-viewer>
+        <div class="vw-bar">
+          <button type="button" class="vw-x" aria-label="Close" data-vw-close>×</button>
+          <span class="vw-label" data-vw-label>Primary · 1×</span>
+          <span></span>
+        </div>
+        <div class="vw-stage" data-vw-stage>
+          <div class="vw-layer" data-vw-layer>
+            <img src={shots[0].src} alt={shots[0].alt} loading="lazy" decoding="async" />
+            {hots.map((h, i) => (
+              <button type="button" class="vw-ring" style={`left:${(h.x * 100).toFixed(3)}%;top:${(h.y * 100).toFixed(3)}%`} data-vw-hot={i} aria-label={`Detail ${i + 1}: ${h.label}`}>{i + 1}</button>
+            ))}
+          </div>
+        </div>
+        <div class="vw-sheet" data-vw-sheet>
+          <span class="vw-handle" aria-hidden="true"></span>
+          <div class="vw-head" data-vw-head>
+            <span class="vw-hl" data-vw-hl>Detail 1 of {hots.length}</span>
+            <span class="vw-nav">
+              <button type="button" aria-label="Previous detail" data-vw-prev>‹</button>
+              <button type="button" aria-label="Next detail" data-vw-next>›</button>
+            </span>
+          </div>
+          <span class="vw-dlabel" data-vw-dlabel hidden></span>
+          <p class="vw-dtext" data-vw-dtext hidden></p>
+          {shots.length > 1 && (
+            <div class="vw-thumbs">
+              {shots.map((t, i) => (
+                <button type="button" class:list={['vw-thumb', { 'vw-on': i === 0 }]} aria-label={t.name} data-vw-thumb={i}><img src={t.src} {...thumbImgs[i]} alt="" loading="lazy" decoding="async" /></button>
+              ))}
+            </div>
+          )}
+        </div>
+      </dialog>
+    )}
   </div>
+  <script type="application/json" id="ob-viewer" set:html={JSON.stringify({ shots, hots })} />
 </NightSky>
 
 <style>
   .ob{position:relative;background:transparent;color:#EEE7D7;overflow-x:clip}
 
-  .ob-top{position:relative;padding:128px clamp(20px,4.5vw,64px) 96px;background:radial-gradient(ellipse 70% 60% at 50% 30%,rgba(40,55,110,.4) 0%,rgba(17,28,60,.4) 45%,rgba(7,10,20,0) 100%);overflow:hidden}
+  .ob-top{position:relative;padding:8rem var(--gut) 6rem;background:radial-gradient(ellipse 70% 60% at 50% 30%,rgba(40,55,110,.4) 0%,rgba(17,28,60,.4) 45%,rgba(7,10,20,0) 100%);overflow:hidden}
   .ob-axis{position:absolute;left:50%;top:0;bottom:0;width:1px;margin-left:-0.5px;background:linear-gradient(to bottom,rgba(211,179,112,0),rgba(211,179,112,.45) 12%,rgba(211,179,112,.2) 88%,rgba(211,179,112,0))}
-  .ob-col{position:relative;max-width:1180px;margin:0 auto;display:flex;flex-direction:column;align-items:center}
-  .ob-crumbs{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;background:#0E1428;padding:6px 12px}
+  .ob-col{position:relative;max-width:73.75rem;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+  .ob-crumbs{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F;display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center;background:#0E1428;padding:.375rem .75rem}
 
-  .ob-plate{position:relative;margin-top:36px;width:min(980px,100%);aspect-ratio:29.5/20.5;background:#0B1124;box-shadow:0 0 0 1px rgba(211,179,112,.28),0 40px 120px rgba(0,0,0,.6);overflow:hidden;color:#B8B2A5}
+  .ob-plate{position:relative;margin-top:2.25rem;width:min(61.25rem,100%);aspect-ratio:29.5/20.5;background:#0B1124;box-shadow:0 0 0 1px rgba(211,179,112,.28),0 40px 120px rgba(0,0,0,.6);overflow:hidden;color:#B8B2A5}
   .ob-zoom{position:absolute;inset:0;transition:transform .5s cubic-bezier(.16,1,.3,1);transform-origin:50% 50%}
   .ob-zoom img,.ob-detail img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .ob-leave{position:absolute;inset:0;cursor:zoom-out;z-index:2}
@@ -198,79 +266,193 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
   .ob-tl{left:14px;top:14px;border-left:1px solid rgba(211,179,112,.6);border-top:1px solid rgba(211,179,112,.6)}
   .ob-br{right:14px;bottom:14px;border-right:1px solid rgba(211,179,112,.6);border-bottom:1px solid rgba(211,179,112,.6)}
 
-  .ob-cap{width:min(980px,100%);display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:16px;font:500 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#8D897F}
-  .ob-inspect{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border:1px solid rgba(211,179,112,.5);padding:9px 14px;background:#0B1124}
-  .ob-inspect:hover{border-color:#D3B370}
-  .ob-details{width:min(980px,100%);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:18px}
+  .ob-cap{width:min(61.25rem,100%);display:flex;justify-content:space-between;align-items:center;gap:1.25rem;margin-top:1rem;font:500 .625rem/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#8D897F}
+  .ob-inspect{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border:1px solid rgba(211,179,112,.5);padding:.5625rem .875rem;background:#0B1124}
+  @media (hover:hover) and (pointer:fine){.ob-inspect:hover{border-color:#D3B370}}
+  .ob-details{width:min(61.25rem,100%);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-top:1.125rem}
   .ob-detail{position:relative;aspect-ratio:3/2;background:#0B1124;color:#8D897F;box-shadow:0 0 0 1px rgba(238,231,215,.1)}
 
-  .ob-head{margin-top:72px;max-width:900px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px;background:radial-gradient(closest-side,#0C1226 70%,rgba(12,18,38,0));padding:10px 30px}
-  .ob-eye{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
-  .ob-title{margin:0;font:400 clamp(42px,5.6vw,80px)/1.02 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
-  .ob-date{font:500 11px/1.7 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
-  .ob-maker{font:italic 400 18px/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5}
-  .ob-badge{display:inline-flex;align-items:center;gap:12px;margin-top:6px;padding:10px 16px;border:1px solid rgba(211,179,112,.45);font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#D3B370}
-  .ob-lede{margin:18px 0 0;max-width:740px;font:italic 400 clamp(20px,1.9vw,25px)/1.5 'EB Garamond',Georgia,serif;color:#E2DBCB;text-wrap:pretty}
+  .ob-head{margin-top:4.5rem;max-width:56.25rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.125rem;background:radial-gradient(closest-side,#0C1226 70%,rgba(12,18,38,0));padding:.625rem 1.875rem}
+  .ob-eye{font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+  .ob-title{margin:0;font:400 clamp(2.625rem,5.6vw,5rem)/1.02 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .ob-date{font:500 .6875rem/1.7 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .ob-maker{font:italic 400 1.125rem/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5}
+  .ob-badge{display:inline-flex;align-items:center;gap:.75rem;margin-top:.375rem;padding:.625rem 1rem;border:1px solid rgba(211,179,112,.45);font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#D3B370}
+  .ob-lede{margin:1.125rem 0 0;max-width:46.25rem;font:italic 400 clamp(1.25rem,1.9vw,1.5625rem)/1.5 'EB Garamond',Georgia,serif;color:#E2DBCB;text-wrap:pretty}
 
-  .ob-record{position:relative;max-width:1240px;margin:0 auto;padding:clamp(72px,8vw,120px) clamp(20px,4.5vw,64px);box-sizing:border-box;display:grid;grid-template-columns:minmax(240px,310px) 1px minmax(0,700px);justify-content:center;column-gap:clamp(32px,5vw,80px)}
-  .ob-aside{position:sticky;top:32px;align-self:start;display:flex;flex-direction:column}
-  .ob-rhead{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370;padding-bottom:16px}
-  .ob-field{display:flex;flex-direction:column;gap:5px;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)}
-  .ob-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)}
-  .ob-f{display:flex;flex-direction:column;gap:5px}
-  .ob-k{font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F}
-  .ob-v{font:400 16.5px/1.4 'EB Garamond',Georgia,serif;color:#E2DBCB}
-  .ob-prov{display:flex;flex-direction:column;gap:8px;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)}
-  .ob-pv{font:400 16.5px/1.45 'EB Garamond',Georgia,serif;color:#E2DBCB}
-  .ob-status{display:inline-flex;align-items:center;gap:8px;font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#D3B370}
+  .ob-record{position:relative;max-width:77.5rem;margin:0 auto;padding:clamp(4.5rem,8vw,7.5rem) var(--gut);box-sizing:border-box;display:grid;grid-template-columns:minmax(15rem,19.375rem) 1px minmax(0,43.75rem);justify-content:center;column-gap:clamp(2rem,5vw,5rem)}
+  .ob-aside{position:sticky;top:2rem;align-self:start;display:flex;flex-direction:column}
+  .ob-rhead{font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370;padding-bottom:1rem}
+  .ob-field{display:flex;flex-direction:column;gap:.3125rem;padding:.875rem 0;border-top:1px solid rgba(238,231,215,.1)}
+  .ob-pair{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;padding:.875rem 0;border-top:1px solid rgba(238,231,215,.1)}
+  .ob-f{display:flex;flex-direction:column;gap:.3125rem}
+  .ob-k{font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F}
+  .ob-v{font:400 1.03125rem/1.4 'EB Garamond',Georgia,serif;color:#E2DBCB}
+  .ob-prov{display:flex;flex-direction:column;gap:.5rem;padding:.875rem 0;border-top:1px solid rgba(238,231,215,.1)}
+  .ob-pv{font:400 1.03125rem/1.45 'EB Garamond',Georgia,serif;color:#E2DBCB}
+  .ob-status{display:inline-flex;align-items:center;gap:.5rem;font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#D3B370}
   .ob-dot{width:7px;height:7px;border-radius:50%;background:#D3B370}
   .ob-dot-open{box-sizing:border-box;background:none;border:1px dashed #D3B370}
-  .ob-acts{display:flex;flex-direction:column;gap:10px;padding:18px 0 0;border-top:1px solid rgba(238,231,215,.1)}
-  .ob-btn{text-align:left;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border:1px solid rgba(211,179,112,.45);padding:12px 14px}
-  .ob-btn:hover{border-color:#D3B370;color:#F3ECDC}
+  .ob-acts{display:flex;flex-direction:column;gap:.625rem;padding:1.125rem 0 0;border-top:1px solid rgba(238,231,215,.1)}
+  .ob-btn{text-align:left;font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border:1px solid rgba(211,179,112,.45);padding:.75rem .875rem}
+  @media (hover:hover) and (pointer:fine){.ob-btn:hover{border-color:#D3B370;color:#F3ECDC}}
 
   .ob-line{position:relative;background:rgba(211,179,112,.16)}
   .ob-fill{position:absolute;left:0;top:0;width:1px;height:100%;background:#D3B370;transform-origin:0 0;transform:scaleY(0)}
   .ob-pstar{position:absolute;left:-4px;top:-4px;width:9px;height:9px;border-radius:50%;background:#FFF8E8;box-shadow:0 0 10px 3px rgba(255,248,232,.6),0 0 30px 8px rgba(211,179,112,.3)}
 
   .ob-sky{border-top:1px solid rgba(238,231,215,.1);background:radial-gradient(ellipse 60% 80% at 50% 0%,rgba(32,45,100,.4),rgba(7,10,20,0) 70%)}
-  .ob-sky-in{max-width:1240px;margin:0 auto;box-sizing:border-box;padding:clamp(80px,8vw,120px) clamp(20px,4.5vw,64px);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:clamp(32px,5vw,88px)}
-  .ob-cons{display:flex;flex-direction:column;gap:18px}
-  .ob-cons-title{margin:0;font:400 clamp(32px,3.6vw,48px)/1.08 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
-  .ob-con{display:grid;grid-template-columns:168px minmax(0,1fr);gap:28px;align-items:center;padding:26px 0;border-top:1px solid rgba(238,231,215,.12);color:#EEE7D7}
-  .ob-con:hover{border-top-color:rgba(211,179,112,.6);color:#EEE7D7}
+  .ob-sky-in{max-width:77.5rem;margin:0 auto;box-sizing:border-box;padding:var(--sec) var(--gut);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:clamp(2rem,5vw,5.5rem)}
+  .ob-cons{display:flex;flex-direction:column;gap:1.125rem}
+  .ob-cons-title{margin:0;font:400 clamp(2rem,3.6vw,3rem)/1.08 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .ob-con{display:grid;grid-template-columns:10.5rem minmax(0,1fr);gap:1.75rem;align-items:center;padding:1.625rem 0;border-top:1px solid rgba(238,231,215,.12);color:#EEE7D7}
+  @media (hover:hover) and (pointer:fine){.ob-con:hover{border-top-color:rgba(211,179,112,.6);color:#EEE7D7}}
   .ob-glyph{position:relative;display:block;width:168px;height:76px}
   .ob-glyph svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
   .ob-glyph path{fill:none;stroke:rgba(211,179,112,.6);stroke-width:1}
   .ob-gdot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;box-shadow:0 0 8px 2px rgba(255,240,205,.4)}
-  .ob-con-text{display:flex;flex-direction:column;gap:8px}
-  .ob-con-meta{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F}
-  .ob-con-name{font:400 24px/1.15 Gloock,Georgia,serif;color:#F3ECDC}
-  .ob-con-premise{font:400 16.5px/1.5 'EB Garamond',Georgia,serif;color:#B8B2A5}
+  .ob-con-text{display:flex;flex-direction:column;gap:.5rem}
+  .ob-con-meta{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F}
+  .ob-con-name{font:400 1.5rem/1.15 Gloock,Georgia,serif;color:#F3ECDC}
+  .ob-con-premise{font:400 1.03125rem/1.5 'EB Garamond',Georgia,serif;color:#B8B2A5}
 
-  .ob-near{display:flex;flex-direction:column;gap:14px}
+  .ob-near{display:flex;flex-direction:column;gap:.875rem}
   .ob-eye-dim{color:#8D897F}
-  .ob-nb{display:grid;grid-template-columns:72px minmax(0,1fr);gap:18px;align-items:baseline;padding:16px 0;border-top:1px solid rgba(238,231,215,.1)}
-  .ob-dir{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#D3B370}
-  .ob-nbt{display:flex;flex-direction:column;gap:5px}
-  .ob-nbn{font:400 19px/1.2 Gloock,Georgia,serif;color:#F3ECDC}
-  .ob-nbd,.ob-isld{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
-  .ob-isl{display:flex;justify-content:space-between;gap:18px;align-items:baseline;padding:14px 0;border-top:1px solid rgba(238,231,215,.1)}
-  .ob-isln{font:400 18px/1.25 Gloock,Georgia,serif;color:#F2CF85}
+  .ob-nb{display:grid;grid-template-columns:4.5rem minmax(0,1fr);gap:1.125rem;align-items:baseline;padding:1rem 0;border-top:1px solid rgba(238,231,215,.1)}
+  .ob-dir{font:500 var(--mono-min)/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#D3B370}
+  .ob-nbt{display:flex;flex-direction:column;gap:.3125rem}
+  .ob-nbn{font:400 1.1875rem/1.2 Gloock,Georgia,serif;color:#F3ECDC}
+  .ob-nbd,.ob-isld{font:500 var(--mono-min)/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .ob-isl{display:flex;justify-content:space-between;gap:1.125rem;align-items:baseline;padding:.875rem 0;border-top:1px solid rgba(238,231,215,.1)}
+  .ob-isln{font:400 1.125rem/1.25 Gloock,Georgia,serif;color:#F2CF85}
   .ob-isld{flex:none}
-  .ob-citebox{margin-top:26px;padding:18px 20px;border:1px solid rgba(211,179,112,.3);display:flex;flex-direction:column;gap:10px}
-  .ob-citek{font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F}
-  .ob-citev{font:400 13px/1.6 'IBM Plex Mono',monospace;color:#E2DBCB;word-break:break-word}
+  .ob-citebox{margin-top:1.625rem;padding:1.125rem 1.25rem;border:1px solid rgba(211,179,112,.3);display:flex;flex-direction:column;gap:.625rem}
+  .ob-citek{font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F}
+  .ob-citev{font:400 .8125rem/1.6 'IBM Plex Mono',monospace;color:#E2DBCB;word-break:break-word}
 
   @media (prefers-reduced-motion: no-preference) {
     :global(.js) [data-in]{opacity:0}
   }
+
+  .ob-near-alone{grid-column:2}
+  .ob-dfig{margin:0}
+  .ob-sum,.ob-ring,.ob-dcap{display:none}
+
+  /* XXL / 3XL: the reading column stops at 840 / 920 (board, 08). */
+  @media (min-width:2400px){ .ob-lede{max-width:min(46.25rem,840px)} }
+  @media (min-width:3200px){ .ob-lede{max-width:min(46.25rem,920px)} }
+
+  /* L: the shipped sticky aside at 260px. */
+  @media (min-width:1024px) and (max-width:1279px){
+    .ob-record{grid-template-columns:16.25rem 1px minmax(0,43.75rem)}
+  }
+
+  /* Below L (Responsive System board, 05): the record sits above the story,
+     the reading progress is a gold hairline pinned under the header, and the
+     sky section stacks with the neighbours after the constellations. */
+  @media (max-width:1023px){
+    .ob-record{display:block}
+    .ob-aside{position:static;max-width:43.75rem;margin:0 auto}
+    .ob-record > :global(.ob-story){max-width:43.75rem;margin:0 auto;padding-top:2rem}
+    .ob-acts{padding-top:1.125rem;gap:0;border-top:0}
+    .ob-acts .ob-btn{display:flex;align-items:center;border:0;padding:0}
+    .ob-acts button.ob-btn{justify-content:center;height:48px;margin-bottom:.25rem;border:1px solid rgba(211,179,112,.6);font-size:.65625rem}
+    .ob-acts a.ob-btn{height:44px;color:#B8B2A5}
+    .ob-acts a.ob-btn + a.ob-btn{border-top:1px solid rgba(238,231,215,.08)}
+    .ob-line{position:sticky;top:var(--head-h);z-index:15;height:1px;margin:3.5rem calc(-1 * var(--gut)) 0;background:rgba(238,231,215,.1);transition:top .22s ease}
+    .ob-fill{width:100%;height:1px;transform:scaleX(0)}
+    .ob-pstar{left:0;top:-2.5px;width:6px;height:6px;margin-left:-3px;box-shadow:0 0 10px 3px rgba(255,248,232,.6)}
+    .ob-sky-in{grid-template-columns:minmax(0,1fr)}
+    .ob-near-alone{grid-column:auto}
+    .ob-crumbs a{display:inline-flex;align-items:center;min-height:44px;margin:-15px 0}
+    .ob-inspect{flex:none;display:flex;align-items:center;min-height:44px;padding:0;border:0;background:none}
+    .ob-insp{padding:.5625rem .875rem;border:1px solid rgba(211,179,112,.5);background:#0B1124}
+  }
+  @media (min-width:768px) and (max-width:1023px){
+    .ob-rec-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:2rem}
+    .ob-rhead,.ob-prov{grid-column:1 / -1}
+  }
+  /* Phones: the plate edge to edge with numbered 28px rings (44px hit areas),
+     the detail images in a sideways row of 220px tiles, H1 clamp(34px, 10vw,
+     44px), the record a <details> closed by default. */
+  @media (max-width:767px){
+    .ob-top{padding:4.5rem var(--gut) 0}
+    .ob-crumbs{gap:.375rem .625rem;margin:0;padding:.4375rem .75rem;font-size:var(--mono-min);line-height:1.4;letter-spacing:.2em}
+    .ob-plate{margin-top:1.5rem;width:calc(100% + 2 * var(--gut));max-width:none;box-shadow:0 0 0 1px rgba(211,179,112,.28),0 30px 80px rgba(0,0,0,.6)}
+    .ob-corner{width:18px;height:18px}
+    .ob-tl{left:12px;top:12px}
+    .ob-br{right:12px;bottom:12px}
+    .ob-ring{position:absolute;z-index:4;display:grid;place-items:center;width:44px;height:44px;margin:-22px 0 0 -22px}
+    .ob-ring span{width:28px;height:28px;box-sizing:border-box;display:grid;place-items:center;border-radius:50%;border:1px solid #F2D493;background:rgba(7,10,20,.5);font:500 .625rem/1 'IBM Plex Mono',monospace;color:#F2D493}
+    .ob-cap{margin-top:.375rem;gap:.75rem;font-size:var(--mono-min);letter-spacing:.14em}
+    .ob-insp{padding:.5625rem .75rem}
+    .ob-details{display:flex;gap:.75rem;width:calc(100% + 2 * var(--gut));margin-top:.625rem;padding:0 var(--gut);box-sizing:border-box;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-padding:0 var(--gut);scrollbar-width:none}
+    .ob-details::-webkit-scrollbar{display:none}
+    .ob-dfig{flex:none;width:220px;display:flex;flex-direction:column;gap:.5rem;scroll-snap-align:start}
+    .ob-dcap{display:block;font:500 var(--mono-min)/1.3 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+    .ob-head{margin-top:3rem;padding:0;gap:.875rem;background:none}
+    .ob-eye{font-size:.625rem}
+    .ob-title{font-size:clamp(2.125rem,10vw,2.75rem)}
+    .ob-date{font-size:.65625rem}
+    .ob-maker{font-size:1.0625rem}
+    .ob-badge{min-height:44px;box-sizing:border-box;margin-top:0;padding:0 1rem;font-size:.625rem}
+    .ob-lede{margin-top:.625rem;font-size:1.25rem}
+    .ob-record{padding-top:2.75rem}
+    .ob-sum{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:60px;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);list-style:none;cursor:pointer}
+    .ob-sum::-webkit-details-marker{display:none}
+    .ob-sum-t{display:flex;flex-direction:column;gap:6px}
+    .ob-sum-k{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+    .ob-sum-v{font:italic 400 .9375rem/1 'EB Garamond',Georgia,serif;color:#8D897F}
+    .ob-sum-plus{font:400 1.5rem/1 Gloock,Georgia,serif;color:#D3B370;transition:transform .3s ease}
+    .ob-rec[open] .ob-sum-plus{transform:rotate(45deg)}
+    .ob-rhead{display:none}
+    .ob-rec-body{padding-top:.25rem}
+    .ob-cons-title{font-size:1.875rem}
+    .ob-con{grid-template-columns:minmax(0,1fr);gap:.75rem;padding:1.375rem 0}
+    .ob-con-name{order:-1;font-size:1.3125rem}
+  }
+  @media (prefers-reduced-motion:reduce){ .ob-line,.ob-sum-plus{transition:none} }
+
+  /* The touch viewer (board 5b). */
+  .vw{position:fixed;inset:0;box-sizing:border-box;width:100%;max-width:none;height:100dvh;max-height:none;margin:0;padding:0;border:0;overflow:hidden;background:#05070F;color:#EEE7D7}
+  .vw[open]{display:flex;flex-direction:column;animation:vw-in .3s ease}
+  .vw::backdrop{background:#05070F}
+  @keyframes vw-in{from{opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .vw[open]{animation:none} }
+  .vw-bar{flex:none;height:calc(56px + env(safe-area-inset-top));box-sizing:border-box;padding:env(safe-area-inset-top) max(8px,env(safe-area-inset-right)) 0 max(8px,env(safe-area-inset-left));display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center}
+  .vw-x{width:44px;height:44px;display:grid;place-items:center;font:400 1.875rem/1 'EB Garamond',Georgia,serif;color:#EEE7D7}
+  .vw-label{justify-self:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:#8D897F}
+  .vw-stage{position:relative;flex:1;min-height:0;overflow:hidden;touch-action:none}
+  .vw-layer{position:absolute;left:0;top:0;transform-origin:0 0}
+  .vw-layer img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none;pointer-events:none}
+  .vw-ring{position:absolute;width:44px;height:44px;display:grid;place-items:center;font:500 .625rem/1 'IBM Plex Mono',monospace;color:#F2D493;transform:translate(-50%,-50%)}
+  .vw-ring::before{content:'';position:absolute;left:8px;top:8px;width:28px;height:28px;box-sizing:border-box;border-radius:50%;border:1px solid rgba(242,212,147,.7)}
+  .vw-ring.vw-on{font-size:.6875rem}
+  .vw-ring.vw-on::before{left:5px;top:5px;width:34px;height:34px;border-color:#F2D493;background:rgba(242,212,147,.18);box-shadow:0 0 24px 6px rgba(211,179,112,.35)}
+  .vw-ring[hidden]{display:none}
+  .vw-sheet{flex:none;box-sizing:border-box;max-height:45dvh;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:10px max(20px,env(safe-area-inset-right)) calc(26px + env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));background:rgba(11,17,36,.98);border-top:1px solid rgba(211,179,112,.45)}
+  .vw-sheet[hidden],.vw-head[hidden],.vw-dlabel[hidden],.vw-dtext[hidden]{display:none}
+  .vw-handle{align-self:center;width:36px;height:4px;border-radius:2px;background:rgba(238,231,215,.25)}
+  .vw-head{display:flex;justify-content:space-between;align-items:center}
+  .vw-hl{font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#D3B370}
+  .vw-nav{display:flex;gap:4px}
+  .vw-nav button{width:44px;height:44px;display:grid;place-items:center;font:400 1.25rem/1 'EB Garamond',Georgia,serif;color:#B8B2A5}
+  .vw-dlabel{font:500 var(--mono-min)/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .vw-dtext{margin:0;font:400 1.0625rem/1.45 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .vw-thumbs{display:flex;gap:8px;padding-top:12px;border-top:1px solid rgba(238,231,215,.1);overflow-x:auto;scrollbar-width:none}
+  .vw-thumb{flex:none;width:56px;height:56px;padding:0;background:#0B1124;box-shadow:0 0 0 1px rgba(238,231,215,.12)}
+  .vw-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+  .vw-thumb.vw-on{box-shadow:0 0 0 1px #D3B370}
 </style>
 
 <script>
   // Port of the Object reference's componentDidMount / toggle / progress /
   // renderVals: entrance, scroll reveals, the reading-progress star, the
   // inspection zoom (2.6×, following the pointer, Esc to leave) and Copy citation.
+  // On touch the plate, its rings, "Inspect" and the detail images open the
+  // full-screen viewer instead (viewer.ts).
+  import { initViewer } from '../../components/object/viewer';
+  import { MQ } from '../../components/responsive';
   const root = document.querySelector<HTMLElement>('[data-object]');
   if (root) {
     const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -285,8 +467,11 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
         io.unobserve(e.target);
         (e.target as HTMLElement).animate([{ opacity: 0, transform: 'translateY(26px)' }, { opacity: 1, transform: 'none' }], { duration: 1200, easing: ease, fill: 'both' });
       }), { threshold: 0.12 });
+      // Below L the footer isn't laid out until it nears the screen; asking where
+      // it is would lay it out (and load its fonts) early, and it's below the fold anyway.
+      const below = (el: HTMLElement) => el.checkVisibility?.({ contentVisibilityAuto: true }) === false || el.getBoundingClientRect().top > innerHeight;
       root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
-        if (el.getBoundingClientRect().top > innerHeight) { el.style.opacity = '0'; io.observe(el); }
+        if (below(el)) { el.style.opacity = '0'; io.observe(el); }
       });
     }
     document.documentElement.classList.remove('js');
@@ -296,8 +481,18 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
     const fill = root.querySelector<HTMLElement>('[data-fill]');
     const star = root.querySelector<HTMLElement>('[data-pstar]');
     let rq = 0;
+    // Below L the line is a horizontal hairline under the header, measured against the story.
+    const compact = matchMedia('(max-width: 1023px)');
+    const story = root.querySelector<HTMLElement>('.ob-story');
     const progress = () => {
       if (!line) return;
+      if (compact.matches && story) {
+        const r = story.getBoundingClientRect();
+        const p = Math.max(0, Math.min(1, (innerHeight * 0.45 - r.top) / r.height));
+        if (fill) fill.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+        if (star) star.style.transform = 'translateX(' + (p * line.clientWidth).toFixed(1) + 'px)';
+        return;
+      }
       const r = line.getBoundingClientRect();
       const p = Math.max(0, Math.min(1, (innerHeight * 0.45 - r.top) / r.height));
       if (fill) fill.style.transform = 'scaleY(' + p.toFixed(4) + ')';
@@ -306,7 +501,12 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
     const onScroll = () => { if (!rq) rq = requestAnimationFrame(() => { rq = 0; progress(); }); };
     addEventListener('scroll', onScroll, { passive: true });
     addEventListener('resize', onScroll);
+    compact.addEventListener('change', onScroll);
     progress();
+
+    // The record opens on M and up; on phones it starts closed.
+    const rec = root.querySelector<HTMLDetailsElement>('[data-rec]');
+    matchMedia('(max-width: 767px)').addEventListener('change', (e) => { if (rec) rec.open = !e.matches; });
 
     // Inspection.
     const plate = root.querySelector<HTMLElement>('[data-plate]');
@@ -318,9 +518,20 @@ const gallery = item.galleryImages.map((src, i) => ({ src, alt: item.galleryCapt
       inspecting = !inspecting;
       if (zoom) { zoom.style.transform = inspecting ? 'scale(2.6)' : ''; if (!inspecting) zoom.style.transformOrigin = '50% 50%'; }
       if (leave) leave.hidden = !inspecting;
-      if (button) button.textContent = inspecting ? 'Leave inspection ✕' : '⊕ Inspect the details';
+      if (button) (button.querySelector('.ob-insp') ?? button).textContent = inspecting ? 'Leave inspection ✕' : '⊕ Inspect the details';
     };
-    button?.addEventListener('click', toggle);
+    const coarse = matchMedia(MQ.coarse);
+    const vd = root.querySelector<HTMLDialogElement>('[data-viewer]');
+    const vdata = JSON.parse(document.getElementById('ob-viewer')?.textContent || '{"shots":[],"hots":[]}');
+    const viewer = vd && vdata.shots.length ? initViewer(vd, vdata.shots, vdata.hots) : null;
+    const touchView = (k: number, hot = -1) => { if (!coarse.matches || !viewer) return false; viewer.open(k, hot); return true; };
+    button?.addEventListener('click', () => { if (!touchView(0)) toggle(); });
+    plate?.addEventListener('click', (e) => {
+      if (inspecting) return;
+      const ring = (e.target as Element).closest<HTMLElement>('[data-hot]');
+      if (!touchView(0, ring ? +ring.dataset.hot! : -1) && ring) toggle();
+    });
+    root.querySelectorAll<HTMLElement>('[data-view]').forEach((t) => t.addEventListener('click', () => touchView(+t.dataset.view!)));
     leave?.addEventListener('click', toggle);
     plate?.addEventListener('pointermove', (e) => {
       if (!inspecting || !zoom) return;

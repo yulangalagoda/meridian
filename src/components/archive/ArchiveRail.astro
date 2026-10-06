@@ -19,7 +19,7 @@ const PAGES: [ArchiveSlug, string][] = [
 ];
 ---
 
-<nav class="rl" aria-label="The Archive">
+<nav class="rl" aria-label="The Archive" data-rail>
   <span class="rl-head">The Archive</span>
   {PAGES.map(([slug, label]) =>
     slug === current ? (
@@ -31,8 +31,35 @@ const PAGES: [ArchiveSlug, string][] = [
 </nav>
 
 <style>
-  .rl{flex:0 0 220px;display:flex;flex-direction:column;gap:14px;position:sticky;top:32px;font:500 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#8D897F}
-  .rl-head{color:#D3B370;letter-spacing:.22em;padding-bottom:6px}
-  .rl-on{display:flex;align-items:center;gap:10px;color:#F3ECDC}
-  .rl-off{padding-left:15px}
+  .rl{flex:0 0 13.75rem;display:flex;flex-direction:column;gap:.875rem;position:sticky;top:2rem;font:500 .625rem/1.4 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#8D897F}
+  .rl-head{color:#D3B370;letter-spacing:.22em;padding-bottom:.375rem}
+  .rl-on{display:flex;align-items:center;gap:.625rem;color:#F3ECDC}
+  .rl-off{padding-left:.9375rem}
+
+  /* L: the rail narrows to 200. */
+  @media (min-width:1024px) and (max-width:1279px){ .rl{flex-basis:12.5rem} }
+  @media (min-width:2400px){ .rl{flex-basis:240px} }
+
+  /* Below L: a sticky 48px strip under the header (at the top while the header
+     is away), scrolling sideways, the current page in view (board 7a). */
+  @media (max-width:1023px){
+    .rl{position:sticky;top:var(--head-h);z-index:20;flex-direction:row;align-items:stretch;gap:22px;height:48px;box-sizing:border-box;margin:0 calc(-1 * var(--gut));padding:0 20vw 0 var(--gut);background:rgba(7,10,20,.92);border-top:1px solid rgba(238,231,215,.06);border-bottom:1px solid rgba(238,231,215,.1);white-space:nowrap;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;line-height:1;-webkit-mask-image:linear-gradient(90deg,#000 82%,rgba(0,0,0,0));mask-image:linear-gradient(90deg,#000 82%,rgba(0,0,0,0));transition:top .22s ease}
+    .rl::-webkit-scrollbar{display:none}
+    .rl > *{flex:none;display:flex;align-items:center}
+    .rl > a{padding:0 11px;margin:0 -11px}
+    .rl-head{padding-bottom:0}
+    .rl-on{gap:8px}
+    .rl-off{padding-left:0}
+  }
+  @media (max-width:1023px) and (prefers-reduced-motion:reduce){ .rl{transition:none} }
 </style>
+
+<script>
+  // The strip opens with the current page in view: if it would sit deep in the
+  // fade, it is scrolled to the middle.
+  const rail = document.querySelector<HTMLElement>('[data-rail]');
+  const on = rail?.querySelector<HTMLElement>('[aria-current="page"]');
+  if (rail && on && rail.scrollWidth > rail.clientWidth && on.offsetLeft + on.offsetWidth > rail.clientWidth * 0.9) {
+    rail.scrollLeft = Math.max(0, on.offsetLeft - (rail.clientWidth - on.offsetWidth) / 2);
+  }
+</script>

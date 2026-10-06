@@ -4,7 +4,7 @@
 // citation box, nested paragraphs follow it; the contact block closes.
 import Lede from './Lede.astro';
 import { CONTACT_EMAIL } from './types';
-import { blockSpans, renderSpans, splitBoldLead } from '../../lib/richtext';
+import { blockSpans, plainText, renderSpans, splitBoldLead } from '../../lib/richtext';
 
 interface Props { blocks: any[] }
 const { blocks } = Astro.props;
@@ -29,7 +29,10 @@ const rows = blocks.filter(led).map((b) => ({ ...led(b)!, children: (b.children 
           <p class="ac-p" set:html={r.restHtml} />
           {r.children.map((c, i) =>
             c.type === 'callout' ? (
-              <div class="ac-cite" set:html={html(c)} />
+              <Fragment>
+                <div class="ac-cite" set:html={html(c)} />
+                <button type="button" class="ac-copy" data-copy={plainText(blockSpans(c))}>Copy citation</button>
+              </Fragment>
             ) : (
               <p class="ac-p" style={i === r.children.length - 1 ? 'margin:0' : undefined} set:html={html(c)} />
             )
@@ -47,14 +50,38 @@ const rows = blocks.filter(led).map((b) => ({ ...led(b)!, children: (b.children 
 
 <style>
   .ac-rows{display:flex;flex-direction:column;border-bottom:1px solid rgba(238,231,215,.12)}
-  .ac-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px 32px;padding:30px 0;border-top:1px solid rgba(238,231,215,.12)}
-  .ac-label{margin:0;font:400 24px/1.2 Gloock,Georgia,serif;color:#F3ECDC}
-  .ac-text{grid-column:span 2;min-width:0;font:400 20px/1.6 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
-  .ac-p{margin:0 0 18px}
-  .ac-cite{margin:0 0 18px;padding:18px 20px;background:rgba(11,17,36,.8);border:1px solid rgba(211,179,112,.35);font:400 14px/1.6 'IBM Plex Mono',monospace;color:#F3ECDC;overflow-wrap:anywhere}
-  .ac-cite :global(em){font-family:'EB Garamond',Georgia,serif;font-size:19px}
+  .ac-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,11.25rem),1fr));gap:.625rem 2rem;padding:1.875rem 0;border-top:1px solid rgba(238,231,215,.12)}
+  .ac-label{margin:0;font:400 1.5rem/1.2 Gloock,Georgia,serif;color:#F3ECDC}
+  .ac-text{grid-column:span 2;min-width:0;font:400 1.25rem/1.6 'EB Garamond',Georgia,serif;color:#D9D2C3;text-wrap:pretty}
+  .ac-p{margin:0 0 1.125rem}
+  .ac-cite{margin:0 0 1.125rem;padding:1.125rem 1.25rem;background:rgba(11,17,36,.8);border:1px solid rgba(211,179,112,.35);font:400 .875rem/1.6 'IBM Plex Mono',monospace;color:#F3ECDC;overflow-wrap:anywhere}
+  .ac-cite :global(em){font-family:'EB Garamond',Georgia,serif;font-size:1.1875rem}
   .ac-cite :global(code){font:inherit;color:#F2D493}
-  .ac-write{margin-top:56px;display:flex;flex-direction:column;gap:12px}
-  .ac-wlabel{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
-  .ac-mail{font:400 clamp(22px,2.4vw,30px)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+  .ac-write{margin-top:3.5rem;display:flex;flex-direction:column;gap:.75rem}
+  .ac-wlabel{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#8D897F}
+  .ac-mail{font:400 clamp(1.375rem,2.4vw,1.875rem)/1.1 Gloock,Georgia,serif;color:#F3ECDC}
+  .ac-copy{display:none}
+
+  /* Below L (board 7b): rows stack label over text; body 19/1.6; the citation
+     box wraps and gets a full-width 48px Copy button; the mailto is a 44px row. */
+  @media (max-width:1023px){
+    .ac-row{grid-template-columns:minmax(0,1fr)}
+    .ac-text{grid-column:auto;font-size:1.1875rem;line-height:1.6}
+    .ac-cite{margin-bottom:.625rem}
+    .ac-copy{display:flex;align-items:center;justify-content:center;width:100%;height:48px;margin:0 0 1.125rem;border:1px solid rgba(211,179,112,.6);font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC}
+    .ac-mail{display:flex;align-items:center;min-height:44px;overflow-wrap:anywhere}
+  }
 </style>
+
+<script>
+  // Copy citation (the same words and timing as the object page's button).
+  document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((b) => {
+    let t = 0;
+    b.addEventListener('click', () => {
+      try { navigator.clipboard && navigator.clipboard.writeText(b.dataset.copy ?? ''); } catch (err) {}
+      b.textContent = 'Citation copied ✓';
+      clearTimeout(t);
+      t = window.setTimeout(() => { b.textContent = 'Copy citation'; }, 2200);
+    });
+  });
+</script>

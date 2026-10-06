@@ -29,6 +29,7 @@ const nar = narratives.map((n, k) => {
   return {
     slug: n.slug, name: n.name, premise: n.premise, items: its.map((it) => it.slug),
     num: String(k + 1).padStart(2, '0'), d: curve(big, n.slug, 40), dm: curve(small, n.slug + 'm', 40),
+    dots: small.map((p) => ({ left: p[0].toFixed(1) + 'px', top: p[1].toFixed(1) + 'px' })),
     meta: its.length + ' objects · ' + (a === b ? a : a + '–' + b),
   };
 });
@@ -58,6 +59,7 @@ const jsonLd = [
       </div>
 
       <div class="nx-band" data-band>
+        <div class="nx-track" data-track><div class="nx-draw" data-draw>
         <div class="nx-sky">
           {nar.map((x) => (
             <svg viewBox="0 0 1320 360" preserveAspectRatio="none" class="nx-svg" aria-hidden="true">
@@ -69,14 +71,19 @@ const jsonLd = [
           ))}
         </div>
         {axis.map((a) => <span class="nx-axis" style={`left:${a.left}`}>{a.y}</span>)}
+        </div></div>
         <span class="nx-label" data-nlabel>{allLabel}</span>
+        <span class="nx-swipe" aria-hidden="true">Swipe ↔</span>
       </div>
 
       <div class="nx-grid">
         {nar.map((x) => (
           <a href={`/narratives/${x.slug}`} class="nx-card" data-ncard={x.slug}>
             <div class="nx-top">
-              <svg viewBox="0 0 168 76" class="nx-mini" aria-hidden="true"><path d={x.dm} /></svg>
+              <span class="nx-mini">
+                <svg viewBox="0 0 168 76" aria-hidden="true"><path d={x.dm} /></svg>
+                {x.dots.map((d) => <span class="nx-mdot" style={`left:${d.left};top:${d.top}`}></span>)}
+              </span>
               <span class="nx-num">{x.num}</span>
             </div>
             <h2 class="nx-name">{x.name}</h2>
@@ -96,33 +103,73 @@ const jsonLd = [
 </NightSky>
 
 <style>
-  .nx{max-width:1320px;margin:0 auto;box-sizing:border-box;padding:clamp(56px,7vw,100px) clamp(20px,4.5vw,64px) clamp(80px,8vw,120px)}
-  .nx-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:24px 48px;align-items:end;margin-bottom:44px}
-  .nx-eyebrow{font:500 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
-  .nx-h1{margin:18px 0 0;font:400 clamp(40px,4.8vw,68px)/1.02 Gloock,Georgia,serif;color:#F3ECDC}
-  .nx-intro{margin:0;justify-self:end;max-width:440px;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .nx{max-width:82.5rem;margin:0 auto;box-sizing:border-box;padding:clamp(3.5rem,7vw,6.25rem) var(--gut) var(--sec)}
+  .nx-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,22.5rem),1fr));gap:1.5rem 3rem;align-items:end;margin-bottom:2.75rem}
+  .nx-eyebrow{font:500 .65625rem/1 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:#D3B370}
+  .nx-h1{margin:1.125rem 0 0;font:400 clamp(2.5rem,4.8vw,4.25rem)/1.02 Gloock,Georgia,serif;color:#F3ECDC}
+  .nx-intro{margin:0;justify-self:end;max-width:27.5rem;font:400 1.125rem/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
 
-  .nx-band{position:relative;height:clamp(260px,30vw,380px);margin-bottom:12px;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(20,28,56,.7),rgba(7,10,20,0))}
+  .nx-band{position:relative;height:clamp(16.25rem,30vw,23.75rem);margin-bottom:.75rem;border-top:1px solid rgba(238,231,215,.12);border-bottom:1px solid rgba(238,231,215,.12);background:radial-gradient(ellipse 60% 80% at 50% 50%,rgba(20,28,56,.7),rgba(7,10,20,0))}
   .nx-sky{position:absolute;left:3%;right:3%;top:12%;bottom:16%}
   .nx-svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
   .nx-svg path{fill:none;vector-effect:non-scaling-stroke;transition:stroke .5s}
   .nx-star{position:absolute;transform:translate(-50%,-50%);border-radius:50%;transition:opacity .5s,box-shadow .5s}
   @media (prefers-reduced-motion: reduce){ .nx-svg path,.nx-star{transition:none} }
-  .nx-axis{position:absolute;bottom:12px;transform:translateX(-50%);font:500 9.5px/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#8D897F}
-  .nx-label{position:absolute;top:14px;left:16px;font:italic 400 16px/1 'EB Garamond',Georgia,serif;color:#B8B2A5}
+  .nx-axis{position:absolute;bottom:.75rem;transform:translateX(-50%);font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.12em;color:#8D897F}
+  .nx-label{position:absolute;top:.875rem;left:1rem;font:italic 400 1rem/1 'EB Garamond',Georgia,serif;color:#B8B2A5}
 
-  .nx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));column-gap:clamp(28px,4vw,56px)}
-  .nx-card{display:flex;flex-direction:column;gap:14px;padding:36px 0 44px;border-top:1px solid rgba(238,231,215,.12);color:#EEE7D7}
-  .nx-card:hover{border-top-color:rgba(211,179,112,.7);color:#EEE7D7}
-  .nx-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
-  .nx-mini{width:168px;height:76px;overflow:visible}
+  .nx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,21.25rem),1fr));column-gap:clamp(1.75rem,4vw,3.5rem)}
+  .nx-card{display:flex;flex-direction:column;gap:.875rem;padding:2.25rem 0 2.75rem;border-top:1px solid rgba(238,231,215,.12);color:#EEE7D7}
+  @media (hover:hover) and (pointer:fine){.nx-card:hover{border-top-color:rgba(211,179,112,.7);color:#EEE7D7}}
+  .nx-top{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem}
+  .nx-mini{position:relative;display:block;flex:none;width:168px;height:76px}
+  .nx-mini svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
   .nx-mini path{fill:none;stroke:rgba(211,179,112,.65);stroke-width:1;stroke-linecap:round}
-  .nx-num{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#8D897F}
-  .nx-name{margin:0;font:400 26px/1.15 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
-  .nx-premise{margin:0;font:400 18px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
-  .nx-foot{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:4px}
-  .nx-meta{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
-  .nx-follow{font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:5px;white-space:nowrap}
+  .nx-mdot{display:none}
+  .nx-num{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.14em;color:#8D897F}
+  .nx-name{margin:0;font:400 1.625rem/1.15 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .nx-premise{margin:0;font:400 1.125rem/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .nx-foot{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;margin-top:.25rem}
+  .nx-meta{font:500 var(--mono-min)/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .nx-follow{font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:#F3ECDC;border-bottom:1px solid rgba(211,179,112,.6);padding-bottom:.3125rem;white-space:nowrap}
+  .nx-track{position:absolute;inset:0}
+  .nx-draw{position:relative;width:100%;height:100%}
+  .nx-swipe{display:none}
+
+  /* Below L (Responsive System board, 6b): the band keeps its 1000px drawing
+     and scrolls sideways, sticking under the header while the cards scroll;
+     the lit narrative's name stays put above it. Cards: one column on XS,
+     two from S, the shipped grid from L. */
+  @media (max-width:1023px){
+    .nx-eyebrow{font-size:.625rem}
+    .nx-h1{margin-top:1rem}
+    .nx-hero{margin-bottom:1.75rem}
+    .nx-band{position:sticky;top:var(--head-h);z-index:10;height:250px;margin:0 calc(-1 * var(--gut));border-color:rgba(238,231,215,.08);background:radial-gradient(ellipse 80% 80% at 50% 50%,#111834,#070A14 75%);transition:top .22s ease}
+    .nx-track{overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:none}
+    .nx-track::-webkit-scrollbar{display:none}
+    .nx-draw{width:1000px}
+    .nx-axis{bottom:.625rem}
+    .nx-label{left:var(--gut);top:.875rem;max-width:calc(100% - 2 * var(--gut) - 5.5rem);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2;color:#E8CE96;text-shadow:0 0 14px #070A14;pointer-events:none}
+    .nx-swipe{display:block;position:absolute;right:var(--gut);top:1.125rem;font:500 var(--mono-min)/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F;pointer-events:none}
+    .nx-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  }
+  @media (max-width:767px){
+    .nx{padding-top:2rem}
+    .nx-grid{grid-template-columns:minmax(0,1fr)}
+    .nx-card{gap:.75rem;padding:1.75rem 0 1.875rem;border-top:0;border-bottom:1px solid rgba(238,231,215,.12)}
+    .nx-mini path{stroke:rgba(211,179,112,.6)}
+    .nx-num{display:none}
+    .nx-mdot{display:block;position:absolute;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;background:#FFF6E2;box-shadow:0 0 8px 2px rgba(255,240,205,.4)}
+    .nx-name{font-size:1.4375rem}
+    .nx-premise{font-size:1.03125rem;line-height:1.5}
+    .nx-foot{align-items:center;margin-top:0}
+    .nx-follow{display:inline-flex;align-items:center;height:44px;padding:0;border:0;letter-spacing:.18em}
+  }
+  @media (min-width:480px) and (max-width:767px){ .nx-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  /* XXL / 3XL (board 8a): the index box grows to 1600 / 1800. */
+  @media (min-width:2400px){ .nx{max-width:1600px} }
+  @media (min-width:3200px){ .nx{max-width:1800px} }
+  @media (prefers-reduced-motion:reduce){ .nx-band{transition:none} }
 </style>
 
 <script>
@@ -150,10 +197,52 @@ const jsonLd = [
         s.style.boxShadow = lit ? '0 0 12px 4px rgba(255,240,205,.75)' : '0 0 5px 1px rgba(255,240,205,.3)';
       });
     };
-    document.querySelectorAll<HTMLElement>('[data-ncard]').forEach((c) => {
+    const cards = [...document.querySelectorAll<HTMLElement>('[data-ncard]')];
+    cards.forEach((c) => {
       const enter = () => set(c.dataset.ncard!), leave = () => set(null);
       c.addEventListener('mouseenter', enter); c.addEventListener('focus', enter);
       c.addEventListener('mouseleave', leave); c.addEventListener('blur', leave);
+    });
+
+    // On touch there is no hover (board 6b): the card nearest the middle of the
+    // screen under the band lights its path, and the band scrolls to centre that
+    // constellation. A tap on a band star (44px hit area, nearest centre wins)
+    // scrolls the list to its narrative.
+    const coarse = matchMedia('(pointer: coarse)');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const band = document.querySelector<HTMLElement>('[data-band]')!;
+    const track = document.querySelector<HTMLElement>('[data-track]')!;
+    const draw = document.querySelector<HTMLElement>('[data-draw]')!;
+    let lit: string | null = null, queued = false;
+    const floor = () => Math.max(0, band.getBoundingClientRect().bottom);
+    const centreBand = (slug: string) => {
+      if (track.scrollWidth <= track.clientWidth) return;
+      const xs = (D.nar.find((x) => x.slug === slug)?.items ?? []).map((it) => stars.get(it)).filter(Boolean).map((el) => { const r = el!.getBoundingClientRect(); return r.left + r.width / 2 - draw.getBoundingClientRect().left; });
+      if (!xs.length) return;
+      const cx = (Math.min(...xs) + Math.max(...xs)) / 2;
+      track.scrollTo({ left: cx - track.clientWidth / 2, behavior: reduced.matches ? 'auto' : 'smooth' });
+    };
+    const nearest = () => {
+      queued = false;
+      if (!coarse.matches) return;
+      const mid = (floor() + innerHeight) / 2;
+      let best: HTMLElement | null = null, bd = Infinity;
+      for (const c of cards) { const r = c.getBoundingClientRect(); const d = Math.abs((r.top + r.bottom) / 2 - mid); if (d < bd) { bd = d; best = c; } }
+      if (best && best.dataset.ncard !== lit) { lit = best.dataset.ncard!; set(lit); centreBand(lit); }
+    };
+    addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(nearest); } }, { passive: true });
+    coarse.addEventListener('change', () => { lit = null; if (coarse.matches) nearest(); else set(null); });
+    nearest();
+    draw.addEventListener('click', (e) => {
+      if (!coarse.matches) return;
+      let best: string | null = null, bd = 22;
+      stars.forEach((el, slug) => { const r = el.getBoundingClientRect(); const d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)); if (d <= bd) { bd = d; best = slug; } });
+      if (!best) return;
+      const n = D.nar.find((x) => x.slug === lit && x.items.includes(best!)) ?? D.nar.find((x) => x.items.includes(best!));
+      const card = n && cards.find((c) => c.dataset.ncard === n.slug);
+      if (!card) return;
+      const r = card.getBoundingClientRect(), f = floor();
+      scrollTo({ top: scrollY + r.top - (f + (innerHeight - f) / 2 - r.height / 2), behavior: reduced.matches ? 'auto' : 'smooth' });
     });
   }
 </script>

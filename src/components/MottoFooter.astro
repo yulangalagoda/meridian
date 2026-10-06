@@ -48,25 +48,59 @@ const ARCHIVE_LINKS: [string, string][] = [
 </footer>
 
 <style>
-  .ft{padding:clamp(80px,8vw,120px) clamp(20px,4.5vw,64px) 52px;text-align:center;background:radial-gradient(ellipse 60% 70% at 50% 100%,rgba(32,45,100,.4) 0%,rgba(7,10,20,0) 72%)}
+  .ft{padding:var(--sec) var(--gut) calc(3.25rem + env(safe-area-inset-bottom));text-align:center;background:radial-gradient(ellipse 60% 70% at 50% 100%,rgba(32,45,100,.4) 0%,rgba(7,10,20,0) 72%)}
   .ft-island{background:none}
-  .ft-timeline,.ft-object{padding:clamp(90px,9vw,140px) clamp(20px,4.5vw,64px) 52px}
-  .ft-home{position:relative;padding:clamp(110px,11vw,170px) clamp(20px,4.5vw,64px) 56px}
+  .ft-timeline,.ft-object{padding:clamp(5.625rem,9vw,8.75rem) var(--gut) calc(3.25rem + env(safe-area-inset-bottom))}
+  .ft-home{position:relative;padding:clamp(6.875rem,11vw,10.625rem) var(--gut) calc(3.5rem + env(safe-area-inset-bottom))}
 
-  .ft-motto{display:flex;flex-direction:column;align-items:center;gap:18px}
-  .ft-home .ft-motto{max-width:760px;margin:0 auto;gap:22px}
+  .ft-motto{display:flex;flex-direction:column;align-items:center;gap:1.125rem}
+  .ft-home .ft-motto{max-width:47.5rem;margin:0 auto;gap:1.375rem}
 
-  .ft-pali{margin:0;font:italic 400 clamp(32px,4vw,52px)/1.05 'EB Garamond',Georgia,serif;color:#F3ECDC}
-  .ft-timeline .ft-pali,.ft-object .ft-pali{font:italic 400 clamp(36px,4.4vw,60px)/1.05 'EB Garamond',Georgia,serif}
-  .ft-home .ft-pali{font:italic 400 clamp(42px,5.4vw,76px)/1.05 'EB Garamond',Georgia,serif}
+  .ft-pali{margin:0;font:italic 400 clamp(2rem,4vw,3.25rem)/1.05 'EB Garamond',Georgia,serif;color:#F3ECDC}
+  .ft-timeline .ft-pali,.ft-object .ft-pali{font:italic 400 clamp(2.25rem,4.4vw,3.75rem)/1.05 'EB Garamond',Georgia,serif}
+  .ft-home .ft-pali{font:italic 400 clamp(2.625rem,5.4vw,4.75rem)/1.05 'EB Garamond',Georgia,serif}
 
-  .ft-decay{margin:0;font:500 10.5px/1.6 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370}
-  .ft-note{margin:6px 0 0;max-width:540px;font:400 19px/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
+  .ft-decay{margin:0;font:500 .65625rem/1.6 'IBM Plex Mono',monospace;letter-spacing:.22em;text-transform:uppercase;color:#D3B370}
+  .ft-note{margin:.375rem 0 0;max-width:33.75rem;font:400 1.1875rem/1.55 'EB Garamond',Georgia,serif;color:#B8B2A5;text-wrap:pretty}
 
-  .ft-links{margin:72px auto 0;max-width:1100px;display:flex;flex-wrap:wrap;justify-content:center;gap:14px 36px;font:500 10px/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F}
-  .ft-home .ft-links{margin:100px auto 0}
+  .ft-links{margin:4.5rem auto 0;max-width:68.75rem;display:flex;flex-wrap:wrap;justify-content:center;gap:.875rem 2.25rem;font:500 .625rem/1 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#8D897F}
+  .ft-home .ft-links{margin:6.25rem auto 0}
 
-  .ft-credit{margin-top:48px;font:italic 400 15px/1.5 'EB Garamond',Georgia,serif;color:#8D897F}
-  .ft-timeline .ft-credit{margin-top:56px}
-  .ft-object .ft-credit,.ft-home .ft-credit{margin-top:28px}
+  .ft-credit{margin-top:3rem;font:italic 400 .9375rem/1.5 'EB Garamond',Georgia,serif;color:#8D897F}
+  .ft-timeline .ft-credit{margin-top:3.5rem}
+  .ft-object .ft-credit,.ft-home .ft-credit{margin-top:1.75rem}
+
+  /* Below L (Responsive System board, 1g): the motto keeps its order; the
+     archive links become a grid of 48px rows, two columns on XS–S and three
+     on M; from L the shipped wrapping row returns. */
+  @media (max-width:1023px){
+    /* Phones and tablets lay the footer out only as it nears the screen, so the
+       motto's Latin Extended letters (ā, ṅ: an 87 kB font file) load then,
+       not with the first screen. */
+    .ft{content-visibility:auto;contain-intrinsic-size:auto 200px}
+    .ft-timeline{contain-intrinsic-size:auto 230px}
+    .ft-object{contain-intrinsic-size:auto 400px}
+    .ft-home{contain-intrinsic-size:auto 520px}
+  }
+  @media (min-width:768px) and (max-width:1023px){
+    .ft{contain-intrinsic-size:auto 165px}
+    .ft-timeline{contain-intrinsic-size:auto 180px}
+    .ft-object{contain-intrinsic-size:auto 320px}
+    .ft-home{contain-intrinsic-size:auto 460px}
+  }
+  @media (max-width:1023px){
+    .ft-home{padding-top:5.5rem}
+    .ft-home .ft-pali{font-size:3.25rem}
+    .ft-links,.ft-home .ft-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:1.25rem;row-gap:0;max-width:none;font:500 .625rem/1.35 'IBM Plex Mono',monospace;letter-spacing:.16em;text-align:left}
+    .ft-links a{min-height:48px;display:flex;align-items:center;border-top:1px solid rgba(238,231,215,.1)}
+  }
+  @media (max-width:767px){
+    .ft-home .ft-motto{gap:1.25rem}
+    .ft-home .ft-pali{font-size:2.625rem}
+    .ft-decay{max-width:18.75rem;font:500 .625rem/1.7 'IBM Plex Mono',monospace}
+    .ft-home .ft-note{margin-top:.25rem;font-size:1.125rem}
+    .ft-links,.ft-home .ft-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .ft-home .ft-links{margin-top:3.25rem}
+    .ft-home .ft-credit{margin-top:1.625rem}
+  }
 </style>

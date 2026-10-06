@@ -1,0 +1,36 @@
+// The responsive system's breakpoints and queries (07-responsive.md, the Responsive System
+// board), for scripts. CSS writes the same numbers in its media queries; see NightSky.astro.
+// XL (1280–2399) is the shipped design and must not change.
+export const BP = { s: 480, m: 768, l: 1024, xl: 1280, xxl: 2400, xxxl: 3200 } as const;
+
+export const MQ = {
+  xs: '(max-width: 479px)',
+  belowM: '(max-width: 767px)',
+  belowL: '(max-width: 1023px)',
+  belowXL: '(max-width: 1279px)',
+  xxl: '(min-width: 2400px)',
+  xxxl: '(min-width: 3200px)',
+  fine: '(hover: hover) and (pointer: fine)', // gates every hover style
+  coarse: '(pointer: coarse)', // 44px hit areas and bottom sheets
+  short: '(max-height: 760px)', // 1280×720, 1366×768
+  landscapePhone: '(orientation: landscape) and (max-height: 500px)',
+  ultrawide: '(min-aspect-ratio: 21/9)',
+  reduced: '(prefers-reduced-motion: reduce)',
+  // The narrative's sticky band: below L, except on landscape phones.
+  narrativeBand: '(max-width: 1023px) and (orientation: portrait), (max-width: 1023px) and (min-height: 501px)',
+} as const;
+
+export const matches = (q: string) => typeof window !== 'undefined' && !!window.matchMedia && matchMedia(q).matches;
+
+// Background stars (board, 00 · 08): one per 2,800 px² of canvas, so about 120
+// on a phone. XL keeps the count it shipped with.
+export const starCount = (w: number, h: number, shipped: number) =>
+  matches(MQ.belowXL) || matches(MQ.xxl) ? Math.round((w * h) / 2800) : shipped;
+
+// Star canvases on touch screens redraw every other frame (30 fps): the twinkle
+// is slow and keyed to the clock, so it looks the same for half the work.
+export const touchFrameSkip = () => {
+  const coarse = matches(MQ.coarse);
+  let n = 0;
+  return () => coarse && (n++ & 1) === 1;
+};

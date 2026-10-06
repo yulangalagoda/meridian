@@ -102,6 +102,8 @@ export function view(D: TLData, Y: number, pick: string | null, route: string | 
     passTitle: n ? 'Passing through ' + Yr : 'Nothing passes through ' + Yr,
     passing: pass.slice(0, 4).map((it) => ({ slug: it.slug, name: it.name, date: it.date })),
     passMore: n > 4 ? 'and ' + (n - 4) + ' more' : n === 0 ? 'Wind on to the next star.' : '',
+    passCount: n,
+    passAll: pass.map((it) => ({ slug: it.slug, name: it.name, date: it.date })),
     stars,
     paths,
     formed,

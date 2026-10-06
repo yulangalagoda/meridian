@@ -1,0 +1,40 @@
+---
+// A bottom sheet, as drawn on the Responsive System board (3b): the panel in
+// rgba(11,17,36,.98) under a gold hairline, a 36 × 4 handle, a mono label with
+// the × beside it, then the content. Behaviour lives in sheet.ts.
+interface Props {
+  id: string;
+  label: string;
+}
+
+const { id, label } = Astro.props;
+---
+
+<dialog class="bs" id={id} aria-label={label} data-sheet>
+  <div class="bs-panel" data-sheet-panel>
+    <div class="bs-grip" data-sheet-grip>
+      <span class="bs-handle" aria-hidden="true"></span>
+      <div class="bs-head">
+        <span class="bs-label">{label}</span>
+        <button type="button" class="bs-x" aria-label="Close" data-sheet-close>×</button>
+      </div>
+    </div>
+    <slot />
+  </div>
+</dialog>
+
+<style>
+  .bs{position:fixed;inset:auto 0 0 0;box-sizing:border-box;width:100%;max-width:none;max-height:62dvh;margin:0;padding:0;border:0;background:transparent;overflow:visible;color:#EEE7D7}
+  .bs::backdrop{background:transparent}
+  .bs-panel{box-sizing:border-box;max-height:62dvh;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:10px;padding:10px max(20px,env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(20px,env(safe-area-inset-left));background:rgba(11,17,36,.98);border-top:1px solid rgba(211,179,112,.45);box-shadow:0 -30px 60px -20px #000}
+  .bs-grip{display:flex;flex-direction:column;gap:10px;touch-action:none}
+  .bs-handle{align-self:center;width:36px;height:4px;border-radius:2px;background:rgba(238,231,215,.25)}
+  .bs-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .bs-label{font:500 var(--mono-min)/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#D3B370}
+  .bs-x{width:44px;height:44px;margin-right:-12px;display:grid;place-items:center;font:400 1.5rem/1 'EB Garamond',Georgia,serif;color:#8D897F}
+</style>
+
+<script>
+  import { wireSheets } from './sheet';
+  wireSheets();
+</script>

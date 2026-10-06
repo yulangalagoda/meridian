@@ -15,6 +15,7 @@
 </style>
 
 <script>
+  import { starCount, touchFrameSkip } from './responsive';
   const cv = document.querySelector<HTMLCanvasElement>('[data-starfield]');
   const ctx = cv?.getContext('2d');
   if (cv && ctx) {
@@ -24,9 +25,9 @@
     let W = 0, H = 0, stars: S[] = [];
 
     // Roughly one star per 2,200 px² of screen: many, and fainter and smaller
-    // than the objects' stars (alpha .1–.48, up to 1.4 px).
+    // than the objects' stars (alpha .1–.48, up to 1.4 px). Outside XL, one per 2,800.
     const seed = () => {
-      const n = Math.max(260, Math.min(1600, Math.round((W * H) / 2200)));
+      const n = starCount(W, H, Math.max(260, Math.min(1600, Math.round((W * H) / 2200))));
       stars = Array.from({ length: n }, () => {
         const d = [0.25, 0.55, 1][Math.floor(Math.random() * 3)];
         return { x: Math.random(), y: Math.random(), r: 0.3 + Math.random() * Math.random() * (0.5 + d * 0.6), a: 0.1 + Math.random() * 0.38, s: 0.3 + Math.random() * 1.2, p: Math.random() * 6.28, d, warm: Math.random() < 0.18 };
@@ -55,10 +56,11 @@
     };
 
     const wrap = (v: number, m: number) => ((v % m) + m) % m;
+    const skip = touchFrameSkip();
     const draw = (now: number) => {
       if (!reduced) requestAnimationFrame(draw);
       if (document.hidden) return;
-      size();
+      if (!reduced && !shot && skip()) return; // a shooting star keeps every frame
       tx += (mx - tx) * 0.05; ty += (my - ty) * 0.05;
       const sy = reduced ? 0 : scrollY;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -93,8 +95,11 @@
         }
       }
     };
+    // The canvas follows the window through a ResizeObserver; measuring it in
+    // every frame would force a layout each time.
     size();
-    if (reduced) { draw(0); new ResizeObserver(() => { size(); draw(0); }).observe(cv); }
+    new ResizeObserver(() => { size(); if (reduced) draw(0); }).observe(cv);
+    if (reduced) draw(0);
     else requestAnimationFrame(draw);
   }
 </script>

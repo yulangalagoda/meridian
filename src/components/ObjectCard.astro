@@ -6,6 +6,7 @@
 //               brightness all follow it over 0.8s; no ring
 // Names of objects in The Island thread are gold.
 import VerificationRing from './VerificationRing.astro';
+import { responsive } from '../lib/images';
 
 interface Props {
   variant: 'collection' | 'timeline';
@@ -18,10 +19,13 @@ interface Props {
   alt: string;
   href?: string; // collection
   lit?: number; // timeline
+  eager?: boolean; // cards in the first viewport
   [attr: `data-${string}`]: string;
 }
 
-const { variant, name, date, origin, verified, island, image, alt, href, lit = 0.06, ...rest } = Astro.props;
+const { variant, name, date, origin, verified, island, image, alt, href, lit = 0.06, eager = false, ...rest } = Astro.props;
+// The case's width: half the screen on XS, a third on S–M, a quarter on L, then 320px.
+const img = await responsive(image, [['(max-width: 479px)', '50vw'], ['(max-width: 1023px)', '33vw'], ['(max-width: 1279px)', '25vw'], [null, '320px']]);
 const Tag = variant === 'collection' ? 'a' : 'button';
 const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: `--lit:${lit}` };
 ---
@@ -29,7 +33,7 @@ const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: 
 <Tag class:list={['cd', `cd-${variant}`]} {...tagAttrs} {...rest}>
   <span class="cd-case">
     <span class="cd-well">
-      {image && <img src={image} alt={alt || name} loading="lazy" decoding="async" />}
+      {image && <img src={image} {...img} alt={alt || name} loading={eager ? 'eager' : 'lazy'} decoding="async" />}
     </span>
     {variant === 'timeline' && <span class="cd-bar"></span>}
   </span>
@@ -41,17 +45,18 @@ const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: 
       <span>{date}</span> · <span>{origin}</span>
     </span>
     <span class="cd-name" style={island ? 'color:#F2CF85' : undefined}>{name}</span>
+    <span class="cd-ring"><VerificationRing verified={verified} size={9} noShrink /></span>
   </span>
 </Tag>
 
 <style>
-  .cd{display:flex;flex-direction:column;gap:14px;color:#EEE7D7}
-  .cd:hover{color:#EEE7D7}
+  .cd{display:flex;flex-direction:column;gap:.875rem;color:#EEE7D7}
+  @media (hover:hover) and (pointer:fine){.cd:hover{color:#EEE7D7}}
   .cd-timeline{text-align:left}
 
-  .cd-case{position:relative;display:block;width:100%;aspect-ratio:4/5;box-sizing:border-box;padding:clamp(12px,1.6vw,22px)}
+  .cd-case{position:relative;display:block;width:100%;aspect-ratio:4/5;box-sizing:border-box;padding:clamp(.75rem,1.6vw,1.375rem)}
   .cd-collection .cd-case{border:1px solid rgba(238,231,215,.12);background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(242,212,147,.1),rgba(242,212,147,0) 72%),#0B1124;transition:border-color .4s}
-  .cd-collection .cd-case:hover{border-color:rgba(211,179,112,.6)}
+  @media (hover:hover) and (pointer:fine){.cd-collection .cd-case:hover{border-color:rgba(211,179,112,.6)}}
   .cd-timeline .cd-case{border:1px solid rgba(238,231,215,calc(.08 + var(--lit) * .3));background:radial-gradient(ellipse 80% 55% at 50% 0%,rgba(242,212,147,calc(var(--lit) * .16)),rgba(242,212,147,0) 72%),#0B1124;box-shadow:0 30px 60px -24px rgba(0,0,0,calc(.3 + var(--lit) * .4));transition:border-color .8s,box-shadow .8s,background .8s}
 
   .cd-well{position:relative;display:block;width:100%;height:100%;color:#B8B2A5}
@@ -60,8 +65,25 @@ const tagAttrs = variant === 'collection' ? { href } : { type: 'button', style: 
 
   .cd-bar{position:absolute;left:50%;top:-1px;width:40%;height:2px;margin-left:-20%;background:rgba(242,212,147,calc(var(--lit) * .85));transition:background .8s}
 
-  .cd-text{display:flex;flex-direction:column;gap:7px}
-  .cd-meta{font:500 9.5px/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
-  .cd-collection .cd-meta{display:flex;align-items:center;gap:8px}
-  .cd-name{font:400 19px/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .cd-text{display:flex;flex-direction:column;gap:.4375rem}
+  .cd-meta{font:500 var(--mono-min)/1.4 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8D897F}
+  .cd-collection .cd-meta{display:flex;align-items:center;gap:.5rem}
+  .cd-name{font:400 1.1875rem/1.2 Gloock,Georgia,serif;color:#F3ECDC;text-wrap:balance}
+  .cd-ring{display:none}
+
+  /* Phones (board 6a, 3g): a compact case — the image fills the top of the
+     bordered card and the text sits inside it: date, name 16px, then the ring. */
+  @media (max-width:767px){
+    .cd{gap:0;position:relative;background:#0B1124}
+    .cd-collection{border:1px solid rgba(238,231,215,.12)}
+    .cd-timeline{border:1px solid rgba(238,231,215,calc(.08 + var(--lit) * .3));transition:border-color .8s}
+    .cd-collection .cd-case,.cd-timeline .cd-case{padding:0;border:0;box-shadow:none}
+    .cd-bar{left:-1px;right:-1px;width:auto;margin-left:0;z-index:2}
+    .cd-text{padding:.75rem .75rem .875rem;gap:.4375rem}
+    .cd-meta{letter-spacing:.12em}
+    .cd-collection .cd-meta{display:block}
+    .cd-collection .cd-meta > :global(:first-child){display:none}
+    .cd-name{font-size:1rem}
+    .cd-ring{display:flex}
+  }
 </style>
