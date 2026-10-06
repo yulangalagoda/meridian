@@ -26,3 +26,11 @@ export const matches = (q: string) => typeof window !== 'undefined' && !!window.
 // on a phone. XL keeps the count it shipped with.
 export const starCount = (w: number, h: number, shipped: number) =>
   matches(MQ.belowXL) || matches(MQ.xxl) ? Math.round((w * h) / 2800) : shipped;
+
+// Star canvases on touch screens redraw every other frame (30 fps): the twinkle
+// is slow and keyed to the clock, so it looks the same for half the work.
+export const touchFrameSkip = () => {
+  const coarse = matches(MQ.coarse);
+  let n = 0;
+  return () => coarse && (n++ & 1) === 1;
+};

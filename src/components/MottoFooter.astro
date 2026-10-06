@@ -74,6 +74,21 @@ const ARCHIVE_LINKS: [string, string][] = [
      archive links become a grid of 48px rows, two columns on XS–S and three
      on M; from L the shipped wrapping row returns. */
   @media (max-width:1023px){
+    /* Phones and tablets lay the footer out only as it nears the screen, so the
+       motto's Latin Extended letters (ā, ṅ: an 87 kB font file) load then,
+       not with the first screen. */
+    .ft{content-visibility:auto;contain-intrinsic-size:auto 200px}
+    .ft-timeline{contain-intrinsic-size:auto 230px}
+    .ft-object{contain-intrinsic-size:auto 400px}
+    .ft-home{contain-intrinsic-size:auto 520px}
+  }
+  @media (min-width:768px) and (max-width:1023px){
+    .ft{contain-intrinsic-size:auto 165px}
+    .ft-timeline{contain-intrinsic-size:auto 180px}
+    .ft-object{contain-intrinsic-size:auto 320px}
+    .ft-home{contain-intrinsic-size:auto 460px}
+  }
+  @media (max-width:1023px){
     .ft-home{padding-top:5.5rem}
     .ft-home .ft-pali{font-size:3.25rem}
     .ft-links,.ft-home .ft-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:1.25rem;row-gap:0;max-width:none;font:500 .625rem/1.35 'IBM Plex Mono',monospace;letter-spacing:.16em;text-align:left}

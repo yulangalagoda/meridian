@@ -15,7 +15,7 @@
 </style>
 
 <script>
-  import { starCount } from './responsive';
+  import { starCount, touchFrameSkip } from './responsive';
   const cv = document.querySelector<HTMLCanvasElement>('[data-starfield]');
   const ctx = cv?.getContext('2d');
   if (cv && ctx) {
@@ -56,10 +56,11 @@
     };
 
     const wrap = (v: number, m: number) => ((v % m) + m) % m;
+    const skip = touchFrameSkip();
     const draw = (now: number) => {
       if (!reduced) requestAnimationFrame(draw);
       if (document.hidden) return;
-      size();
+      if (!reduced && !shot && skip()) return; // a shooting star keeps every frame
       tx += (mx - tx) * 0.05; ty += (my - ty) * 0.05;
       const sy = reduced ? 0 : scrollY;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -94,8 +95,11 @@
         }
       }
     };
+    // The canvas follows the window through a ResizeObserver; measuring it in
+    // every frame would force a layout each time.
     size();
-    if (reduced) { draw(0); new ResizeObserver(() => { size(); draw(0); }).observe(cv); }
+    new ResizeObserver(() => { size(); if (reduced) draw(0); }).observe(cv);
+    if (reduced) draw(0);
     else requestAnimationFrame(draw);
   }
 </script>

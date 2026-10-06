@@ -118,7 +118,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
   <div class="nr" data-narrative>
     <SiteHeader current="narratives" overlay z={20} passThrough />
 
-    <section class="nr-grid">
+    <main class="nr-grid">
       <div class="nr-left">
         <div class="nr-stage" data-stage>
           <canvas class="nr-canvas" data-canvas></canvas>
@@ -202,7 +202,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
           </div>
         </div>
       </div>
-    </section>
+    </main>
   </div>
   <script type="application/json" id="nr-data" set:html={JSON.stringify(data)} />
 </NightSky>
@@ -356,7 +356,7 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
   // Port of the reference's componentDidMount, startSky, points, seg and
   // renderVals. Stations are the story's blocks; the one crossing the middle of
   // the screen (rootMargin -42% / -52%) is current.
-  import { MQ, starCount } from '../../components/responsive';
+  import { MQ, starCount, touchFrameSkip } from '../../components/responsive';
   const root = document.querySelector<HTMLElement>('[data-narrative]');
   const json = document.getElementById('nr-data');
   if (root && json) {
@@ -537,14 +537,22 @@ const jsonLd = narrativeData(narrative, stars.map((s) => s.it), ogImage);
     // Paused while the stage is off screen.
     let offscreen = false;
     new IntersectionObserver(([e]) => { offscreen = !e.isIntersecting; }).observe(cv);
+    // Its size comes from a ResizeObserver; measuring it in every frame would
+    // force a layout each time.
+    let w = 0, h = 0;
+    const fit = () => {
+      w = cv.clientWidth; h = cv.clientHeight;
+      if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    };
+    fit();
+    const skip = touchFrameSkip();
     const draw = (t: number) => {
       if (!reduced) requestAnimationFrame(draw);
-      if (offscreen) return;
-      const w = cv.clientWidth, h = cv.clientHeight;
-      if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+      if (offscreen || (!reduced && skip())) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
       for (const s of field) { ctx.globalAlpha = s.a * (0.55 + 0.45 * Math.sin((t / 1000) * s.s + s.p)); ctx.fillStyle = s.r > 1 ? '#FFF4DC' : '#D9E1F4'; ctx.beginPath(); ctx.arc(s.x * w, s.y * h, s.r, 0, 6.283); ctx.fill(); }
     };
-    if (!reduced) requestAnimationFrame(draw); else { draw(0); new ResizeObserver(() => draw(0)).observe(cv); }
+    new ResizeObserver(() => { fit(); if (reduced) draw(0); }).observe(cv);
+    if (!reduced) requestAnimationFrame(draw); else draw(0);
   }
 </script>

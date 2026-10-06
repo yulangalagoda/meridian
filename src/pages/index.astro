@@ -89,6 +89,7 @@ const description = `A private archive of ${items.length} antiques and historica
 
 <NightSky title="The Meridian" description={description} jsonLd={website(description, items)} legible>
   <div class="hm" data-home>
+    <main>
     <section class="hm-hero" data-hero>
       <canvas class="hm-canvas" data-canvas></canvas>
       <div class="hm-line" data-c="line"></div>
@@ -253,6 +254,7 @@ const description = `A private archive of ${items.length} antiques and historica
         </div>
       </div>
     </section>
+    </main>
 
     <MottoFooter variant="home" />
   </div>
@@ -507,7 +509,7 @@ const description = `A private archive of ${items.length} antiques and historica
 <script>
   // Port of the reference's componentDidMount, ceremony, startSky,
   // setupReveals, twinkle, drawActive, tick and renderVals.
-  import { starCount } from '../components/responsive';
+  import { starCount, touchFrameSkip } from '../components/responsive';
   type HItem = { slug: string; name: string; short: string; featured: boolean; verified: boolean; pos: [number, number]; meta: string; verification: string; n: number };
   type HNar = { slug: string; name: string; premise: string; items: string[]; lx: number; ly: number; span: string; count: number };
 
@@ -575,9 +577,10 @@ const description = `A private archive of ${items.length} antiques and historica
     new ResizeObserver(() => { size(); if (reduced) draw(0); }).observe(cv);
     window.addEventListener('pointermove', (e) => { if (e.pointerType !== 'mouse') return; mx = e.clientX / innerWidth - 0.5; my = e.clientY / innerHeight - 0.5; });
     new IntersectionObserver(([e]) => { heroHidden = !e.isIntersecting; }).observe(cv);
+    const everyOther = touchFrameSkip();
     const draw = (t: number) => {
       if (!reduced) requestAnimationFrame(draw);
-      if (heroHidden) return;
+      if (heroHidden || (!reduced && everyOther())) return;
       tx += (mx - tx) * 0.04; ty += (my - ty) * 0.04;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
       for (const s of field) {
@@ -594,7 +597,10 @@ const description = `A private archive of ${items.length} antiques and historica
       io.unobserve(e.target);
       e.target.animate([{ opacity: 0, transform: 'translateY(28px)' }, { opacity: 1, transform: 'none' }], { duration: 1300, easing: E, fill: 'both' });
     }), { threshold: 0.15 });
-    if (!reduced) root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => { if (el.getBoundingClientRect().top > innerHeight) { el.style.opacity = '0'; io.observe(el); } });
+    // Below L the footer isn't laid out until it nears the screen; asking where it
+    // is would lay it out (and load its fonts) early, and it's below the fold anyway.
+    const below = (el: HTMLElement) => el.checkVisibility?.({ contentVisibilityAuto: true }) === false || el.getBoundingClientRect().top > innerHeight;
+    if (!reduced) root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => { if (below(el)) { el.style.opacity = '0'; io.observe(el); } });
 
     // The sky: one constellation at a time, cycling every 5.2 s unless chosen,
     // pointed at, or the pointer is over the chart.

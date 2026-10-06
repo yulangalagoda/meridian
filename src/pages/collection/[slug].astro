@@ -71,6 +71,7 @@ const thumbImgs = await Promise.all(shots.map((t) => responsive(t.src, [[null, '
   <div class="ob" data-object>
     <SiteHeader current="collection" overlay z={20} />
 
+    <main>
     <section class="ob-top">
       <div class="ob-axis"></div>
       <div class="ob-col">
@@ -204,6 +205,7 @@ const thumbImgs = await Promise.all(shots.map((t) => responsive(t.src, [[null, '
         </div>
       </div>
     </section>
+    </main>
 
     <MottoFooter variant="object" />
 
@@ -465,8 +467,11 @@ const thumbImgs = await Promise.all(shots.map((t) => responsive(t.src, [[null, '
         io.unobserve(e.target);
         (e.target as HTMLElement).animate([{ opacity: 0, transform: 'translateY(26px)' }, { opacity: 1, transform: 'none' }], { duration: 1200, easing: ease, fill: 'both' });
       }), { threshold: 0.12 });
+      // Below L the footer isn't laid out until it nears the screen; asking where
+      // it is would lay it out (and load its fonts) early, and it's below the fold anyway.
+      const below = (el: HTMLElement) => el.checkVisibility?.({ contentVisibilityAuto: true }) === false || el.getBoundingClientRect().top > innerHeight;
       root.querySelectorAll<HTMLElement>('[data-reveal]').forEach((el) => {
-        if (el.getBoundingClientRect().top > innerHeight) { el.style.opacity = '0'; io.observe(el); }
+        if (below(el)) { el.style.opacity = '0'; io.observe(el); }
       });
     }
     document.documentElement.classList.remove('js');

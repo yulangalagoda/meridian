@@ -65,6 +65,7 @@ const jsonLd = [
 
 <NightSky title="Timeline · The Meridian" description={description} jsonLd={jsonLd} legible>
   <div class="tl" data-timeline>
+    <main>
     <section class="tl-stage" data-stage>
       <SiteHeader current="timeline" overlay z={20} />
       <div class="tl-meridian"></div>
@@ -200,6 +201,7 @@ const jsonLd = [
         ))}
       </div>
     </section>
+    </main>
 
     <MottoFooter variant="timeline" />
   </div>
@@ -337,8 +339,11 @@ const jsonLd = [
     .tl-sheeted .tl-sky{top:calc(var(--head) + 5.25rem)}
   }
   @media (max-width:1023px) and (prefers-reduced-motion:no-preference){ .tl-route-name{transition:border-color .4s} }
+  /* On touch the sky takes the tap and gives it to the nearest star (below); the
+     star buttons stay for the keyboard and screen readers. */
   @media (max-width:1023px) and (pointer:coarse){
-    .tl-hit{left:-22px;top:-22px;width:44px;height:44px;box-shadow:none}
+    .tl-sky{pointer-events:auto}
+    .tl-hit{left:-22px;top:-22px;width:44px;height:44px;box-shadow:none;pointer-events:none!important}
     .tl-hit::before{content:'';position:absolute;inset:8px;border-radius:50%;box-shadow:var(--ring);transition:box-shadow .3s}
   }
   @media (min-width:1024px) and (max-width:1279px){ .tl-grid{grid-template-columns:repeat(4,minmax(0,1fr))} }
@@ -637,11 +642,13 @@ const jsonLd = [
     };
     playBtn.addEventListener('click', togglePlay);
 
-    // Stars and the card. On touch below L a tap goes to the nearest risen star
-    // within 22px (44px hit areas; where they overlap, the nearest centre wins).
+    // Stars and the card. On touch below L a tap on the sky goes to the nearest
+    // risen star within 22px (44px hit areas; where they overlap, the nearest
+    // centre wins). A star pressed from the keyboard is handled by its button.
     let dragged = 0;
     sky.addEventListener('click', (e) => {
       if (!(compact.matches && coarse.matches)) return;
+      if (e.detail === 0 && (e.target as Element).closest('[data-pick]')) return;
       e.stopPropagation(); e.preventDefault();
       if (performance.now() - dragged < 250) return;
       let best: string | null = null, bd = 22;
